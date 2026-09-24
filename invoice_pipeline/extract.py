@@ -20,7 +20,7 @@ from pathlib import Path
 import anthropic
 
 from .schema import Invoice
-from .validate import check
+from .validate import check, unsupported_reason
 
 # USD per million tokens (input, output) — from the Claude API reference cached 2026-06-24.
 PRICES = {"claude-haiku-4-5": (1.00, 5.00), "claude-opus-5": (5.00, 25.00)}
@@ -52,6 +52,8 @@ class Result:
     invoice: dict | None
     warnings: list[str]
     attempts: list[Attempt]
+    review_reason: str = ""
+    latency_s: float = 0.0
 
     @property
     def cost_usd(self) -> float:
@@ -80,8 +82,13 @@ def _call(client: anthropic.Anthropic, model: str, block: dict):
 
 def process(path: Path, client: anthropic.Anthropic | None = None, tiers: list[str] = TIERS) -> Result:
     client = client or anthropic.Anthropic()
-    block = _document_block(path)
+    try:
+        block = _document_block(path)
+    except (KeyError, OSError) as exc:  # unsupported format (tiff, heic, docx...) or unreadable file
+        return Result(str(path), "human_review", None, [], [], review_reason=f"unreadable or unsupported file: {exc}")
     attempts: list[Attempt] = []
+    last_errors: list[str] = []
+    t_start = time.monotonic()
     for model in tiers:
         att = Attempt(model=model)
         t0 = time.monotonic()
@@ -104,12 +111,21 @@ def process(path: Path, client: anthropic.Anthropic | None = None, tiers: list[s
             attempts.append(att)
             continue
         inv: Invoice = resp.parsed_output
+        reason = unsupported_reason(inv)
+        if reason:
+            att.errors = [reason]
+            attempts.append(att)
+            return Result(str(path), "human_review", inv.model_dump(), [], attempts, review_reason=reason,
+                          latency_s=round(time.monotonic() - t_start, 2))
         errors, warnings = check(inv)
         att.errors = errors
+        last_errors = errors
         attempts.append(att)
         if not errors:
-            return Result(str(path), "accepted", inv.model_dump(), warnings, attempts)
-    return Result(str(path), "human_review", None, [], attempts)
+            return Result(str(path), "accepted", inv.model_dump(), warnings, attempts,
+                          latency_s=round(time.monotonic() - t_start, 2))
+    return Result(str(path), "human_review", None, [], attempts, review_reason="; ".join(last_errors) or "no valid extraction",
+                  latency_s=round(time.monotonic() - t_start, 2))
 
 
 def run_folder(folder: Path, out_jsonl: Path) -> dict:

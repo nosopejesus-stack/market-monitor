@@ -1,26 +1,69 @@
 {
   "_doc": "Single source of truth for experiments and money metrics. Every metric carries a 'kind': ACTUAL (measured), ESTIMATE, or ASSUMPTION. Dashboard: python dashboard/build_dashboard.py",
-  "updated": "2026-09-24",
+  "updated": "2026-09-24 (cycle 02)",
   "money": {
-    "revenue_eur": {"value": 0, "kind": "ACTUAL"},
-    "mrr_eur": {"value": 0, "kind": "ACTUAL"},
-    "customers": {"value": 0, "kind": "ACTUAL"},
-    "prospects_contacted": {"value": 0, "kind": "ACTUAL"},
-    "paid_pilots": {"value": 0, "kind": "ACTUAL"},
-    "variable_costs_eur": {"value": 0, "kind": "ACTUAL"},
-    "ai_costs_eur": {"value": 0, "kind": "ACTUAL", "note": "research used connector/web tools, not billed API calls"},
-    "gross_margin_pct": {"value": null, "kind": "ACTUAL", "note": "no revenue yet"},
-    "cac_eur": {"value": null, "kind": "ACTUAL", "note": "no customers yet"},
-    "cac_eur_assumed_s1": {"value": 600, "kind": "ASSUMPTION"},
-    "payback_months": {"value": null, "kind": "ACTUAL"},
-    "churn_pct": {"value": null, "kind": "ACTUAL"},
-    "ai_cost_per_accepted_invoice_eur": {"value": 0.0124, "kind": "ESTIMATE", "note": "research/economics.py"}
+    "revenue_eur": {
+      "value": 0,
+      "kind": "ACTUAL"
+    },
+    "mrr_eur": {
+      "value": 0,
+      "kind": "ACTUAL"
+    },
+    "customers": {
+      "value": 0,
+      "kind": "ACTUAL"
+    },
+    "prospects_contacted": {
+      "value": 0,
+      "kind": "ACTUAL"
+    },
+    "paid_pilots": {
+      "value": 0,
+      "kind": "ACTUAL"
+    },
+    "variable_costs_eur": {
+      "value": 0,
+      "kind": "ACTUAL"
+    },
+    "ai_costs_eur": {
+      "value": 0,
+      "kind": "ACTUAL",
+      "note": "research used connector/web tools, not billed API calls"
+    },
+    "gross_margin_pct": {
+      "value": null,
+      "kind": "ACTUAL",
+      "note": "no revenue yet"
+    },
+    "cac_eur": {
+      "value": null,
+      "kind": "ACTUAL",
+      "note": "no customers yet"
+    },
+    "cac_eur_assumed_s1": {
+      "value": 600,
+      "kind": "ASSUMPTION"
+    },
+    "payback_months": {
+      "value": null,
+      "kind": "ACTUAL"
+    },
+    "churn_pct": {
+      "value": null,
+      "kind": "ACTUAL"
+    },
+    "ai_cost_per_accepted_invoice_eur": {
+      "value": null,
+      "kind": "ACTUAL",
+      "note": "not measured; cycle-01 estimate withdrawn as headline metric — total cost per accepted invoice is dominated by human review (research/pilot_economics.md)"
+    }
   },
   "pipeline": {
     "opportunities_generated": 102,
-    "opportunities_surviving": 14,
+    "opportunities_surviving": 13,
     "validated_opportunities": 0,
-    "active_mvps": 3
+    "active_mvps": 2
   },
   "quant": {
     "strategies_tested": 1,
@@ -30,47 +73,89 @@
   },
   "experiments": [
     {
-      "id": "EXP-001", "date": "2026-09-24", "status": "KILLED",
+      "id": "EXP-001",
+      "date": "2026-09-24",
+      "status": "KILLED (verified cycle 02)",
       "hypothesis": "XAUUSD SELL STOP 708 pts below a bullish daily close, TP 708 / SL 1616, has positive expectancy",
-      "market": "XAUUSD (own/prop capital)", "customer": "self", "problem": "find a tradable edge",
+      "market": "XAUUSD (own/prop capital)",
+      "customer": "self",
+      "problem": "find a tradable edge",
       "method": "event backtest H1 2020-2026 + D1 2006-2019 bounds; controls, permutation, 44 slices with BH-FDR, IS/OOS, ATR grid, Monte Carlo",
-      "cost_eur": 0, "cost_note": "~60 Twelve Data credits on existing plan; engineering time",
-      "result": "WR 68.8% vs 69.5% breakeven; -0.020R/trade (CI -0.076..+0.034) after $0.30 spread; negative in independent era",
-      "evidence": "quant/REPORT_XAUUSD.md; quant/results/xau_study.md",
-      "failure_reason": "no edge: win rate is the random-walk rate implied by TP/SL; short bias fought a bull market",
-      "next_action": "none with capital; optional pre-registered paper test of 'skip bodies >= 0.53 ATR'; confirm point size",
+      "cost_eur": 0,
+      "cost_note": "~60 Twelve Data credits on existing plan; engineering time",
+      "result": "WR 68.8% vs 69.5% breakeven; -0.020R/trade (CI -0.076..+0.034) after $0.30 spread; negative in independent era; cycle 02: independent re-implementation 100% match, geometry null WR 68.8% = observed, 0/125 variants t>2, walk-forward -0.013R, M5 shows H1 is optimistic",
+      "evidence": "quant/REPORT_XAUUSD.md; quant/results/xau_study.md; quant/REPORT_XAUUSD_VERIFY.md; quant/results/xau_verify.md",
+      "failure_reason": "NO EDGE: win rate equals random-walk rate for this TP/SL and spread; negative after all cost scenarios; not robust",
+      "next_action": "none; optional: send broker symbol specification for documentation only",
       "learning_value": "high: prevents losing prop challenges on a false edge; engine reusable"
     },
     {
-      "id": "EXP-002", "date": "2026-09-24", "status": "READY - AWAITING APPROVAL",
+      "id": "EXP-002",
+      "date": "2026-09-24",
+      "status": "KILLED - NO-GO (cycle 02, before any contact)",
       "hypothesis": "Small Spanish gestorías pay EUR 300 pilot then EUR 0.20/accepted invoice for supplier-invoice extraction at >=97% field accuracy",
-      "market": "Spain accounting firms", "customer": "gestoría 2-10 staff", "problem": "manual keying of supplier invoices",
+      "market": "Spain accounting firms",
+      "customer": "gestoría 2-10 staff",
+      "problem": "manual keying of supplier invoices",
       "method": "25 conversations -> sample runs on their invoices -> paid pilot ask",
-      "cost_eur": 0, "budget_eur": 20, "budget_hours": 15,
-      "result": null, "evidence": "experiments/EXP-002-gestoria-pilot.md",
-      "failure_reason": null,
+      "cost_eur": 0,
+      "budget_eur": 20,
+      "budget_hours": 15,
+      "result": "not run (no prospects contacted, EUR 0 spent)",
+      "evidence": "reports/cycle-02.md §G; research/competitors.md; research/invoice_evidence.md; research/pilot_economics.md",
+      "failure_reason": "crowded (Inmatic, AutoApunte, Contarapid, Dext, a3innuva, Sage), mandatory structured B2B e-invoicing from Oct 2027/Oct 2028 (RD 238/2026), no verifiable differentiation or moat, negative service-model margin",
       "pass": ">=2 paid pilots AND accuracy >=97% AND review rate <=10%",
       "kill": "<2 paid pilots after 25 qualified conversations OR accuracy <97% after 2 iterations",
-      "next_action": "owner approves outreach list/script and provides ANTHROPIC_API_KEY"
+      "next_action": "none; technology test plan kept in experiments/EXP-002-test-plan.md"
     },
     {
-      "id": "EXP-003", "date": "2026-09-24", "status": "QUEUED",
+      "id": "EXP-003",
+      "date": "2026-09-24",
+      "status": "QUEUED",
       "hypothesis": "SMEs bidding on public tenders pay EUR 350-700 for an AI-drafted, human-edited memoria técnica",
-      "market": "Spain public procurement", "customer": "bidding SMEs 5-50 staff", "problem": "writing scored technical proposals under deadline",
+      "market": "Spain public procurement",
+      "customer": "bidding SMEs 5-50 staff",
+      "problem": "writing scored technical proposals under deadline",
       "method": "concierge: 3 intro-priced jobs for firms bidding on open tenders",
-      "cost_eur": 0, "result": null, "evidence": "reports/cycle-01.md#s4",
+      "cost_eur": 0,
+      "result": null,
+      "evidence": "reports/cycle-01.md#s4",
       "pass": ">=1 paid job from 30 conversations; editing <=12 h; rating >=4/5",
       "kill": "0 paid jobs from 30 conversations",
       "next_action": "after EXP-002 outreach starts"
     },
     {
-      "id": "EXP-004", "date": "2026-09-24", "status": "QUEUED",
+      "id": "EXP-004",
+      "date": "2026-09-24",
+      "status": "PARKED",
       "hypothesis": "Median over-contracting saving on 3.0TD SME supplies is >= EUR 600/year",
-      "market": "Spain SME electricity", "customer": "SMEs via gestorías", "problem": "paying for unused contracted kW",
+      "market": "Spain SME electricity",
+      "customer": "SMEs via gestorías",
+      "problem": "paying for unused contracted kW",
       "method": "run energy_audit on 10 real invoice sets collected during EXP-002 conversations",
-      "cost_eur": 0, "result": null, "evidence": "energy_audit/",
-      "pass": "median saving >= EUR 600/yr", "kill": "median < EUR 600/yr",
-      "next_action": "collect invoices with customer consent"
+      "cost_eur": 0,
+      "result": null,
+      "evidence": "energy_audit/",
+      "pass": "median saving >= EUR 600/yr",
+      "kill": "median < EUR 600/yr",
+      "next_action": "depended on EXP-002 conversations; parked with it"
+    },
+    {
+      "id": "EXP-005",
+      "date": "2026-09-24",
+      "status": "PROPOSED - research only, awaiting approval",
+      "hypothesis": "Gestorías face a paid, deadline-driven problem adapting SME clients to mandatory B2B e-invoicing (RD 238/2026) that incumbents do not already cover",
+      "market": "Spain accounting firms",
+      "customer": "gestorías",
+      "problem": "B2B e-invoicing transition 2027-2029",
+      "method": "desk research: primary sources (BOE, ministerial order), incumbent offers, platform landscape; no contact",
+      "cost_eur": 0,
+      "result": null,
+      "evidence": "reports/cycle-02.md §G",
+      "failure_reason": null,
+      "pass": "a specific unserved, paid task with a named buyer and a verifiable price anchor",
+      "kill": "editors/platforms already bundle it, or no paid task beyond software upgrades",
+      "next_action": "owner decides whether to run cycle 03"
     }
   ]
 }

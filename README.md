@@ -3,8 +3,8 @@
 Evidence-first lab for finding, testing and killing money-making opportunities.
 Primary metric: **economic value created**, not code.
 
-**Start here:** [`reports/cycle-01.md`](reports/cycle-01.md) (research, 14 surviving opportunities,
-economics, first experiment) · dashboard: `python dashboard/build_dashboard.py`, then open `dashboard/index.html`.
+**Start here:** [`reports/cycle-02.md`](reports/cycle-02.md) (validation & red team, in Spanish:
+XAUUSD **NO EDGE**, invoice pilot **NO-GO**). Earlier: [`reports/cycle-01.md`](reports/cycle-01.md) (research, partly superseded) · dashboard: `python dashboard/build_dashboard.py`, then open `dashboard/index.html`.
 
 | path | what |
 |---|---|
@@ -12,8 +12,8 @@ economics, first experiment) · dashboard: `python dashboard/build_dashboard.py`
 | `research/` | 102-item opportunity longlist with kill reasons, scoring, scenario economics (scripts + outputs) |
 | `experiments/` | experiment ledger (`ledger.json` = source of truth) and one file per experiment |
 | `dashboard/` | money dashboard generated from the ledger. ACTUAL, ESTIMATE and ASSUMPTION are always labelled. |
-| `quant/` | XAUUSD data, event backtester, falsification study, report (EXP-001, killed) |
-| `invoice_pipeline/` | S1 MVP: Spanish supplier-invoice extraction. Haiku → Opus → human routing, deterministic NIF/VAT validation, cost per accepted invoice. |
+| `quant/` | XAUUSD event backtester, falsification study (cycle 01), independent re-implementation and verification/red team (cycle 02). EXP-001: NO EDGE |
+| `invoice_pipeline/` | Spanish supplier-invoice extraction (Haiku → Opus → human), deterministic NIF/VAT/total validation, tax-regime routing, duplicate detection, ground-truth evaluator. EXP-002 is NO-GO; kept as a tested component |
 | `energy_audit/` | S2 MVP: contracted-power audit (deterministic, uses the customer's own invoice prices) |
 | `landing/`, `outreach/` | EXP-002 go-to-market drafts. **Not published or sent.** |
 | `market_monitor_v1/` | the original daily-email market monitor, unpacked from `market-monitor.zip`. Its GitHub workflows are inside the subfolder, so they do **not** run. Move `.github/` to the repo root only if you want them active. |
@@ -22,8 +22,8 @@ economics, first experiment) · dashboard: `python dashboard/build_dashboard.py`
 ```bash
 pip install -r requirements.txt
 python -m pytest -q quant/tests energy_audit/tests invoice_pipeline/tests
-cd quant && python -m xau.study          # regenerates quant/results/*
-python research/economics.py > research/economics.md
+cd quant && python -m xau.study && python -m xau.verify   # regenerates quant/results/*
+python research/pilot_economics.py > research/pilot_economics.md
 python -m energy_audit.optimizer energy_audit/examples/synthetic_restaurant.json
 ```
 

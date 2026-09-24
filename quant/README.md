@@ -4,12 +4,16 @@
 - `xau/engine.py`: numba event simulator for stop entries with TP/SL, spread, gaps, and WORST/PATH/BEST intrabar bounds
 - `xau/features.py`: daily features known at the close (no look-ahead)
 - `xau/study.py`: the full falsification battery (T1-T9) → `results/xau_study.md|json`
-- `REPORT_XAUUSD.md`: the written verdict (EXP-001: killed)
+- `xau/independent.py`: plain-Python re-implementation of the literal rule (cross-check of the engine)
+- `xau/verify.py`: cycle 02 verification and red team (V1-V12) → `results/xau_verify.md|json`
+- `REPORT_XAUUSD.md` (cycle 01) and `REPORT_XAUUSD_VERIFY.md` (cycle 02, in Spanish): **NO EDGE**
 
 ## Data (not committed; provider terms)
 Pull XAU/USD from Twelve Data (free plan: 8 credits/min, 800/day):
 - `1day`, outputsize 5000, end_date today, plus a second call ending where the first stops (back to 1995)
 - `1h`, outputsize 5000, in windows ending at successive dates back to 2020-01-24 (≈9 calls; each covers ~7-10 months)
+
+- `5min` (optional, for V4 intrabar calibration): outputsize 5000 per call covers only ~17 calendar days; step end dates by ≤15 days to avoid gaps
 
 Save each raw response (`{"result": "datetime;open;high;low;close\n..."}`) into one folder, then:
 ```bash

@@ -41,6 +41,17 @@ def valid_nif(raw: str) -> bool:
     return False
 
 
+# Regimes the pilot validator cannot check deterministically yet. They go straight to a human with
+# a specific reason instead of being escalated to a stronger model (which would fail the same checks).
+UNSUPPORTED_REGIMES = {"IGIC", "IPSI", "EXTRANJERO", "OTRO"}
+
+
+def unsupported_reason(inv: Invoice) -> str | None:
+    if inv.tax_regime in UNSUPPORTED_REGIMES:
+        return f"tax regime {inv.tax_regime} not supported by the pilot validator"
+    return None
+
+
 def check(inv: Invoice, today: date | None = None) -> tuple[list[str], list[str]]:
     """Return (errors, warnings). Any error means the extraction is not trusted."""
     errors, warnings = [], []
@@ -61,8 +72,11 @@ def check(inv: Invoice, today: date | None = None) -> tuple[list[str], list[str]
         errors.append(f"issue date '{inv.issue_date}' is not ISO YYYY-MM-DD")
     if not inv.vat_lines:
         errors.append("no VAT breakdown lines")
+    zero_vat_regime = inv.tax_regime in {"EXENTO", "INVERSION_SUJETO_PASIVO"}
     base_sum = vat_sum = surcharge_sum = 0.0
     for i, ln in enumerate(inv.vat_lines):
+        if zero_vat_regime and (ln.vat_rate != 0 or ln.vat_amount != 0):
+            errors.append(f"line {i}: {inv.tax_regime} invoice with non-zero VAT")
         if ln.vat_rate not in VAT_RATES:
             errors.append(f"line {i}: VAT rate {ln.vat_rate}% is not a Spanish rate")
         elif ln.vat_rate == 5.0:
@@ -76,9 +90,11 @@ def check(inv: Invoice, today: date | None = None) -> tuple[list[str], list[str]
         base_sum += ln.base; vat_sum += ln.vat_amount; surcharge_sum += ln.surcharge_amount
     if abs(base_sum * inv.withholding_rate / 100 - inv.withholding_amount) > TOL * max(1, len(inv.vat_lines)):
         errors.append(f"withholding {inv.withholding_rate}% of {base_sum:.2f} != {inv.withholding_amount}")
-    expected_total = base_sum + vat_sum + surcharge_sum - inv.withholding_amount
+    if inv.non_taxable_amount < 0:
+        warnings.append("negative suplidos amount")
+    expected_total = base_sum + vat_sum + surcharge_sum - inv.withholding_amount + inv.non_taxable_amount
     if abs(expected_total - inv.total) > TOL * max(1, len(inv.vat_lines)):
-        errors.append(f"total {inv.total} != bases+VAT+surcharge-withholding {expected_total:.2f}")
+        errors.append(f"total {inv.total} != bases+VAT+surcharge-withholding+suplidos {expected_total:.2f}")
     if inv.total < 0:
         warnings.append("negative total: credit note (factura rectificativa)?")
     return errors, warnings

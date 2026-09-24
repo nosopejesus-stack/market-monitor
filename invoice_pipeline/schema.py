@@ -1,4 +1,8 @@
+from typing import Literal
+
 from pydantic import BaseModel, Field
+
+TaxRegime = Literal["IVA", "IGIC", "IPSI", "EXENTO", "INVERSION_SUJETO_PASIVO", "EXTRANJERO", "OTRO"]
 
 
 class VatLine(BaseModel):
@@ -17,6 +21,10 @@ class Invoice(BaseModel):
     issue_date: str = Field(description="ISO date YYYY-MM-DD")
     concept: str = Field(description="Short description of what was bought")
     vat_lines: list[VatLine]
+    tax_regime: TaxRegime = Field(
+        "IVA", description="IVA (peninsula/Baleares), IGIC (Canarias), IPSI (Ceuta/Melilla), EXENTO, "
+        "INVERSION_SUJETO_PASIVO (reverse charge), EXTRANJERO (foreign supplier), OTRO")
+    non_taxable_amount: float = Field(0.0, description="Suplidos / amounts outside the tax base included in the total, 0 if none")
     withholding_rate: float = Field(0.0, description="IRPF retention percentage, 0 if none")
     withholding_amount: float = Field(0.0, description="IRPF retention amount in EUR, 0 if none")
     total: float = Field(description="Total amount payable in EUR")

@@ -1,5 +1,11 @@
 # Money Engine — Cycle 01 report (2026-09-24)
 
+> **Superseded in part by [Cycle 02](cycle-02.md) (2026-09-24).** Withdrawn or corrected: "~60,000 asesorías" (now ~54,000 in CNAE 692, SRC),
+> "77% <10 employees" (weak), "23% use AI" (contradicted: Wolters Kluwer barometer reports 7 in 10), "€800-2,000 implementations" (weak),
+> "59% margin at €0.20/invoice" (refuted by the cycle-02 model with realistic review rates), "≥97% accuracy as pass criterion on 20-50 invoices"
+> (statistically unprovable at that size). EXP-002 is **NO-GO**. The XAUUSD verdict is confirmed.
+
+
 ## 0. Executive summary
 
 | question | answer |
