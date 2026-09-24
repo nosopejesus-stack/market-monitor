@@ -17,8 +17,7 @@ MONEY_TILES = [
     ("paid_pilots", "Paid pilots", ""), ("prospects_contacted", "Prospects contacted", ""),
     ("variable_costs_eur", "Variable costs", "€"), ("ai_costs_eur", "AI costs", "€"),
     ("gross_margin_pct", "Gross margin", "%"), ("cac_eur", "CAC", "€"), ("payback_months", "Payback", "mo"),
-    ("churn_pct", "Churn", "%"), ("human_hours", "Human hours", ""),
-    ("revenue_per_human_hour_eur", "Revenue / human hour", "€"), ("ai_cost_per_accepted_invoice_eur", "AI cost / accepted invoice", "€"),
+    ("churn_pct", "Churn", "%"), ("ai_cost_per_accepted_invoice_eur", "AI cost / accepted invoice", "€"),
 ]
 STATUS_ICON = {"KILLED": "✕", "QUEUED": "…", "RUNNING": "▶", "PASSED": "✓"}
 
@@ -47,10 +46,7 @@ def build():
     tiles = "".join(tile(lbl, fmt(m[k]["value"], u), m[k]["kind"], m[k].get("note", "")) for k, lbl, u in MONEY_TILES if k in m)
     ptiles = "".join(tile(lbl, fmt(v, ""), "ACTUAL") for lbl, v in [
         ("Opportunities generated", p["opportunities_generated"]), ("Surviving", p["opportunities_surviving"]),
-        ("Validated (paid signal)", p["validated_opportunities"]), ("Active MVPs", p["active_mvps"]),
-        ("Prospects identified", p.get("prospects_identified", 0)), ("Prospects approved", p.get("prospects_approved", 0)),
-        ("Contacts made", p.get("contacts_made", 0)), ("Responses", p.get("responses", 0)),
-        ("Pilots", p.get("pilots", 0)), ("Paying customers", p.get("paying_customers", 0))])
+        ("Validated (paid signal)", p["validated_opportunities"]), ("Active MVPs", p["active_mvps"])])
     qtiles = "".join(tile(lbl, v, "ACTUAL") for lbl, v in [
         ("Strategies tested", fmt(q["strategies_tested"], "")),
         ("With validated edge", fmt(q["strategies_with_validated_edge"], "")),

@@ -9,7 +9,3 @@ runs/
 
 # market data from Twelve Data: not redistributed (provider terms); re-pull per quant/README.md
 quant/data/*.csv
-
-# PLACSP downloads and client job folders (tender pliegos, client profiles) never go in git
-placsp/
-jobs/
