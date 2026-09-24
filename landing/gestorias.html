@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Facturas de proveedor contabilizadas</title>
+<meta name="description" content="Piloto para gestorías: extracción y validación automática de facturas de proveedor, listas para importar en su programa contable.">
+<!-- DRAFT — NOT PUBLISHED. Replace [MARCA], [EMAIL] and [TELÉFONO] before any publication (owner approval required).
+     Claims policy: no customer counts, testimonials or accuracy figures until measured in EXP-002. -->
+<style>
+:root { color-scheme: light; --bg:#fcfcfb; --card:#fff; --line:#e4e3de; --text:#0b0b0b; --text2:#52514e; --accent:#2a78d6; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { color-scheme: dark; --bg:#1a1a19; --card:#232322; --line:#3a3a38; --text:#fff; --text2:#c3c2b7; --accent:#6ea8ef; } }
+:root[data-theme="dark"] { color-scheme: dark; --bg:#1a1a19; --card:#232322; --line:#3a3a38; --text:#fff; --text2:#c3c2b7; --accent:#6ea8ef; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font:17px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+main { max-width:760px; margin:0 auto; padding:40px 16px 64px; }
+h1 { font-size:34px; line-height:1.15; margin:0 0 12px; } h2 { font-size:21px; margin:40px 0 10px; }
+.lead { color:var(--text2); font-size:19px; }
+.steps { display:grid; gap:12px; padding:0; list-style:none; counter-reset:s; }
+.steps li { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px 14px 52px; position:relative; }
+.steps li::before { counter-increment:s; content:counter(s); position:absolute; left:16px; top:14px; font-weight:700; color:var(--accent); }
+.box { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:18px; }
+.cta { display:inline-block; margin-top:16px; background:var(--accent); color:#fff; padding:12px 20px; border-radius:8px; text-decoration:none; font-weight:600; }
+small { color:var(--text2); }
+</style></head><body><main>
+<p><small>[MARCA] · Piloto para gestorías y asesorías</small></p>
+<h1>Sus facturas de proveedor, extraídas y cuadradas. Usted solo revisa las excepciones.</h1>
+<p class="lead">Nos envía las facturas (PDF o foto). Le devolvemos un fichero listo para importar en su programa contable, con cada factura comprobada antes de llegar a usted.</p>
+
+<h2>Qué comprobamos en cada factura, sin excepción</h2>
+<ul>
+<li>NIF/CIF del emisor y del receptor, con su letra o dígito de control.</li>
+<li>Cada línea de IVA: base × tipo = cuota. Recargo de equivalencia y retención de IRPF si aparecen.</li>
+<li>Que bases + IVA + recargo − retención coincidan con el total.</li>
+<li>Fecha válida y tipos de IVA españoles.</li>
+</ul>
+<p>Si algo no cuadra, la factura <b>no</b> se contabiliza sola: va a su lista de revisión con el motivo exacto.</p>
+
+<h2>Cómo funciona el piloto</h2>
+<ol class="steps">
+<li>Nos pasa entre 20 y 50 facturas de un cliente (pueden ser antiguas o anonimizadas) y firmamos un encargo de tratamiento de datos.</li>
+<li>Las procesamos y le entregamos un informe: facturas correctas, facturas a revisar y comparación campo a campo con lo que usted ya contabilizó.</li>
+<li>Si el resultado le sirve, hacemos un mes de piloto con un cliente real y el formato de importación de su programa.</li>
+</ol>
+
+<div class="box">
+<b>Precio del piloto: 300 € (un cliente, un mes).</b><br>
+Después, si continúa: 0,20 € por factura aceptada, más la puesta en marcha para su programa contable.<br>
+<small>La prueba con sus 20-50 facturas es gratuita. Si no le convence, no paga nada.</small>
+</div>
+
+<h2>Lo que no hacemos</h2>
+<p>No prometemos porcentajes de acierto antes de probar con <i>sus</i> facturas. No guardamos sus documentos más tiempo del necesario. Nunca se contabiliza nada que no haya pasado todas las comprobaciones.</p>
+
+<a class="cta" href="mailto:[EMAIL]?subject=Piloto%20facturas%20de%20proveedor">Quiero probar con 20 facturas</a>
+<p><small>O llámenos: [TELÉFONO]</small></p>
+</main></body></html>

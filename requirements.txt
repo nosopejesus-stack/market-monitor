@@ -1,0 +1,8 @@
+# Money Engine (quant study, energy audit, invoice pipeline, dashboard)
+numpy>=1.26
+pandas>=2.2
+numba>=0.60
+pydantic>=2.7
+anthropic>=1.8
+pytest>=8
+# market_monitor_v1/ has its own requirements.txt

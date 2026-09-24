@@ -1,0 +1,103 @@
+id,domain,opportunity,payer,verdict,reason,basis
+1,Accounting,Gestoría supplier-invoice capture -> accounting entries (a3/Sage/Contasol),Gestorías / asesorías,SURVIVOR S1,"60k firms, 23% use AI, implementations sold at EUR 800-2,000; crowded but fragmented",evidence S1-S3
+2,Accounting,Gestoría bank reconciliation automation,Gestorías,MERGED into S1,Same buyer and pilot; Norma 43 files reduce the PDF-parsing pain in Spain,judgment
+3,Accounting,Bank statement PDF -> CSV converter SaaS,Bookkeepers (US/UK),KILL,"Commodity: DocuClipper from $20-29/mo plus many clones",evidence S4
+4,Compliance,Verifactu 2027 migration service for gestorías' client base,Gestorías / SMEs,SURVIVOR S3,"Hard deadline 1 Jan 2027 (companies) / 1 Jul 2027 (autónomos)",evidence S5
+5,Compliance,Verifactu-certified invoicing SaaS,SMEs,KILL,Every invoicing vendor ships this; no distribution edge,judgment
+6,Energy,Contracted-power audit for 3.0TD SMEs (success fee),"Restaurants, hotels, workshops, gyms",SURVIVOR S2,"Deterministic, customer data via Datadis/invoices, measurable EUR; small ticket (~EUR 100/client at 25% fee)",evidence S6-S9
+7,Energy,Reactive-energy penalty removal (capacitor banks),SMEs with inductive loads,MERGED into S2,Upsell inside the same audit; needs installer partner,judgment
+8,Energy,Retail electricity contract switching (broker commissions),SMEs,KILL,Crowded broker market paid by retailers; conflict of interest; no edge,evidence S7
+9,Energy,Solar self-consumption sizing reports,SMEs/homes,KILL,Installers give it away free as sales tool,judgment
+10,Public sector,AI-assisted bid writing (memorias técnicas) studio,Construction/cleaning/IT SMEs bidding tenders,SURVIVOR S4,"EUR 350-5,000 per memoria with success component; AI tools emerging (Noetia, LicitaIA)",evidence S10
+11,Public sector,Tender alert SaaS,SMEs,KILL,"Crowded: LicitaFacil, LicitaAlerta, Gobierto, Licitaciones.es, Quiero Licitar",evidence S11
+12,Public sector,Price-to-win analytics from awarded-contract data (PLACSP),Bidders,SURVIVOR S9 (compounding),"Open data, hard to process; value in interpretation not alerts; demand UNVERIFIED",judgment
+13,Grants,Grant (subvención) matching + application service,SMEs,SURVIVOR S5,"Success fees 10-25% (smaller grants); cash arrives slowly after concession",evidence S12
+14,Grants,Grant database SaaS,SMEs,KILL,Fandit and BDNS free search cover it,evidence S12
+15,Trading,XAUUSD sell-stop after bullish close (user hypothesis),Own capital,KILL (EXP-001),"No edge: WR 68.8% vs 69.5% breakeven, -0.02R/trade after spread",this repo quant/
+16,Trading,XAUUSD 'skip large bullish bodies' filter,Own capital,RESEARCH (paper only),"Relative effect replicated 2006-2019; absolute +0.05R, t~1.5, not proven",this repo quant/
+17,Trading,Prop-firm drawdown guard EA,Prop traders,KILL,Free open-source versions published on MQL5 this month,evidence S13
+18,Trading,Strategy falsification reports for retail/prop traders,Retail traders,SURVIVOR S6,"Engine already built; WTP low ($30-125 MQL5 jobs, up to ~$1.2k Upwork)",evidence S14
+19,Trading,Trading journal SaaS,Retail traders,KILL,"TradeZella $35-99/mo with prop sync, AI, backtesting; saturated",evidence S15
+20,Trading,Signal-selling / copy-trading,Retail,KILL,Regulatory risk (investment advice) and no validated edge,judgment
+21,Trading,Monte-Carlo prop-challenge pass-probability calculator,Prop traders,KILL,Many free calculators; low WTP,judgment
+22,Trading,Gold/FX economic-calendar event-risk dataset,Traders,KILL,Free calendars abundant; no proprietary angle,judgment
+23,Trading,Market-monitor daily email (existing repo),User,REWORK,"Directional score is mostly noise (see red-team); keep as calendar/volatility brief",this repo
+24,Ecommerce,Chargeback dispute automation,Merchants,KILL,"Chargeflow 25% of recovered, 4x ROI guarantee, global",evidence S16
+25,Ecommerce,Chargeback handling for Redsys (Spanish bank POS) merchants,Spanish merchants,SURVIVOR S10 (low confidence),"Plausible gap (bank portals, manual); demand and access UNVERIFIED",judgment
+26,Ecommerce,Marketplace payout reconciliation for Spanish accounting,Ecommerce SMEs,KILL,"Accountali, Netto, Datali, Holded already serve Spain",evidence S17
+27,Ecommerce,A2X-style reconciliation (US/UK),Sellers,KILL,A2X from $29/mo; Link My Books; saturated,evidence S18
+28,Ecommerce,Amazon FBA reimbursement audits,Amazon sellers,KILL,"Crowded (Getida etc.), platform dependency",judgment
+29,Ecommerce,Competitor price monitoring,Ecommerce,KILL,Prisync etc.; commodity,judgment
+30,Ecommerce,Product feed/catalog enrichment with AI,Merchants,KILL,Crowded; platform apps,judgment
+31,Ecommerce,Shopify customer-support agent,Merchants,KILL,Crowded; platform-native AI,judgment
+32,Ecommerce,Returns fraud detection,Merchants,KILL,Needs large data; enterprise sales,judgment
+33,Real estate,NRUA short-term-rental registration service,Holiday-rental owners,KILL,Supreme Court annulled NRUA (STS 19 May 2026),evidence S19
+34,Real estate,VUT regional licence paperwork,Holiday-rental owners,KILL,Regional fragmentation; gestorías already do it; one-off,judgment
+35,Real estate,Rental listing compliance monitor for agencies,Agencies,KILL,Driver (NRUA) removed,evidence S19
+36,Real estate,Property management back-office automation,Property managers,SURVIVOR S11,"Recurring admin (invoices, community fees); same pipeline as S1; demand UNVERIFIED",judgment
+37,Real estate,Plusvalía municipal refund claims,Property sellers,KILL,Legal service; window closing; lawyers dominate,judgment
+38,Real estate,Mortgage broker lead gen,Brokers,KILL,Regulated credit intermediation; crowded,judgment
+39,Insurance,Certificate-of-insurance tracking (US),US GCs/property mgrs,KILL,No distribution from Spain; incumbents,judgment
+40,Insurance,Claims document intake for brokers,Insurance brokers,SURVIVOR S12,"Document-heavy, same extraction core; demand UNVERIFIED",judgment
+41,Insurance,Policy comparison for SMEs,SMEs,KILL,Regulated distribution (brokerage licence),judgment
+42,Logistics,Parcel late-delivery refund audits,Shippers,KILL,Guarantees suspended by carriers in many services; US-centric,judgment
+43,Logistics,Freight invoice audit,Shippers,KILL,Enterprise sales; incumbents,judgment
+44,Logistics,Customs HS-code classification assistant,Exporters/customs brokers,KILL,Liability for misclassification; incumbents; needs licensed broker,judgment
+45,Logistics,Carrier vetting for freight brokers,Brokers (US),KILL,US market; incumbents,judgment
+46,Compliance,CBAM declarant-as-a-service,Importers >=50 t CBAM goods,SURVIVOR S7,"Definitive regime since 1 Jan 2026; declarations delegable to EU third party; first surrender Sep 2027",evidence S20
+47,Compliance,EUDR due-diligence statements,"Coffee/cocoa/wood/rubber importers",SURVIVOR S8,"Applies 30 Dec 2026 (large/medium), 30 Jun 2027 (micro/small); delayed twice = risk",evidence S21
+48,Compliance,EU AI Act readiness audits,SMEs,KILL,Timelines in flux; buyers not yet obligated; crowded consultancies,judgment
+49,Compliance,NIS2 readiness,Mid-size firms,KILL,Security consultancies dominate; credibility barrier,judgment
+50,Compliance,GDPR cookie/privacy compliance,SMEs,KILL,Commodity (CMPs),judgment
+51,Compliance,AML/KYC onboarding for small obligated entities,"Gestorías, real-estate agents",KILL,High liability; needs regulated partners,judgment
+52,Compliance,Sanctions screening micro-SaaS,Exporters,KILL,Commodity APIs,judgment
+53,HR,Payroll/nómina incident automation for gestorías,Gestorías (laboral),SURVIVOR S13,"Same buyer as S1; labour side is heavy and recurring; demand UNVERIFIED",judgment
+54,HR,Recruiting sourcing agent,Agencies,KILL,Crowded; platform ToS risk (LinkedIn),judgment
+55,HR,Employee time-tracking compliance (registro de jornada),SMEs,KILL,Commodity apps,judgment
+56,Legal,Contract review for SMEs,SMEs,KILL,Legal-advice liability; incumbents,judgment
+57,Legal,Law-firm intake agent,Law firms,KILL,Crowded; regulated,judgment
+58,Legal,Court-deadline tracking (LexNET) for small firms,Lawyers,KILL,Integration access unclear; incumbents,judgment
+59,Healthcare,AI receptionist for clinics (Spain),Dental/physio clinics,KILL,"Commoditised at EUR 29-55/mo (Ringuno, Clinicbot, Clara)",evidence S22
+60,Healthcare,Medical billing denials (US),US providers,KILL,HIPAA; US distribution,judgment
+61,Healthcare,Clinic review/reputation management,Clinics,KILL,Commodity,judgment
+62,Sales,B2B leads from BORME new companies,Service providers,KILL,"Free/near-free (LibreBORME, Telegram bots, Apify)",evidence S23
+63,Sales,Cold-email outbound agency,SMEs,KILL,LSSI consent rules for commercial email in Spain; spam risk,judgment
+64,Sales,Meeting-booking SDR agent,B2B SaaS,KILL,Crowded; deliverability arms race,judgment
+65,Sales,CRM data hygiene service,SMEs,KILL,Low pain for small firms,judgment
+66,Sales,Renewal/upsell alerts for agencies,Agencies,KILL,Weak pain,judgment
+67,Marketing,SEO content agency with AI,SMEs,KILL,Race to the bottom,judgment
+68,Marketing,Local Google Business Profile management,Local SMEs,KILL,Commodity,judgment
+69,Marketing,Ad creative generation,Ecommerce,KILL,Platform-native tools,judgment
+70,Operations,Automation audits for SMEs (generic),SMEs,MERGED into S1/S2,Generic audits sell poorly; vertical audits sell,judgment
+71,Operations,Procurement spend analysis for mid-size firms,CFOs,SURVIVOR S14,"Recovery-audit model (duplicate/overpayments) exists internationally; Spain demand UNVERIFIED",judgment
+72,Operations,Telecom expense audit,SMEs,KILL,Small savings; operator bundles,judgment
+73,Operations,SaaS spend management,Mid-size firms,KILL,Crowded (Vendr etc.),judgment
+74,Operations,Utility bill (water/gas) audit,SMEs,MERGED into S2,Same channel,judgment
+75,Operations,Fleet fuel card anomaly detection,Transport SMEs,KILL,Card providers offer it,judgment
+76,Construction,Subcontractor document compliance (TC2/REA),Construction firms,KILL,Established CAE platforms (e.g. coordination tools); UNVERIFIED gap,judgment
+77,Construction,Certificaciones de obra (progress billing) automation,Contractors,KILL,Deep ERP integration; long sales,judgment
+78,Construction,Bid cost estimation from plans,Contractors,KILL,Hard technically; liability,judgment
+79,Hospitality,Restaurant supplier invoice + food cost control,Restaurants,MERGED into S1/S12,Same extraction core; sells via gestorías,judgment
+80,Hospitality,Hotel rate parity monitoring,Hotels,KILL,Channel managers include it,judgment
+81,Hospitality,Review response agent,Hotels/restaurants,KILL,Commodity,judgment
+82,Dev tools,MCP server building service for SaaS vendors,SaaS companies,KILL,Demand real but competitive; no distribution edge from here,judgment
+83,Dev tools,AI agent eval/testing SaaS,AI teams,KILL,"Crowded, well funded incumbents",judgment
+84,Dev tools,Prompt-injection scanning,AI teams,KILL,"Crowded; big vendors",judgment
+85,Dev tools,LLM cost observability,AI teams,KILL,Crowded,judgment
+86,Dev tools,Legacy code migration (COBOL etc.),Enterprises,KILL,Enterprise sales cycle,judgment
+87,Data,Spanish company financials (depósito de cuentas) extraction,Credit analysts,KILL,"Incumbents (eInforma, Axesor, Iberinform)",judgment
+88,Data,Spanish regulatory change monitor (BOE) by sector,Compliance teams,KILL,Many free/paid alerts; low differentiation,judgment
+89,Data,Commodity/energy price intelligence for SMEs,SMEs,KILL,Free public OMIE data; low WTP,judgment
+90,Data,Retail shelf-price scraping,CPG brands,KILL,ToS/legal risk; incumbents,judgment
+91,Data,Job-postings intelligence,Recruiters,KILL,Incumbents,judgment
+92,Fintech,Invoice factoring marketplace,SMEs,KILL,Regulated; capital intensive,judgment
+93,Fintech,Late-payment collection (reclamación de impagos) automation,SMEs,KILL,Regulated debt collection; reputational risk,judgment
+94,Fintech,Treasury cash-forecast for SMEs,SMEs,KILL,Banks/ERPs include it,judgment
+95,Fintech,Crypto tax reports (Spain),Individuals,KILL,Regulated advice; incumbents,judgment
+96,Education,Exam-prep (oposiciones) AI tutor,Candidates,KILL,Crowded academies; B2C CAC,judgment
+97,Agriculture,CAP/PAC subsidy paperwork,Farmers,KILL,Agricultural cooperatives and gestorías dominate,judgment
+98,Agriculture,Irrigation energy optimisation,Farms,MERGED into S2,Same power-audit logic (6.1TD),judgment
+99,Automotive,Workshop parts invoice automation,Car workshops,MERGED into S1,Sell via gestorías,judgment
+100,Public sector,Municipal fine/tax appeal automation,Individuals,KILL,Legal service; low ticket,judgment
+101,Energy,Energy communities (comunidades energéticas) admin,Coops,KILL,Small market; grant-dependent,judgment
+102,Trading,Prop-firm rule-compliance audit of trade history,Prop traders,MERGED into S6,Same buyer and tooling,judgment

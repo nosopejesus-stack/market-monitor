@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+# customer documents and pipeline outputs must never be committed
+samples/
+runs/
+*.jsonl
+.env
+
+# market data from Twelve Data: not redistributed (provider terms); re-pull per quant/README.md
+quant/data/*.csv
