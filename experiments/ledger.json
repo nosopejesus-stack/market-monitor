@@ -1,6 +1,6 @@
 {
   "_doc": "Single source of truth for experiments and money metrics. Every metric carries a 'kind': ACTUAL (measured), ESTIMATE, or ASSUMPTION. Dashboard: python dashboard/build_dashboard.py",
-  "updated": "2026-09-24 (cycle 02)",
+  "updated": "2026-09-24 (cycle 03)",
   "money": {
     "revenue_eur": {
       "value": 0,
@@ -57,13 +57,28 @@
       "value": null,
       "kind": "ACTUAL",
       "note": "not measured; cycle-01 estimate withdrawn as headline metric — total cost per accepted invoice is dominated by human review (research/pilot_economics.md)"
+    },
+    "human_hours": {
+      "value": 0,
+      "kind": "ACTUAL"
+    },
+    "revenue_per_human_hour_eur": {
+      "value": null,
+      "kind": "ACTUAL",
+      "note": "no revenue yet"
     }
   },
   "pipeline": {
     "opportunities_generated": 102,
-    "opportunities_surviving": 13,
+    "opportunities_surviving": 5,
     "validated_opportunities": 0,
-    "active_mvps": 2
+    "active_mvps": 1,
+    "prospects_identified": 14,
+    "prospects_approved": 0,
+    "contacts_made": 0,
+    "responses": 0,
+    "pilots": 0,
+    "paying_customers": 0
   },
   "quant": {
     "strategies_tested": 1,
@@ -75,7 +90,7 @@
     {
       "id": "EXP-001",
       "date": "2026-09-24",
-      "status": "KILLED (verified cycle 02)",
+      "status": "ARCHIVED — NO EDGE",
       "hypothesis": "XAUUSD SELL STOP 708 pts below a bullish daily close, TP 708 / SL 1616, has positive expectancy",
       "market": "XAUUSD (own/prop capital)",
       "customer": "self",
@@ -92,7 +107,7 @@
     {
       "id": "EXP-002",
       "date": "2026-09-24",
-      "status": "KILLED - NO-GO (cycle 02, before any contact)",
+      "status": "FROZEN — NO-GO",
       "hypothesis": "Small Spanish gestorías pay EUR 300 pilot then EUR 0.20/accepted invoice for supplier-invoice extraction at >=97% field accuracy",
       "market": "Spain accounting firms",
       "customer": "gestoría 2-10 staff",
@@ -143,7 +158,7 @@
     {
       "id": "EXP-005",
       "date": "2026-09-24",
-      "status": "PROPOSED - research only, awaiting approval",
+      "status": "FROZEN",
       "hypothesis": "Gestorías face a paid, deadline-driven problem adapting SME clients to mandatory B2B e-invoicing (RD 238/2026) that incumbents do not already cover",
       "market": "Spain accounting firms",
       "customer": "gestorías",
@@ -155,7 +170,25 @@
       "failure_reason": null,
       "pass": "a specific unserved, paid task with a named buyer and a verifiable price anchor",
       "kill": "editors/platforms already bundle it, or no paid task beyond software upgrades",
-      "next_action": "owner decides whether to run cycle 03"
+      "next_action": "only if new evidence of a defensible e-invoicing opportunity appears"
+    },
+    {
+      "id": "EXP-006",
+      "date": "2026-09-24",
+      "status": "READY — awaiting step 1 (no contact) and approval for step 2",
+      "hypothesis": "A facility-services SME bidding on a public tender where the technical memoria weighs >=15-20 points will pay EUR 390 for an AI-drafted, human-reviewed memoria with exclusion QA",
+      "market": "Spain public tenders (cleaning/gardening/maintenance)",
+      "customer": "SME bidders 5-100 staff",
+      "problem": "memoria técnica under deadline; exclusion risk",
+      "method": "PLACSP discovery (open tender x local past winner) -> 45s call -> offer -> concierge delivery in-session",
+      "cost_eur": 0,
+      "budget_eur": 0,
+      "result": null,
+      "evidence": "reports/cycle-03.md; tender_agent/; outreach/memorias.md",
+      "failure_reason": null,
+      "pass": "first paid job (EUR 390) within 30 qualified conversations; <=180 human minutes; client rating >=4/5",
+      "kill": "0 paid jobs after 30 qualified conversations OR >6 h human time per memoria after 3 jobs OR rating <4/5",
+      "next_action": "owner runs step 1 (PLACSP download + discovery script, no contact)"
     }
   ]
 }

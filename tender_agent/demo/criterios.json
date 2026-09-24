@@ -1,0 +1,22 @@
+{
+  "tender_title": "EJEMPLO SINTÉTICO — Servicio de limpieza de colegios públicos y escuelas infantiles municipales",
+  "buyer": "Ayuntamiento de Villa Ejemplo",
+  "company_name": "Limpiezas Ejemplo, S.L.",
+  "names_not_allowed": [],
+  "judgment_points_total": 35,
+  "formula_points_total": 65,
+  "limits": {"max_pages": 15, "words_per_page": 450},
+  "criteria": [
+    {"id": "C1", "name": "Organización y planificación del servicio", "points": 15, "type": "juicio_valor",
+     "must_include": ["cronograma", "frecuencias", "turnos", "sustituciones", "absentismo"], "source": "Cl. 12 A.1"},
+    {"id": "C2", "name": "Medios materiales y productos", "points": 8, "type": "juicio_valor",
+     "must_include": ["maquinaria", "etiqueta ecológica", "fichas técnicas", "dosificación"], "source": "Cl. 12 A.2"},
+    {"id": "C3", "name": "Control de calidad", "points": 7, "type": "juicio_valor",
+     "must_include": ["indicadores", "inspecciones", "incidencias"], "source": "Cl. 12 A.3"},
+    {"id": "C4", "name": "Formación y prevención de riesgos laborales", "points": 5, "type": "juicio_valor",
+     "must_include": ["plan de formación", "prevención"], "source": "Cl. 12 A.4"},
+    {"id": "F1", "name": "Precio", "points": 55, "type": "formula", "keywords": ["precio"], "source": "Cl. 12 B.1"},
+    {"id": "F2", "name": "Bolsa de horas sin coste", "points": 5, "type": "formula", "keywords": ["bolsa de horas", "horas sin coste", "horas gratuitas"], "source": "Cl. 12 B.2"},
+    {"id": "F3", "name": "Plazo de respuesta ante urgencias", "points": 5, "type": "formula", "keywords": ["plazo de respuesta", "tiempo de respuesta"], "source": "Cl. 12 B.3"}
+  ]
+}
