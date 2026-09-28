@@ -1,6 +1,6 @@
 ---
 fecha: 2026-09-28
-estado: propuesta (pendiente de validar con 25 conversaciones)
+estado: aparcada (el proyecto principal es Arcend, clínicas estéticas)
 actualizada: 2026-09-28 (promesa reformulada tras investigación y dos revisiones)
 ---
 # Negocio: respuesta inmediata a leads para inmobiliarias de Madrid

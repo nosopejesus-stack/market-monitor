@@ -1,4 +1,5 @@
 # Plan: respuesta inmediata a leads para inmobiliarias de Madrid
+> **APARCADO (2026-09-28):** el proyecto principal es Arcend (clínicas estéticas). Este plan se conserva por si se reutilizan piezas.
 
 ## Qué vendemos
 A inmobiliarias pequeñas y medianas de Madrid (1-15 agentes): **cada lead de Idealista, Fotocasa o su web

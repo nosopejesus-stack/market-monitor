@@ -21,3 +21,4 @@ Lecciones que los agentes y tú hemos aprendido. Cada lección es una nota en es
 | 2026-09-28 | [[2026-09-28 Demos comerciales seguras y honestas]] | #demo #seguridad |
 | 2026-09-28 | [[2026-09-28 Prospección desde el contenedor cloud]] | #entorno #prospeccion |
 | 2026-09-28 | [[2026-09-28 Commits con agentes en paralelo y frontmatter de agentes]] | #proceso #git #agentes |
+| 2026-09-28 | [[2026-09-28 Revisar proyectos previos antes de proponer negocio]] | #proceso #negocio |
