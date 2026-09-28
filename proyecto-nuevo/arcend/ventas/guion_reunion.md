@@ -1,12 +1,15 @@
 # Guion de reunión con el/la titular (10-12 min)
 
-Lleva: **el informe impreso de su clínica** (con capturas de su propia web/redes y fecha), 2 copias de
-`oferta_una_pagina.md` rellenada, 2 copias de `contrato_blindaje.md` rellenado y un bolígrafo.
-Nada de portátil ni de explicar el método.
+Lleva: **el informe PREVIO impreso de su clínica** (`python blindaje.py URL --nombre "X" --previo`: los N
+puntos con su norma y gravedad, **sin textos corregidos**), fotos de las páginas afectadas con fecha **hechas
+por ti con el móvil** (la herramienta no genera capturas), 2 copias de `oferta_una_pagina.md` rellenada,
+2 copias de `contrato_blindaje.md` rellenado y un bolígrafo. Nada de portátil ni de explicar el método.
+El informe completo con los textos corregidos **no se lleva**: es el entregable de los 390 € y se genera
+solo tras el cobro.
 
 Cifras (iguales en todo el kit): **390 €** corrección, pago único al firmar · **190 €/mes** vigilancia,
-por adelantado, **sin permanencia**, preaviso 15 días · entrega en **5 días hábiles** desde el cobro
-(propuesta interna, confirmar) · precios **sin IVA** (con IVA 21 %: 471,90 € y 229,90 €).
+por adelantado, **sin permanencia**, preaviso 15 días · entrega en **5 días hábiles** desde el cobro ·
+precios **sin IVA** (con IVA 21 %: 471,90 € y 229,90 €; el importe exacto a cobrar es el de la factura).
 
 ## Reglas
 
@@ -29,32 +32,36 @@ Pregunta de contexto (escucha, 20 s): "¿Quién le lleva la web y las redes: alg
 
 ## 1. Los 3 hallazgos principales (4-5 min)
 
-Enseña **captura impresa** de cada uno. Para cada hallazgo, tres frases: **qué es · qué dice la norma ·
-cómo se corrige**. Elige los 3 más graves del informe de esa clínica; no leas los N.
+Enseña el hallazgo en el informe previo (y la foto que hiciste con el móvil, si la tienes). Para cada
+hallazgo, tres frases: **qué es · qué dice la norma · qué gravedad tiene**. Elige los 3 más graves del
+informe de esa clínica; no leas los N. **No des el texto corregido**: eso es lo que se paga.
 
-Plantilla por hallazgo (rellena con lo que **de verdad** dice su informe):
+Plantilla por hallazgo (rellena con lo que **de verdad** dice su informe previo):
 > "Primero: aquí, en {página/publicación, fecha}, aparece {texto literal}. La norma {norma} no lo permite
-> porque {motivo en una frase}. Se corrige así: {texto corregido}. Es un cambio de {minutos}."
+> porque {motivo en una frase}. Gravedad {gravedad}. Tiene arreglo sencillo; el texto corregido va en la
+> corrección."
 
 Tipos de hallazgo habituales (referencias en `investigacion/mercado.md`; úsalos solo si están en su informe):
 - **Medicamentos con receta** (toxina botulínica: "bótox", marcas, precios por zona, bonos o hashtags):
-  prohibida su publicidad al público (RD 1416/1994 y RDL 1/2015). Es lo que más se sanciona.
+  prohibida su publicidad al público (RD 1416/1994 y RDL 1/2015). Es el punto de más riesgo.
 - **Falta del nº de registro sanitario** del centro en la publicidad (Decreto 51/2006 de la Comunidad de Madrid).
 - **Promesas de resultado, "sin riesgo", "sin dolor garantizado", testimonios** (RD 1907/1996, art. 4).
 - **Fotos de antes/después de pacientes**: el riesgo es de protección de datos si no hay consentimiento
   específico (hubo una sanción de la AEPD de 10.000 € a una clínica en 2024, dato de prensa SIN VERIFICAR
   en fuente oficial). Aquí no afirmes que la foto es ilegal: pregunta si tienen ese consentimiento.
 
-> "En total son {N} puntos; están todos en el informe con su corrección. Estos tres son los que yo
-> quitaría esta semana."
+> "En total son {N} puntos; están todos en el informe con su norma y su gravedad. Estos tres son los que
+> yo quitaría esta semana."
 
-## 2. Por qué importa: el caso 90.001 € → 6.000 € (1-2 min)
+## 2. Por qué importa: el caso publicado (1-2 min)
 
-> "No se lo digo para asustarle; la mayoría de clínicas nunca recibe un requerimiento. Pero cuando pasa,
-> la publicidad de medicamentos con receta se trata como infracción muy grave, **desde 90.001 €**.
-> Hay un caso publicado por un despacho de abogados: una clínica a la que propusieron 90.001 € y que
-> acabó pagando **6.000 €**, porque ya había retirado esos contenidos y había consultado a la Consejería
-> antes de la resolución. Corregir antes, y poder demostrarlo, cambió el resultado."
+**[VERIFICAR fuente antes de usar este bloque; si no se ha verificado, se omite.]**
+
+> "No se lo digo para asustarle; la mayoría de clínicas nunca recibe un requerimiento. Pero la publicidad
+> de medicamentos con receta puede dar lugar a sanciones que pueden llegar a importes muy altos (en casos
+> publicados, 90.001 €). Hay un caso publicado por un despacho de abogados: una clínica a la que propusieron
+> 90.001 € y que acabó pagando **6.000 €**, porque ya había retirado esos contenidos y había consultado a la
+> Consejería antes de la resolución. Corregir antes, y poder demostrarlo, cambió el resultado."
 
 Notas internas (no se dicen así):
 - Fuente: caso de reducción publicado por JL Casajuana Abogados (enlace en `investigacion/mercado.md`).
@@ -93,9 +100,10 @@ Calla y espera.
   > y me dice sí o no?" — fecha y hora concretas; en notas.
 - **No** → "Gracias por el tiempo. ¿Qué tendría que ser distinto para que le interesara?" Literal en notas, `perdido`.
 
-El informe impreso **se lo queda solo si firma**; los textos corregidos se entregan en 5 días hábiles desde
-el cobro. Si no firma, ha visto las capturas y los hallazgos, pero el informe completo y las correcciones
-son el entregable de los 390 €. (Si pide el resumen de una página, sí se le deja.)
+El informe completo con los textos corregidos se genera **solo tras el cobro** y se entrega en 5 días
+hábiles desde el cobro: es el entregable de los 390 €. Si no firma, ha visto el informe previo (puntos,
+norma y gravedad); puede quedárselo, porque no contiene correcciones. (Si pide el resumen de una página,
+también se le deja.)
 
 ## 5. Objeciones (respuestas honestas)
 
@@ -106,8 +114,10 @@ son el entregable de los 390 €. (Si pide el resumen de una página, sí se le 
 
 **2. "Nunca me han multado."**
 > "Me alegro, y es lo normal: se sanciona a pocas clínicas. Funciona como un seguro: la probabilidad es baja,
-> pero la infracción de medicamentos con receta empieza en 90.001 €. Por 390 € quita lo que hoy está a la
-> vista de cualquier inspector y deja constancia de que lo corrigió."
+> pero la publicidad de medicamentos con receta puede dar lugar a sanciones que pueden llegar a importes
+> muy altos (en casos publicados, 90.001 €). Por 390 € quita lo que hoy está a la vista de cualquier
+> inspector y deja constancia de que lo corrigió."
+> [VERIFICAR fuente antes de usar la cifra; si no está verificada, di solo "importes muy altos".]
 
 **3. "Lo corrijo yo."**
 > "Puede hacerlo, y el resumen se lo dejo. Lo que le entrego por 390 € son los textos ya reescritos, uno por
@@ -115,7 +125,9 @@ son el entregable de los 390 €. (Si pide el resumen de una página, sí se le 
 > no se deje los hashtags y las publicaciones antiguas de redes, que es donde más se suele quedar."
 
 **4. "Es caro."**
-> "Es un pago único de 390 €. La vigilancia es opcional y sin permanencia. Frente a una sanción que empieza en 90.001 €, no me parece caro; pero usted decide."
+> "Es un pago único de 390 €. La vigilancia es opcional y sin permanencia. Frente a sanciones que pueden
+> llegar a importes muy altos (en casos publicados, 90.001 €), no me parece caro; pero usted decide."
+> [VERIFICAR fuente antes de usar la cifra.]
 > No bajes el precio en la primera reunión. Si insiste, puedes empezar solo por la corrección, sin vigilancia.
 
 **5. "Mándame información."**
@@ -126,7 +138,7 @@ son el entregable de los 390 €. (Si pide el resumen de una página, sí se le 
 **6. "¿Quién eres tú?" / "¿Tenéis clientes?"**
 > "{tu_nombre}, de Arcend. Nos dedicamos solo a revisar y corregir la publicidad de clínicas de medicina
 > estética. Le digo la verdad: estamos empezando y usted estaría entre las primeras clínicas. Por eso es
-> un pago pequeño, sin permanencia, y el informe lo tiene delante antes de pagar nada."
+> un pago pequeño, sin permanencia, y los puntos los tiene delante antes de pagar nada."
 > **Nunca inventes clientes, nombres ni resultados.**
 
 **7. "¿Sois abogados?"**
@@ -148,7 +160,8 @@ Otras:
 ## Después de la reunión (mismo día)
 
 - `embudo.csv`: fila `reunion` (resultado y objeción principal) y, si procede, `firmado`.
-- Si firmó: enviar los datos de la transferencia de 390 € y la copia digital del informe **solo por el canal
-  que haya aceptado** (email o WhatsApp, `mensaje_whatsapp_confirmacion.md`). Los textos corregidos, en
-  5 días hábiles desde que llegue el pago. Fila `cobrado` al recibirlo.
+- Si firmó: enviar los datos de la transferencia (importe total de la factura) **solo por el canal que haya
+  aceptado** (email o WhatsApp, `mensaje_whatsapp_confirmacion.md`). Fila `cobrado` al recibirlo. Solo
+  entonces se genera el informe completo con los textos corregidos (sin `--previo`) y se entrega en
+  5 días hábiles desde el cobro.
 - Contador de condiciones de muerte: **0 firmas tras 8 reuniones** con el informe delante → parar y revisar la oferta.

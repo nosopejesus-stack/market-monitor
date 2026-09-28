@@ -55,7 +55,7 @@ paneles ni datos del CLIENTE, ni realiza pruebas técnicas sobre ellos.
 ### Segunda. Entrega
 
 1. El servicio A se entrega por escrito en un plazo de **5 días hábiles** desde la recepción del pago de la
-   cláusula cuarta.1. **SIN VERIFICAR:** plazo propuesto; confirmar antes de la primera firma.
+   cláusula quinta.1.
 2. La vigilancia (servicio B), si se contrata, empieza el día de entrega del servicio A. Cada informe mensual se
    entrega en los {n} días hábiles siguientes a la fecha de revisión.
 3. Las entregas se envían a {email_cliente} o por el canal que el CLIENTE indique por escrito.

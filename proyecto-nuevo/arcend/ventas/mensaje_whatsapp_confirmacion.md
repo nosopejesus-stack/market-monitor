@@ -8,9 +8,9 @@ Los envía **el usuario desde su móvil**; el equipo solo los prepara.
   anotado en `embudo.csv` como `whatsapp_ok`). Nunca al número de la clínica sin ese permiso ni a números
   sacados de internet. Nada de mensajes comerciales no solicitados (LSSI).
 - **Cortos**, sin "IA", sin explicar el método, sin alarmismo.
-- **El informe y los textos corregidos solo se envían tras la aceptación** (contrato firmado); los textos
-  corregidos, además, en 5 días hábiles desde el pago. Antes de firmar, como mucho el resumen de una página
-  si lo han pedido.
+- **El informe completo con los textos corregidos solo se genera y se envía tras el cobro**, en 5 días
+  hábiles desde el pago. Antes de firmar, como mucho el informe previo (`--previo`: puntos, norma y
+  gravedad, sin correcciones) o el resumen de una página, y solo si lo han pedido.
 - No enviar por WhatsApp nada que contenga imágenes de pacientes: en ese caso, email.
 - Cifras iguales que el resto del kit: 390 € + IVA (corrección), 190 €/mes + IVA (vigilancia, sin permanencia,
   preaviso 15 días).
@@ -33,18 +33,20 @@ Los envía **el usuario desde su móvil**; el equipo solo los prepara.
 ## 4. Tras la firma: datos de pago (solo tras aceptación)
 
 > Dr./Dra. {apellido}, gracias por la confianza. Le dejo los datos para la transferencia de la corrección:
-> 390 € + IVA (471,90 €), IBAN {IBAN_prestador}, concepto "{nombre_clinica} corrección". Le envío la factura a
+> 390 € + IVA ({importe_total_factura}), IBAN {IBAN_prestador}, concepto "{nombre_clinica} corrección". Le envío la factura a
 > {email_cliente}. En 5 días hábiles desde que llegue el pago tendrá todos los textos corregidos.
 
-## 5. Envío del informe (solo tras aceptación y por el canal aceptado)
+## 5. Envío del informe previo (solo si lo han pedido y por el canal aceptado)
 
-> Dr./Dra. {apellido}, le adjunto el informe de revisión de la publicidad de {nombre_clinica} con fecha
-> {fecha_revision}. Recuerde que no es asesoramiento jurídico: si algún punto le genera dudas, conviene
+El informe completo con los textos corregidos no va aquí: se genera tras el cobro y se entrega con el mensaje 6.
+
+> Dr./Dra. {apellido}, le adjunto el informe previo de revisión de la publicidad de {nombre_clinica} con fecha
+> {fecha_revision}: los puntos detectados, la norma de cada uno y su gravedad. Recuerde que no es asesoramiento jurídico: si algún punto le genera dudas, conviene
 > validarlo con su asesor.
 
 ## 6. Entrega de los textos corregidos (en 5 días hábiles desde el pago)
 
-> Dr./Dra. {apellido}, aquí tiene los textos corregidos, ordenados por página y publicación. Cuando usted o su
+> Dr./Dra. {apellido}, aquí tiene el informe completo con los textos corregidos, ordenados por página y publicación. Cuando usted o su
 > agencia los hayan publicado, avíseme y compruebo que ha quedado todo bien y le dejo la constancia fechada.
 
 ## 7. Oferta de vigilancia (al entregar la corrección, si no la contrató)

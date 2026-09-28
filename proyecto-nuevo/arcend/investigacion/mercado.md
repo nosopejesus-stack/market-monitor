@@ -1,4 +1,5 @@
 ---
+> **Nota de uso (2026-09-28):** documento de investigación interna. En venta NO se usan "reduce la sanción ~93 %" ni "desde 90.001 €": la fórmula única es la de `ventas/` con [VERIFICAR fuente antes de usar].
 fecha: 2026-09-28
 autor: investigador
 proyecto: Arcend (clínicas de medicina estética independientes, Madrid)

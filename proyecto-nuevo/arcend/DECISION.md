@@ -11,7 +11,7 @@
 
 **Por qué este y no otro** (`simulacion/montecarlo.py`, 4.000 ejecuciones por escenario, dos rondas del revisor):
 - Es el que **menos riesgo de caja** tiene en todas las pruebas: con cifras de mercado, 12-14 % de acabar la semana 4 sin caja, frente al 24-39 % de las opciones con paquetes caros; y el mejor peor caso (p10).
-- El precio encaja con lo que el mercado acepta (150-900 €), y el dolor es real: sanciones de hasta 90.001 € por publicidad de medicamentos con receta (toxina), y el caso de una multa rebajada a 6.000 € por haber corregido antes (`investigacion/mercado.md`).
+- El precio encaja con lo que el mercado acepta (150-900 €), y el dolor es real: la publicidad de medicamentos con receta (toxina) puede dar lugar a sanciones que pueden llegar a importes muy altos (en casos publicados, 90.001 €) [VERIFICAR fuente antes de usar], y el caso de una multa rebajada a 6.000 € por haber corregido antes [VERIFICAR] (`investigacion/mercado.md`).
 - **No hay nadie** vendiendo vigilancia continua de publicidad sanitaria a clínicas pequeñas (no se encontraron tarifas públicas).
 - No amenaza a la recepcionista ni lleva chatbot: desaparecen el problema del filtro en la llamada y la obligación de la Ley de IA art. 50.1.
 - Casi todo el trabajo lo hace Claude con el risk-scanner: informe, textos corregidos y revisión mensual. Horas humanas por cliente: ~1 h de alta y ~15 min/mes.
@@ -23,9 +23,9 @@
 - **La verdad está entre las dos y se sabe en 2 semanas** midiendo las primeras 40 llamadas.
 
 ## Cómo se vende (tú)
-1. Claude prepara el informe de cada clínica **antes** de llamar (solo información pública; nada de escaneos de sistemas, art. 197 bis CP).
-2. **Llamas** a la clínica: "He revisado la publicidad de su web y he encontrado N puntos que la Consejería sanciona; ¿me da 10 minutos el Dr./la Dra. esta semana para enseñárselo?". Nada de emails comerciales en frío (LSSI).
-3. En la reunión enseñas el informe, ofreces la entrada de 390 € y **pides la decisión en la reunión**.
+1. Claude prepara el informe PREVIO de cada clínica **antes** de llamar (`blindaje.py URL --nombre X --previo`; solo información pública; nada de escaneos de sistemas, art. 197 bis CP). N = `n_puntos_norma` de `informe.json` (reglas distintas con norma concreta, deduplicadas); no se cuenta a mano.
+2. **Llamas** a la clínica: "He revisado la publicidad de su web y hay N puntos que la normativa de publicidad sanitaria no permite; ¿me da 10 minutos el Dr./la Dra. esta semana para enseñárselo?". Si preguntan por consecuencias: "pueden dar lugar a un requerimiento". Nunca se afirma que habrá sanción. Nada de emails comerciales en frío (LSSI).
+3. En la reunión enseñas el informe previo (puntos, norma y gravedad, sin textos corregidos), ofreces la entrada de 390 € y **pides la decisión en la reunión**. El informe completo con los textos corregidos se genera solo tras el cobro.
 4. Al entregar la corrección, ofreces la vigilancia mensual (190 €). La Atención, solo cuando ya confían (semana 4-8).
 
 ## Condiciones de muerte (primeras 40 llamadas / 2 semanas)
@@ -43,4 +43,4 @@
 - Entrega de la corrección: **5 días hábiles desde el cobro**; incluye comprobar que los cambios están publicados y dejar constancia fechada.
 - Alcance en redes: publicaciones visibles de los **últimos 12 meses**.
 - Vigilancia: **mensual**, no en tiempo real (así consta por escrito).
-- Cifras de sanciones (90.001 € y el caso rebajado a 6.000 €): leer la fuente original antes de imprimir la oferta.
+- Cifras de sanciones: fórmula única en todo el kit, "sanciones que pueden llegar a importes muy altos (en casos publicados, 90.001 €) [VERIFICAR fuente antes de usar]"; el caso rebajado a 6.000 € también [VERIFICAR]. Leer la fuente original antes de imprimir la oferta.
