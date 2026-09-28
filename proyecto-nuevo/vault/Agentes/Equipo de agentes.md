@@ -8,6 +8,9 @@ y dejan lo aprendido al terminar.
 | `bibliotecario` | Lee y escribe la memoria en Obsidian: aprendizajes, decisiones, diario | [[Bibliotecario]] |
 | `investigador` | Investiga opciones, datos y documentación antes de construir | [[Investigador]] |
 | `revisor` | Revisa código y resultados, busca errores y registra lecciones | [[Revisor]] |
+| `prospector` | Lista y enriquece inmobiliarias de Madrid; pruebas de tiempo de respuesta | [[Prospector]] |
+| `constructor` | Demos por agencia e instalaciones reales (n8n + WhatsApp + calendario) | [[Constructor]] |
+| `ventas` | Guiones, propuestas, contratos, RGPD y embudo (no envía nada) | [[Ventas]] |
 
 ## Ciclo de trabajo
 1. **Leer memoria** → `bibliotecario` resume lo relevante del vault.
