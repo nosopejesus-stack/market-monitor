@@ -38,3 +38,9 @@
 - El informe **no es asesoramiento jurídico**: revisión basada en normativa pública, con la recomendación de validarlo con su asesor si hay dudas. Esta frase va en cada informe.
 - Alta de autónomo solo tras el primer sí, fechada el día de la primera factura (~80 €/mes, SIN VERIFICAR).
 - Supuestos del modelo aún SIN VERIFICAR (se miden en las primeras llamadas): tasa de acceso al titular por teléfono, cierre, pago trimestral, referidos. El modelo v3 tiene problemas conocidos que el revisor listó (tope de horas, upsell y plazo por paquete, meses de 4 semanas); afectan sobre todo a las opciones caras y **no cambian la elección**.
+
+## Condiciones de servicio (fijadas 2026-09-28)
+- Entrega de la corrección: **5 días hábiles desde el cobro**; incluye comprobar que los cambios están publicados y dejar constancia fechada.
+- Alcance en redes: publicaciones visibles de los **últimos 12 meses**.
+- Vigilancia: **mensual**, no en tiempo real (así consta por escrito).
+- Cifras de sanciones (90.001 € y el caso rebajado a 6.000 €): leer la fuente original antes de imprimir la oferta.
