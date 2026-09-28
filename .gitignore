@@ -2,3 +2,8 @@ __pycache__/
 *.pyc
 .venv/
 .env
+
+# Obsidian: estado local de la ventana
+**/.obsidian/workspace*.json
+**/.obsidian/cache
+.trash/

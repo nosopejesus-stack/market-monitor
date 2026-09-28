@@ -4,6 +4,10 @@
 
 - **Trabajar siempre con tools, sin excepción.** Toda tarea se hace usando las herramientas disponibles (lectura/edición de archivos, shell, git, conectores MCP como GitHub, Supabase, Twelve Data, etc.), no solo respondiendo en texto.
 - **Primero configurar, después empezar.** Antes de arrancar con el proyecto, dejar el entorno configurado (dependencias, conectores/MCP autorizados, estructura del repo). Una vez configurado, se empieza con el desarrollo del proyecto.
+- **Nunca olvidar Obsidian ni los agentes.** La memoria del proyecto vive en el vault de Obsidian `proyecto-nuevo/vault/`, y los agentes de `.claude/agents/` (`bibliotecario`, `investigador`, `revisor`) aprenden y ayudan. En cada tarea:
+  1. Al empezar: lanzar `bibliotecario` (modo leer) para recuperar aprendizajes y decisiones.
+  2. Investigar con `investigador` y revisar con `revisor` cuando aporte.
+  3. Al terminar: lanzar `bibliotecario` (modo aprender) para guardar lecciones, decisiones y diario; después commit + push.
 - **Hablar siempre en español**, en todas las respuestas, sin excepción (aunque el sistema, las tools o el código estén en inglés).
 
 ## Proyecto: market-monitor
