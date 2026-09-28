@@ -22,3 +22,7 @@ Lecciones que los agentes y tú hemos aprendido. Cada lección es una nota en es
 | 2026-09-28 | [[2026-09-28 Prospección desde el contenedor cloud]] | #entorno #prospeccion |
 | 2026-09-28 | [[2026-09-28 Commits con agentes en paralelo y frontmatter de agentes]] | #proceso #git #agentes |
 | 2026-09-28 | [[2026-09-28 Revisar proyectos previos antes de proponer negocio]] | #proceso #negocio |
+| 2026-09-28 | [[2026-09-28 Simulación Monte Carlo de estrategias comerciales]] | #simulacion #montecarlo #revision |
+| 2026-09-28 | [[2026-09-28 Comparar estrategias sin razonamiento circular]] | #metodo #decision |
+| 2026-09-28 | [[2026-09-28 Verificar cada cifra de un resumen]] | #error #revision #cifras |
+| 2026-09-28 | [[2026-09-28 Fuentes oficiales bloqueadas en el contenedor]] | #entorno #investigacion |

@@ -18,3 +18,15 @@ fuente: Notion "Proyecto Arcend · Clínicas estéticas Madrid" (https://app.not
 ## Riesgos detectados por el equipo (2026-09-28)
 - El ciclo 01 de money-engine descartó la "recepcionista IA para clínicas" por estar comoditizada a 29-55 €/mes (Ringuno, Clinicbot, Clara). Si "Atención" se percibe como eso, 890 €/mes no se sostiene: el diferencial tiene que ser el servicio hecho + **Blindaje** (cumplimiento sanitario y riesgo), no el bot.
 - Lo investigado hoy para WhatsApp (opt-in, plantillas, cobro de Meta desde 1-oct-2026) y la Ley de IA art. 50.1 (el asistente debe decir que es automático desde 2-ago-2026) aplica igual a las clínicas. Choca con la regla "no decir IA": se puede no hablar de IA en la venta, pero el asistente sí debe identificarse como automático ante el paciente.
+
+## Estado 2026-09-28
+**Decisión vigente:** [[Decisiones/2026-09-28 Arcend - Blindaje continuo por teléfono]]. Se entra con el Blindaje (informe 390 € + vigilancia 190 €/mes, sin permanencia), captado por teléfono con el informe ya hecho. Atención (paquetes 1 y 2 de arriba) queda solo como subida para la semana 4-8. 10.000 € en 30 días no es realista; se decide con las primeras 40 llamadas (condiciones de muerte en la decisión).
+
+**Datos de mercado** (`proyecto-nuevo/arcend/investigacion/mercado.md`; extractos del buscador, SIN VERIFICAR salvo que se diga):
+- **Código correcto: U.48 "Medicina estética"** (RD 1277/2003), no U.90.
+- **Tamaño:** ~350-550 clínicas cuyo negocio principal es la medicina estética en Madrid capital (extrapolación propia desde 6.305 centros U.48 en España en 2021; dato oficial por municipio pendiente del registro de la Comunidad). 80-90 % independientes (SIN VERIFICAR).
+- **Sanciones:** publicidad de medicamentos con receta (toxina) = muy grave **desde 90.001 €**; TSJ Madrid confirmó 90.000 € a una clínica. Caso de una multa **rebajada a 6.000 €** porque la clínica había corregido antes: es el mejor argumento de venta. Frecuencia baja (~13 propuestas de sanción en ~3 años en Madrid): se vende como seguro, con captura de su propia web.
+- **Competencia:** recepcionistas automáticas/bots **29-55 €/mes** (hasta ~100 €); agencias de marketing para clínicas **950-2.000 €/mes**. No se encontró ninguna tarifa pública de vigilancia continua de publicidad sanitaria.
+- **Valor del paciente:** gasto medio **~1.027 €/año** (mujer, SEME). Ticket de primera visita 250-600 €. **La cifra de "8.000 €/mes perdidos" (y "1.500-5.000 € por paciente") de arriba no se sostiene con datos públicos**: el recálculo da ~600-4.000 €/mes de primer ticket.
+- **Embudo realista:** 40 puertas × 20 % decisor × 8 % cierre ≈ 0,6 firmas/mes (rango 0,1-2,1), frente a las 2 del plan de Notion.
+- Pendiente de verificar en el PC del usuario: contar U.48 en el registro, tramos exactos del RDL 1/2015, página de vigilancia de publicidad de la Consejería, Orden 1158/2018 (puede no existir).

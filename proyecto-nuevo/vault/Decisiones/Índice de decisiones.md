@@ -9,3 +9,4 @@ Registro de decisiones (plantilla: [[Plantillas/Decisión]]).
 | 2026-09-28 | [[2026-09-28 Despliegue seguro en Hetzner con Coolify]] | aceptada |
 | 2026-09-28 | [[2026-09-28 Cero gasto]] | aceptada |
 | 2026-09-28 | [[2026-09-28 Negocio respuesta inmediata a leads inmobiliarios]] | propuesta (promesa reformulada 2026-09-28) |
+| 2026-09-28 | [[2026-09-28 Arcend - Blindaje continuo por teléfono]] | aceptada |
