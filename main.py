@@ -12,10 +12,11 @@ import sys
 from config import (
     ASSETS, NEWS_KEYWORDS, HIGH_VOL_THRESHOLD,
     MC_SIMULATIONS, MC_HORIZON_DAYS, CALENDAR_MIN_IMPACT,
+    CALENDAR_LOOKAHEAD_HOURS,
 )
 from data_sources.market import compute_volatility_stats
 from data_sources.news import fetch_news_for_keywords, summarize_sentiment
-from data_sources.calendar import get_high_impact_events
+from data_sources.calendar import get_high_impact_events, events_for_currencies
 from analysis.monte_carlo import run_monte_carlo
 from analysis.scoring import score_asset
 from report.build_report import build_asset_block, build_full_report
@@ -27,11 +28,11 @@ ALERT_CONFIDENCE_THRESHOLD = 60
 
 def analyze_all_assets():
     """Ejecuta el pipeline completo para todos los activos configurados."""
-    high_impact_events = get_high_impact_events(CALENDAR_MIN_IMPACT)
+    high_impact_events = get_high_impact_events(CALENDAR_MIN_IMPACT, CALENDAR_LOOKAHEAD_HOURS)
     results = []
 
-    for ticker, name in ASSETS.items():
-        stats = compute_volatility_stats(ticker)
+    for name, symbols in ASSETS.items():
+        stats = compute_volatility_stats(symbols)
         if stats is None:
             print(f"[main] sin datos para {name}, se omite.")
             continue
@@ -52,11 +53,11 @@ def analyze_all_assets():
         score = score_asset(
             mc_result=mc,
             news_sentiment=sentiment,
-            volatility_pct=stats["volatility_annualized_pct"],
+            volatility_pct=stats["daily_volatility_pct"],
             high_vol_threshold=HIGH_VOL_THRESHOLD,
         )
 
-        asset_events = [e for e in high_impact_events if e["country"] in name or True]
+        asset_events = events_for_currencies(high_impact_events, symbols.get("currencies", []))
 
         results.append({
             "name": name,

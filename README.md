@@ -2,7 +2,7 @@
 
 Sistema automatizado que corre 24/7 en GitHub Actions (sin servidor propio)
 y te envía por email un informe diario + alertas cuando detecta señales
-fuertes, combinando: precios (Yahoo Finance), noticias (NewsAPI), calendario
+fuertes, combinando: precios (Twelve Data, con Yahoo Finance de respaldo), noticias (NewsAPI), calendario
 económico (ForexFactory) y simulación Monte Carlo.
 
 ⚠️ Es una herramienta de apoyo, no garantiza aciertos. Los mercados son
@@ -21,6 +21,10 @@ git push -u origin main
 
 ### 2. Consigue tus credenciales gratuitas
 
+**Twelve Data** (precios): regístrate en https://twelvedata.com (plan gratis:
+800 créditos/día, 8 peticiones/min) → copia tu API key en *API Keys*.
+Sin esta key el sistema usa Yahoo Finance como respaldo.
+
 **NewsAPI** (noticias): regístrate en https://newsapi.org (gratis, 100 req/día) → copia tu API key.
 
 **Gmail App Password** (para enviar los emails):
@@ -31,7 +35,8 @@ git push -u origin main
 ### 3. Configura los secretos en GitHub
 En tu repo: `Settings → Secrets and variables → Actions → New repository secret`
 
-Añade estos 4 secretos:
+Añade estos 5 secretos:
+- `TWELVEDATA_API_KEY` — tu API key de Twelve Data
 - `NEWSAPI_KEY` — tu API key de NewsAPI
 - `EMAIL_FROM` — tu email de Gmail
 - `EMAIL_APP_PASSWORD` — la contraseña de aplicación de 16 caracteres
@@ -44,9 +49,17 @@ GitHub. Ya está: correrá automáticamente según el cron configurado.
 Puedes forzar una ejecución manual en `Actions → [nombre workflow] → Run workflow`
 para probar que todo funciona antes de esperar al cron.
 
+## Tests
+
+```
+pip install -r requirements.txt
+python -m unittest discover -s tests -v
+```
+Se ejecutan automáticamente en GitHub Actions en cada push (`tests.yml`).
+
 ## Personalización
 
-- **Activos monitorizados**: edita `config.py` → diccionario `ASSETS`
+- **Activos monitorizados**: edita `config.py` → diccionario `ASSETS` (símbolo Twelve Data, ticker Yahoo y divisas del calendario)
 - **Horario del informe diario**: edita el cron en `.github/workflows/daily-report.yml`
 - **Frecuencia de alertas**: edita el cron en `.github/workflows/alert-check.yml`
 - **Sensibilidad de alertas**: `ALERT_CONFIDENCE_THRESHOLD` en `main.py`
@@ -54,10 +67,11 @@ para probar que todo funciona antes de esperar al cron.
 
 ## Límites conocidos (importante)
 
-- Yahoo Finance puede tener pequeños retrasos/huecos de datos — no es un
-  feed de nivel institucional. Para precisión de grado profesional, sustituye
-  `data_sources/market.py` por la API de tu broker (MT5) o un proveedor de
-  pago (Polygon, Twelve Data).
+- El plan gratuito de Twelve Data no incluye índices ni WTI: se usan ETFs
+  como proxy (SPY, QQQ, DIA, USO). Con 9 activos, cada ejecución gasta 9
+  créditos y tarda ~70 s (se respetan las 8 peticiones/minuto).
+- Para precios exactos de tu cuenta de fondeo, lo ideal sigue siendo el feed
+  de tu broker (MT5).
 - NewsAPI gratis tiene 100 requests/día — con 9 activos configurados usarás
   ~9 por ejecución. El plan diario + varias alertas puede acercarte al límite;
   ajusta la frecuencia del cron de alertas si lo agotas.

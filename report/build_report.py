@@ -1,5 +1,6 @@
 """Genera el HTML del informe diario / alerta."""
-from datetime import datetime
+from datetime import datetime, timezone
+from html import escape
 
 DIRECTION_COLOR = {"ALZA": "#16a34a", "BAJA": "#dc2626", "NEUTRAL": "#6b7280"}
 DIRECTION_ICON = {"ALZA": "▲", "BAJA": "▼", "NEUTRAL": "■"}
@@ -11,11 +12,12 @@ def build_asset_block(name, mc, score, news_items, calendar_events):
 
     news_html = ""
     for n in news_items[:3]:
-        news_html += f'<li><a href="{n["url"]}">{n["title"]}</a> — {n["source"]}</li>'
+        news_html += f'<li><a href="{escape(n["url"] or "", quote=True)}">{escape(n["title"] or "")}</a> — {escape(n["source"] or "")}</li>'
 
     cal_html = ""
     for e in calendar_events:
-        cal_html += f'<li><b>{e["title"]}</b> ({e["country"]}) — impacto {e["impact"]}, previsión: {e["forecast"]}</li>'
+        when = e["when"].astimezone(timezone.utc).strftime("%d/%m %H:%M UTC") if e.get("when") else ""
+        cal_html += f'<li><b>{escape(str(e["title"]))}</b> ({e["country"]}, {when}) — impacto {e["impact"]}, previsión: {escape(str(e["forecast"] or "-"))}</li>'
 
     return f"""
     <div style="border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-bottom:16px;">
@@ -34,7 +36,7 @@ def build_asset_block(name, mc, score, news_items, calendar_events):
 
 
 def build_full_report(asset_blocks: list[str], title="Informe diario de mercado"):
-    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     body = "".join(asset_blocks)
     return f"""
     <html>

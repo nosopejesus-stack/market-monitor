@@ -5,3 +5,11 @@
 - **Trabajar siempre con tools, sin excepción.** Toda tarea se hace usando las herramientas disponibles (lectura/edición de archivos, shell, git, conectores MCP como GitHub, Supabase, Twelve Data, etc.), no solo respondiendo en texto.
 - **Primero configurar, después empezar.** Antes de arrancar con el proyecto, dejar el entorno configurado (dependencias, conectores/MCP autorizados, estructura del repo). Una vez configurado, se empieza con el desarrollo del proyecto.
 - Idioma de comunicación: español.
+
+## Proyecto: market-monitor
+
+- Python 3.11. Se ejecuta en GitHub Actions (`.github/workflows/`): informe diario, alertas cada 30 min y tests.
+- Precios: Twelve Data (`TWELVEDATA_API_KEY`) con respaldo en Yahoo Finance. Plan gratis: sin índices ni WTI → proxies ETF (SPY, QQQ, DIA, USO).
+- Tests: `python -m unittest discover -s tests -v` (usan una serie real de EUR/USD en `tests/fixtures/`).
+- El contenedor cloud de Claude no tiene salida a Yahoo/NewsAPI/Twelve Data/Gmail: validar con tests y mocks; los datos en vivo se consultan con el conector MCP de Twelve Data.
+- Los workflows programados solo corren en la rama por defecto (`main`).

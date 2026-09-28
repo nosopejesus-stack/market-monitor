@@ -13,6 +13,8 @@ W_VOLATILITY_PENALTY = 0.2
 
 def score_asset(mc_result: dict, news_sentiment: float, volatility_pct: float, high_vol_threshold: float):
     """
+    volatility_pct y high_vol_threshold son volatilidad DIARIA en %.
+
     Devuelve dict con:
     - direction: "ALZA" | "BAJA" | "NEUTRAL"
     - confidence_pct: 0-100
@@ -45,7 +47,7 @@ def score_asset(mc_result: dict, news_sentiment: float, volatility_pct: float, h
         f"Sentimiento de noticias: {'positivo' if news_signal > 0.1 else 'negativo' if news_signal < -0.1 else 'neutral'}",
     ]
     if is_high_vol:
-        reasoning_parts.append(f"⚠️ Volatilidad alta ({volatility_pct:.2f}%) → confianza reducida")
+        reasoning_parts.append(f"⚠️ Volatilidad diaria alta ({volatility_pct:.2f}%) → confianza reducida")
 
     return {
         "direction": direction,
