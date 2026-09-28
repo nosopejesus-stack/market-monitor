@@ -9,31 +9,43 @@ El {dia_prueba} a las {hora_envio} enviamos una consulta como interesado en {pis
 {comentario_propio_del_decisor, p. ej. "Nos comentaste que entran unos N contactos por semana y que noches y fines de semana nadie los atiende."}
 
 ## Qué hacemos
-- Cada contacto de Idealista, Fotocasa y vuestra web recibe respuesta por WhatsApp **en menos de 2 minutos, 24/7**.
-- El asistente se presenta como asistente automático de {nombre_agencia}, responde con los datos del anuncio y pregunta presupuesto, zona, financiación y plazo.
-- Propone visita en el calendario de {agente_o_agentes} y os envía un resumen del contacto.
-- Si el cliente pide una persona o pregunta algo fuera del anuncio, pasa a vuestro agente.
+- Cada contacto de Idealista, Fotocasa y vuestra web recibe una **primera respuesta automática en minutos,
+  24/7 (objetivo < 2 min, se mide en el piloto), por email con botón para seguir por WhatsApp**.
+- Cuando el comprador escribe por WhatsApp, un **asistente automático** (identificado como tal desde el
+  primer mensaje) responde con los datos del inmueble, cualifica (presupuesto, zona, financiación y plazo)
+  y agenda la visita en el calendario de {agente_o_agentes}, que recibe un resumen del contacto.
+- Si el cliente pide una persona o pregunta algo fuera de los datos del inmueble, pasa a vuestro agente.
+- Los datos de los inmuebles salen de vuestro CRM/feed o los copiamos a mano con vuestro permiso; no
+  extraemos datos de los portales de forma automática.
+- Informe mensual: leads recibidos, respondidos, tiempo medio de respuesta, cualificados y visitas agendadas.
 - {ajustes_pedidos_en_la_demo}
 
 ## Qué no hacemos
 - No negociamos precios ni prometemos nada en vuestro nombre.
-- No garantizamos un número de ventas: medimos y os informamos cada mes de tiempos de respuesta y contactos cualificados.
+- No escribimos primero por WhatsApp a quien no nos ha escrito: la conversación de WhatsApp la abre el comprador.
+- No garantizamos un número de ventas: medimos y os informamos cada mes.
 
 ## Plazos
-Instalación en **48 horas** desde el primer pago y la entrega de accesos (WhatsApp Business, calendario, textos aprobados).
+Instalación en **48 h laborables desde la recepción de accesos y la aprobación de plantillas por Meta**
+(WhatsApp Business, calendario, fuente de inmuebles y textos aprobados por vosotros). La verificación
+del negocio y la aprobación de plantillas por Meta no dependen de nosotros y pueden tardar días.
 
-## Precio (IVA no incluido)
+## Precio (importes sin IVA)
 | Concepto | Importe |
 |---|---|
-| Instalación | **1.900 €** (50 % al firmar, 50 % a la entrega) |
-| Cuota mensual: mantenimiento, ajustes e informe mensual | **290 €/mes** |
-| WhatsApp Business API y servidor (a nombre de la agencia, se pagan directamente al proveedor) | aprox. 15-40 €/mes según volumen |
+| Instalación | **1.900 €**: 50 % a la firma, 50 % a la aceptación |
+| Cuota mensual: mantenimiento, ajustes e informe mensual | **290 €/mes**, se factura desde el mes de la entrega (a la aceptación) |
+| WhatsApp Business (cuota de Meta) y servidor: a nombre de la agencia, se pagan con vuestra tarjeta directamente al proveedor | según volumen; importe exacto SIN VERIFICAR, se mide en el piloto |
+
+**Aceptación:** cuando se supera una prueba de extremo a extremo (consulta de prueba → respuesta →
+cualificación → cita en calendario → resumen al agente) o pasan 5 días hábiles desde la entrega sin
+reparos por escrito.
 
 **Sin permanencia.** Se puede cancelar con {preaviso_dias} días de preaviso.
 Protección de datos: firmamos contrato de encargo del tratamiento (art. 28 RGPD).
 
 ## Siguiente paso
-Firmar el contrato y transferir el 50 % de la instalación ({importe_primer_pago} € + IVA) a {iban}.
+Firmar el contrato y transferir el 50 % de la instalación (950 € + IVA) a {iban}.
 Validez de esta propuesta: hasta el {fecha_validez}.
 
 Firma y fecha: ______________________

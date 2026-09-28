@@ -15,8 +15,13 @@ En {ciudad}, a {fecha}.
 
 ## 1. Objeto
 El ENCARGADO tratará por cuenta del RESPONSABLE los datos personales necesarios para prestar el
-servicio de respuesta automática por WhatsApp, cualificación de contactos y agenda de visitas descrito
-en el contrato de prestación de servicios.
+servicio de respuesta automática (primera respuesta por email y conversación por WhatsApp con un
+asistente automático), cualificación de contactos y agenda de visitas descrito en el contrato de
+prestación de servicios.
+
+**Infraestructura:** el servidor donde se ejecuta el servicio y se guardan los datos lo contrata el
+RESPONSABLE a su nombre. El proveedor de alojamiento es proveedor del RESPONSABLE, no subencargado del
+ENCARGADO. El ENCARGADO accede a ese servidor **solo para instalación y mantenimiento**.
 
 ## 2. Duración
 Este contrato dura lo mismo que el contrato de prestación de servicios. Las obligaciones de
@@ -36,7 +41,9 @@ a) Tratar los datos **solo siguiendo instrucciones documentadas** del RESPONSABL
 
 b) Garantizar que las personas autorizadas a tratar los datos se han comprometido a respetar la **confidencialidad**.
 
-c) Aplicar las **medidas de seguridad** del artículo 32 RGPD adecuadas al riesgo, como mínimo: control de acceso con credenciales individuales y segundo factor cuando esté disponible; cifrado en tránsito (HTTPS/TLS); copias de seguridad; registro de accesos; minimización de datos; supresión periódica según el punto 7.
+c) Aplicar las **medidas de seguridad** del artículo 32 RGPD adecuadas al riesgo, como mínimo: control de acceso con credenciales individuales y segundo factor cuando esté disponible; cifrado en tránsito (HTTPS/TLS); copias de seguridad; registro de accesos; minimización de datos; supresión periódica según el punto 7. **Queda prohibido usar datos reales de
+interesados en equipos propios del ENCARGADO para pruebas o desarrollo**: las pruebas se hacen con datos
+ficticios.
 
 d) **Subencargados:** el RESPONSABLE autoriza de forma general el uso de los subencargados del **Apéndice A**. El ENCARGADO informará por escrito de cualquier alta o sustitución con {15} días de antelación; el RESPONSABLE podrá oponerse y, en ese caso, resolver el contrato. El ENCARGADO impondrá a cada subencargado, por contrato, las mismas obligaciones de protección de datos y seguirá siendo responsable ante el RESPONSABLE de su cumplimiento.
 
@@ -50,7 +57,7 @@ h) Poner a disposición del RESPONSABLE la información necesaria para demostrar
 
 i) Llevar, cuando proceda, el **registro de actividades de tratamiento** como encargado (art. 30.2 RGPD).
 
-j) Configurar el asistente para que se identifique como **asistente automático** del RESPONSABLE e incluya en el primer mensaje el enlace a la información de privacidad del RESPONSABLE ({url_politica_privacidad}).
+j) Configurar el asistente para que se identifique como **asistente automático** del RESPONSABLE (art. 50 del Reglamento (UE) 2024/1689, Ley de IA) e incluya en el primer mensaje el enlace a la información de privacidad del RESPONSABLE ({url_politica_privacidad}).
 
 ## 5. Obligaciones del RESPONSABLE
 a) Facilitar al ENCARGADO los datos e instrucciones necesarios.
@@ -64,8 +71,9 @@ como el Marco de Privacidad de Datos UE-EE. UU. para entidades certificadas, o c
 tipo). **SIN VERIFICAR:** ubicación del tratamiento y garantía aplicable de cada subencargado del Apéndice A.
 
 ## 7. Conservación y destino de los datos al finalizar
-- Durante el contrato, las conversaciones y resúmenes se conservarán en los sistemas del ENCARGADO un máximo de **{90} días**, salvo instrucción distinta del RESPONSABLE (los datos que el agente pase a su CRM quedan bajo el control directo del RESPONSABLE).
-- Al terminar el contrato, el ENCARGADO, a elección del RESPONSABLE, **devolverá** los datos en formato estructurado (CSV/JSON) y/o los **suprimirá**, incluidas las copias, en un plazo de {30} días, y lo certificará por escrito. Podrá conservar los datos bloqueados solo cuando lo exija una ley y durante el plazo que esta fije.
+- Durante el contrato, las conversaciones y resúmenes se conservan en el servidor del RESPONSABLE un máximo de **{90} días**, salvo instrucción distinta del RESPONSABLE; el ENCARGADO configurará su supresión automática (los datos que el agente pase a su CRM quedan bajo el control directo del RESPONSABLE).
+- El ENCARGADO no guardará copias de los datos fuera del servidor del RESPONSABLE, salvo las **estrictamente necesarias** para resolver una incidencia concreta, que suprimirá en cuanto se resuelva.
+- Al terminar el contrato, el ENCARGADO, a elección del RESPONSABLE, **devolverá** los datos en formato estructurado (CSV/JSON) y/o los **suprimirá** del servidor, incluidas las copias que tuviera según el punto anterior, en un plazo de {30} días, retirará sus accesos y lo certificará por escrito. Podrá conservar los datos bloqueados solo cuando lo exija una ley y durante el plazo que esta fije.
 
 ## 8. Responsabilidad
 Si el ENCARGADO trata los datos para otras finalidades o incumple las instrucciones o este contrato,
@@ -86,9 +94,10 @@ Jurisdicción: Juzgados y Tribunales de {Madrid}.
 
 **SIN VERIFICAR:** rellenar con los proveedores reales del montaje final, su país y la garantía de transferencia. Lista orientativa:
 
+(El proveedor de alojamiento del servidor no figura aquí: lo contrata el RESPONSABLE a su nombre y es proveedor suyo; ver punto 1.)
+
 | Subencargado | Servicio | Ubicación del tratamiento | Garantía si hay transferencia |
 |---|---|---|---|
 | {Meta Platforms Ireland Ltd.} | WhatsApp Business Platform (envío y recepción de mensajes) | {UE / EE. UU.} | {DPF / CCT} |
-| {proveedor de alojamiento} | Servidor donde corre el flujo (n8n) y la base de datos | {país} | {…} |
 | {Google Ireland Ltd. / Microsoft} | Calendario de los agentes (cuenta del RESPONSABLE) | {…} | {…} |
 | {proveedor del modelo de lenguaje, si se usa} | Generación de respuestas del asistente | {…} | {…} |

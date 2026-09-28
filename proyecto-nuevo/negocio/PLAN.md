@@ -2,7 +2,7 @@
 
 ## Qué vendemos
 A inmobiliarias pequeñas y medianas de Madrid (1-15 agentes): **cada lead de Idealista, Fotocasa o su web
-recibe respuesta en menos de 2 minutos, 24/7.** La primera respuesta va por email (el formato en que llegan
+recibe una primera respuesta automática en minutos, 24/7 (objetivo < 2 min, se mide en el piloto).** La primera respuesta va por email (el formato en que llegan
 todos los leads) con un botón para seguir por WhatsApp; cuando el comprador escribe por WhatsApp, un asistente
 **identificado como automático** cualifica (presupuesto, zona, financiación, plazo) y agenda la visita en el
 calendario del agente. El agente solo ve leads cualificados.
@@ -18,12 +18,12 @@ Por qué así (ver `investigacion/whatsapp_idealista.md`):
 - Muchas agencias responden en horas o al día siguiente, sobre todo fines de semana y noches. **Lo medimos nosotros:** antes de visitarlas, les mandamos una consulta real como comprador y cronometramos su respuesta. Ese dato es el argumento de venta.
 
 ## El edge real (y sus límites)
-- **Edge:** coste de entrega casi cero y velocidad. Claude construye la demo personalizada de cada agencia (con sus pisos, copiados a mano con su permiso) ANTES de la reunión, y la instalación en 48 h laborables desde que llegan los accesos y Meta aprueba las plantillas. Una agencia tradicional tarda semanas.
+- **Edge:** coste de entrega casi cero y velocidad. Claude construye la demo personalizada de cada agencia ANTES de la reunión (con su nombre y pisos ficticios de su zona y rango de precio, marcados como simulación; sus pisos reales solo tras su permiso), y la instalación en 48 h laborables desde que llegan los accesos y Meta aprueba las plantillas. Una agencia tradicional tarda semanas.
 - **No es un moat:** otros pueden copiarlo. Se defiende con velocidad, precio fijo, resultados medidos y relación local.
 
 ## Precio
 - **1.900 € instalación + 290 €/mes** (mantenimiento, ajustes, informe mensual).
-- Pago de la instalación: 50 % al firmar, 50 % a la entrega. Sin permanencia.
+- Pago de la instalación: 50 % al firmar, 50 % a la aceptación. Sin permanencia.
 - Los costes de WhatsApp (Meta, con la tarjeta del cliente) y del servidor (contratado a nombre del cliente) los paga el cliente. Importe exacto: SIN VERIFICAR, se mide en el piloto. Nuestro coste de herramientas: 0 € (ver cuota de autónomo abajo).
 
 ## Matemática de los 10.000 € (ingresos brutos, sin IVA)

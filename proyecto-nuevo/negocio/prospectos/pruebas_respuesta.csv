@@ -1,1 +1,1 @@
-id_agencia,canal,fecha_hora_envio,fecha_hora_respuesta,minutos,calidad_respuesta,notas
+id_agencia,canal,variante,franja,fecha_hora_envio,fecha_hora_respuesta,minutos,canal_respuesta,trae_telefono,calidad_respuesta,notas
