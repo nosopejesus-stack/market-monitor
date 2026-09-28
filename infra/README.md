@@ -23,6 +23,8 @@ Para descargar modelos de Ollama: `OLLAMA_MODELS="llama3.2:3b"` en `.env` y `doc
 Los puertos solo escuchan en `127.0.0.1` (variable `BIND_ADDRESS`): no quedan abiertos a internet.
 
 ## 2. Siempre encendido: servidor + Coolify
+
+> **Guía completa y segura paso a paso: [`server/GUIA.md`](server/GUIA.md)** (servidor, endurecimiento con `server/bootstrap.sh`, firewall, panel privado, dominios, 2FA, backups). El resumen de abajo es solo orientativo.
 Este stack tiene que vivir en un servidor propio (el contenedor de Claude en la nube se borra al cerrar la sesión).
 
 **Servidor recomendado:** Ubuntu 24.04, 4 vCPU, 16 GB RAM y 150 GB de disco. Sin GPU, Ollama usa modelos pequeños y ComfyUI va lento (minutos por imagen); con GPU NVIDIA, usa `docker-compose.gpu.yml`.

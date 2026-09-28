@@ -1,0 +1,10 @@
+[Unit]
+Description=Backup diario (03:30) de las bases de datos del stack
+
+[Timer]
+OnCalendar=*-*-* 03:30:00
+RandomizedDelaySec=15m
+Persistent=true
+
+[Install]
+WantedBy=timers.target
