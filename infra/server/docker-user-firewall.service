@@ -1,7 +1,11 @@
 [Unit]
 Description=Cerrar puertos de contenedores Docker salvo 80/443
-After=docker.service network-online.target
-Wants=network-online.target
+# Antes de Docker: así no hay ni un segundo con puertos abiertos al arrancar.
+# Docker conserva las reglas de DOCKER-USER y solo engancha el salto desde FORWARD.
+DefaultDependencies=no
+After=local-fs.target
+Before=docker.service network-pre.target
+Wants=network-pre.target
 PartOf=docker.service
 
 [Service]
@@ -10,4 +14,5 @@ ExecStart=/usr/local/sbin/docker-user-firewall.sh
 RemainAfterExit=yes
 
 [Install]
-WantedBy=multi-user.target docker.service
+WantedBy=multi-user.target
+RequiredBy=docker.service

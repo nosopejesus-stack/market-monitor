@@ -29,6 +29,16 @@ ssh-keygen -t ed25519 -C "servidor-stack"
 ```
 Pulsa Enter en todo y pon una frase de paso. Tu llave pública está en `~/.ssh/id_ed25519.pub`.
 
+Para no escribirla siempre, añade esto a `~/.ssh/config` en tu ordenador (cambia IP y usuario):
+```
+Host stack
+    HostName IP_DEL_SERVIDOR
+    User ana
+    IdentityFile ~/.ssh/id_ed25519
+    IdentitiesOnly yes
+```
+Así `ssh stack` basta, y nunca te bloquea el límite de intentos por probar otras llaves.
+
 ## Paso 2 🔐 — Contratar el servidor
 1. Crea cuenta en https://console.hetzner.cloud y un proyecto nuevo.
 2. **Add Server**:
@@ -50,17 +60,30 @@ Ya dentro del servidor (cambia `ana` por el usuario que quieras):
 git clone --depth 1 -b claude/tender-cannon-ui4ixl https://github.com/nosopejesus-stack/market-monitor.git /opt/stack-repo
 ADMIN_USER=ana bash /opt/stack-repo/infra/server/bootstrap.sh
 ```
-Si el repositorio es privado, GitHub te pedirá acceso: usa un *token* de solo lectura, o copia la
-carpeta `infra/server` al servidor con `scp -r infra/server root@IP:/opt/`.
+(Cuando estos cambios estén en `main`, usa `-b main`.)
+Si el repositorio es privado, GitHub te pedirá acceso: usa un *token* de solo lectura, o copia
+las carpetas desde tu ordenador:
+```bash
+ssh root@IP_DEL_SERVIDOR mkdir -p /opt/stack-repo/infra
+scp -r infra/server infra/scripts root@IP_DEL_SERVIDOR:/opt/stack-repo/infra/
+```
 
 Tarda unos 5-10 minutos. Al terminar:
-- **Sin cerrar esa ventana**, abre otra terminal y comprueba: `ssh ana@IP_DEL_SERVIDOR`
+- **Sin cerrar esa ventana**, abre otra terminal y comprueba: `ssh stack`
 - 🔐 Crea la contraseña de sudo de tu usuario (desde la sesión de root): `passwd ana`
+- Reinicia una vez (`reboot`), vuelve a entrar con `ssh stack` y comprueba:
+  ```bash
+  sudo sshd -T | grep -E 'passwordauthentication|permitrootlogin'   # no / without-password
+  sudo ufw status                                                    # 22, 80, 443
+  sudo iptables -S DOCKER-USER                                       # termina en -j DROP
+  ```
+  Y desde tu ordenador, el panel NO debe responder desde internet:
+  `nc -zv IP_DEL_SERVIDOR 8000` → debe fallar (o `curl -m 5 http://IP_DEL_SERVIDOR:8000`).
 
 ## Paso 4 🔐 — Abrir el panel de Coolify (privado)
 En tu ordenador, deja esto abierto mientras usas el panel:
 ```bash
-ssh -N -L 8000:localhost:8000 -L 6001:localhost:6001 -L 6002:localhost:6002 ana@IP_DEL_SERVIDOR
+ssh -N -L 8000:localhost:8000 -L 6001:localhost:6001 -L 6002:localhost:6002 stack
 ```
 Abre http://localhost:8000 y **crea tu cuenta de administrador en ese momento**.
 Después, en tu perfil, activa **2FA** (autenticación en dos pasos).
@@ -116,10 +139,10 @@ Nada más terminar el despliegue, en este orden:
 Desde ese momento puedo crear y ejecutar flujos en n8n, y a través de ellos usar Chatwoot, Ollama, Umami y ComfyUI.
 
 ## Paso 9 — Modelos de IA y comprobación
-En el servidor (`ssh ana@IP`):
+En el servidor (`ssh stack`):
 ```bash
 # Descargar un modelo para Ollama (el nombre del contenedor lo ves con: docker ps)
-docker exec $(docker ps --format '{{.Names}}' | grep -m1 '^ollama') ollama pull llama3.2:3b
+docker exec "$(docker ps --filter label=com.docker.compose.service=ollama --format '{{.Names}}')" ollama pull llama3.2:3b
 
 # Comprobar los servicios públicos
 N8N_BASE=https://n8n.tudominio.com CHATWOOT_BASE=https://chat.tudominio.com \
@@ -128,20 +151,25 @@ UMAMI_BASE=https://stats.tudominio.com bash /opt/stack-repo/infra/scripts/smoke-
 
 ## Uso diario de lo privado (túnel SSH)
 ```bash
-ssh -N -L 8000:localhost:8000 -L 6001:localhost:6001 -L 6002:localhost:6002 -L 8188:localhost:8188 ana@IP_DEL_SERVIDOR
+ssh -N -L 8000:localhost:8000 -L 6001:localhost:6001 -L 6002:localhost:6002 -L 8188:localhost:8188 stack
 ```
 Coolify en http://localhost:8000 y ComfyUI en http://localhost:8188.
 
 ## Copias de seguridad
-- Automáticas cada noche a las 03:30 en `/var/backups/stack/` (se guardan 14 días).
+- Automáticas cada noche a las 03:30 en `/var/backups/stack/` (se guardan 14 días):
+  las bases de datos del stack y la configuración de Coolify (su base de datos y su `.env`).
 - Probar ahora: `sudo systemctl start stack-backup && ls -lh /var/backups/stack/`
-- Restaurar: `gunzip -c FICHERO.sql.gz | docker exec -i <contenedor-postgres> psql -U postgres`
-  (salen 2 errores sobre el rol `postgres`: son normales).
+- Restaurar (con las apps **paradas**, si no se mezclan datos):
+  1. En Coolify, para n8n, chatwoot-web, chatwoot-worker y umami (o `docker stop` de sus contenedores).
+  2. `gunzip -c /var/backups/stack/stack-FECHA.sql.gz | docker exec -i <contenedor-postgres> psql -U postgres`
+     (salen 2 errores sobre el rol `postgres`: son normales).
+  3. Vuelve a arrancarlos.
 - Además, los **Backups de Hetzner** (paso 2) guardan el servidor entero fuera de él.
 
 ## Resumen de seguridad
-- ✅ Sin contraseñas por SSH; root solo con llave (Coolify lo necesita); fail2ban
-- ✅ Firewall: solo 22/80/443; los puertos de Docker también cerrados (`docker-user-firewall`)
+- ✅ Sin contraseñas por SSH (comprobado con `sshd -T`); root solo con llave (Coolify lo necesita); fail2ban
+- ✅ Firewall: solo 22/80/443; los puertos de Docker también cerrados (`docker-user-firewall`,
+  se aplica antes de que arranque Docker y, si algo falla, cierra en vez de abrir)
 - ✅ Panel de Coolify, Ollama y ComfyUI no accesibles desde internet
 - ✅ HTTPS automático (Let's Encrypt, vía Coolify)
 - ✅ 2FA en Coolify, n8n y Chatwoot

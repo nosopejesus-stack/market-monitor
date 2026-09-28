@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Prepara un servidor Ubuntu 24.04 NUEVO de forma segura e instala Coolify.
-# Ejecutar como root, una sola vez:
-#   curl -fsSL https://raw.githubusercontent.com/<usuario>/<repo>/<rama>/infra/server/bootstrap.sh -o bootstrap.sh
-#   ADMIN_USER=tunombre bash bootstrap.sh
+# Ejecutar como root, desde la carpeta infra/server del repositorio clonado
+# (necesita los archivos que hay junto a él; ver GUIA.md, paso 3):
+#   ADMIN_USER=tunombre bash /opt/stack-repo/infra/server/bootstrap.sh
 #
 # Qué hace:
 #   1. Actualiza el sistema y activa las actualizaciones de seguridad automáticas
 #   2. Crea un usuario administrador (sudo) con TU llave SSH
 #   3. SSH solo con llave: sin contraseñas; root solo con llave (Coolify lo necesita)
-#   4. Firewall: entra solo SSH (22), HTTP (80) y HTTPS (443)
+#   4. Firewall: entra solo SSH (22, con límite), HTTP (80) y HTTPS (443)
 #   5. Firewall para Docker: los contenedores solo son accesibles desde fuera por 80/443
 #      (el panel de Coolify, puerto 8000, queda privado: se usa con túnel SSH)
 #   6. Backup diario de las bases de datos (03:30, se guardan 14 días)
@@ -30,6 +30,10 @@ log() { printf '\n==> %s\n' "$*"; }
 . /etc/os-release
 [ "${ID:-}" = ubuntu ] || { echo "Pensado para Ubuntu 24.04 (detectado: ${PRETTY_NAME:-?})."; exit 1; }
 [[ "$ADMIN_USER" =~ ^[a-z][a-z0-9_-]{1,31}$ ]] || { echo "ADMIN_USER no válido."; exit 1; }
+
+for f in docker-user-firewall.sh docker-user-firewall.service backup.sh stack-backup.service stack-backup.timer; do
+  [ -f "$HERE/$f" ] || { echo "Falta $HERE/$f: clona el repositorio completo (GUIA.md, paso 3)."; exit 1; }
+done
 
 # Seguridad anti-bloqueo: sin llave SSH de root no se desactivan las contraseñas
 if ! grep -qsE '^(ssh-(ed25519|rsa)|ecdsa-sha2|sk-)' /root/.ssh/authorized_keys; then
@@ -57,11 +61,20 @@ if ! id "$ADMIN_USER" >/dev/null 2>&1; then
 fi
 run usermod -aG sudo "$ADMIN_USER"
 run install -d -m 700 -o "$ADMIN_USER" -g "$ADMIN_USER" "/home/$ADMIN_USER/.ssh"
-run install -m 600 -o "$ADMIN_USER" -g "$ADMIN_USER" /root/.ssh/authorized_keys "/home/$ADMIN_USER/.ssh/authorized_keys"
+# Copia tus llaves (no la que añade Coolify a root) solo si el usuario aún no tiene
+if [ ! -s "/home/$ADMIN_USER/.ssh/authorized_keys" ]; then
+  if [ "$DRY_RUN" = 1 ]; then echo "[dry-run] copiar llaves de root (sin la de coolify) a $ADMIN_USER"; else
+    grep -v -i coolify /root/.ssh/authorized_keys > "/home/$ADMIN_USER/.ssh/authorized_keys"
+    chown "$ADMIN_USER:$ADMIN_USER" "/home/$ADMIN_USER/.ssh/authorized_keys"
+    chmod 600 "/home/$ADMIN_USER/.ssh/authorized_keys"
+  fi
+fi
 echo "   (sudo pedirá contraseña: créala con 'passwd $ADMIN_USER' cuando termine)"
 
 log "3. SSH solo con llave"
-SSHD_DROPIN=/etc/ssh/sshd_config.d/99-hardening.conf
+# sshd usa el PRIMER valor que lee: 00- gana a 50-cloud-init.conf y similares
+SSHD_DROPIN=/etc/ssh/sshd_config.d/00-hardening.conf
+[ "$DRY_RUN" = 1 ] || rm -f /etc/ssh/sshd_config.d/99-hardening.conf
 if [ "$DRY_RUN" = 1 ]; then echo "[dry-run] escribir $SSHD_DROPIN"; else
 cat > "$SSHD_DROPIN" <<'CONF'
 # Endurecimiento (infra/server/bootstrap.sh)
@@ -70,18 +83,25 @@ KbdInteractiveAuthentication no
 PermitEmptyPasswords no
 # Coolify gestiona el servidor como root por SSH con su propia llave
 PermitRootLogin prohibit-password
-MaxAuthTries 3
+MaxAuthTries 6
 LoginGraceTime 30
 X11Forwarding no
 AllowAgentForwarding no
 CONF
 fi
 run sshd -t
+if [ "$DRY_RUN" != 1 ]; then
+  sshd -T | grep -qx 'passwordauthentication no' || { echo "ERROR: PasswordAuthentication sigue activo"; exit 1; }
+  sshd -T | grep -qx 'permitrootlogin without-password' || { echo "ERROR: PermitRootLogin no quedó en solo-llave"; exit 1; }
+fi
 run systemctl reload ssh
 
 log "4. Firewall del sistema (ufw)"
 run ufw default deny incoming
 run ufw default allow outgoing
+# Coolify entra por SSH al propio host desde sus redes Docker: sin límite para ellas
+run ufw allow from 10.0.0.0/8 to any port 22 proto tcp comment 'Coolify -> host'
+run ufw allow from 172.16.0.0/12 to any port 22 proto tcp comment 'Docker -> host'
 run ufw limit 22/tcp comment 'SSH'
 run ufw allow 80/tcp comment 'HTTP'
 run ufw allow 443/tcp comment 'HTTPS'
@@ -93,6 +113,7 @@ run install -m 755 "$HERE/docker-user-firewall.sh" /usr/local/sbin/docker-user-f
 run install -m 644 "$HERE/docker-user-firewall.service" /etc/systemd/system/docker-user-firewall.service
 run systemctl daemon-reload
 run systemctl enable docker-user-firewall.service
+run systemctl start docker-user-firewall.service
 
 run install -m 750 "$HERE/backup.sh" /usr/local/sbin/stack-backup.sh
 run install -m 644 "$HERE/stack-backup.service" /etc/systemd/system/stack-backup.service
@@ -103,6 +124,9 @@ run systemctl enable stack-backup.timer
 log "6. fail2ban"
 if [ "$DRY_RUN" = 1 ]; then echo "[dry-run] escribir /etc/fail2ban/jail.d/sshd.local"; else
 cat > /etc/fail2ban/jail.d/sshd.local <<'CONF'
+[DEFAULT]
+ignoreip = 127.0.0.1/8 ::1 10.0.0.0/8 172.16.0.0/12
+
 [sshd]
 enabled = true
 backend = systemd
@@ -129,17 +153,18 @@ if [ "$INSTALL_COOLIFY" = 1 ]; then
     curl -fsSL https://cdn.coollabs.io/coolify/install.sh -o /root/coolify-install.sh
     bash /root/coolify-install.sh
   fi
-  run systemctl restart docker-user-firewall.service
 fi
+run systemctl restart docker-user-firewall.service
 
 log "Listo"
 cat <<MSG
 Siguientes pasos (desde TU ordenador, no desde el servidor):
   1. Comprueba que entras con el nuevo usuario ANTES de cerrar esta sesión:
-       ssh $ADMIN_USER@<IP>
+       ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519 $ADMIN_USER@<IP>
      y crea su contraseña de sudo:  sudo passwd $ADMIN_USER   (desde root: passwd $ADMIN_USER)
   2. Abre el panel de Coolify por túnel SSH (no está abierto a internet):
-       ssh -N -L 8000:localhost:8000 -L 6001:localhost:6001 -L 6002:localhost:6002 $ADMIN_USER@<IP>
+       ssh -o IdentitiesOnly=yes -i ~/.ssh/id_ed25519 -N -L 8000:localhost:8000 -L 6001:localhost:6001 -L 6002:localhost:6002 $ADMIN_USER@<IP>
      y en el navegador: http://localhost:8000  -> crea tu cuenta AL MOMENTO.
-  3. Sigue infra/server/GUIA.md desde el paso 4.
+  3. Reinicia una vez el servidor (sudo reboot) y haz las comprobaciones del paso 3 de GUIA.md.
+  4. Sigue infra/server/GUIA.md desde el paso 4.
 MSG
