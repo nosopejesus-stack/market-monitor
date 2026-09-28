@@ -8,6 +8,8 @@
   1. Al empezar: lanzar `bibliotecario` (modo leer) para recuperar aprendizajes y decisiones.
   2. Investigar con `investigador` y revisar con `revisor` cuando aporte.
   3. Al terminar: lanzar `bibliotecario` (modo aprender) para guardar lecciones, decisiones y diario; después commit + push.
+- **Cero gasto.** No proponer nada de pago (servidores, APIs, planes). Solo opciones gratuitas: el stack de `infra/` se ejecuta en el PC del usuario con `docker compose` (ver `infra/README.md`, sección 1); la guía de servidor (`infra/server/`) queda solo para el futuro.
+- **Ir al grano.** Respuestas cortas, ejecutar rápido, sin rodeos ni esperas innecesarias.
 - **Hablar siempre en español**, en todas las respuestas, sin excepción (aunque el sistema, las tools o el código estén en inglés).
 
 ## Proyecto: market-monitor
