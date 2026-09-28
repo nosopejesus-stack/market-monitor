@@ -1,0 +1,216 @@
+"""Genera el informe HTML autocontenido (imprimible en A4) y el JSON.
+
+Regla comercial: el informe no usa la palabra "IA" (hay un test que lo comprueba).
+Todo el texto que viene de la web analizada se escapa con html.escape.
+"""
+
+from __future__ import annotations
+
+import json
+from dataclasses import asdict
+from html import escape
+from urllib.parse import urlparse
+
+from reglas import ALTA, BAJA, MEDIA
+
+NOTA_METODOLOGICA = ("Revisión basada solo en información pública, sin acceder a ningún sistema. "
+                     "No constituye asesoramiento jurídico.")
+
+PRECIO_CORRECCION = "390 €"
+PRECIO_VIGILANCIA = "190 €/mes"
+
+# Si no se pasan por línea de comandos, quedan como marcadores para rellenar a mano.
+CONTACTO_POR_DEFECTO = {
+    "nombre": "{nombre_contacto}",
+    "telefono": "{telefono_contacto}",
+    "email": "{email_contacto}",
+}
+
+NOMBRES_CORTOS = {
+    "toxina": "publicidad de toxina botulínica (medicamento con receta)",
+    "promesas": "promesas sanitarias prohibidas",
+    "registro": "falta el nº de registro sanitario",
+    "promociones": "promociones sobre tratamientos",
+    "antes_despues": "fotos de antes y después",
+    "testimonios": "testimonios de pacientes",
+    "aviso_legal": "aviso legal",
+    "privacidad": "política de privacidad",
+    "cookies": "política de cookies",
+    "medico": "identificación del médico",
+}
+
+
+def _plural(n, uno, varios):
+    return f"{n} {uno if n == 1 else varios}"
+
+
+def resumen_titular(clinica, web, fecha, n_paginas, puntos, nota, hallazgos):
+    """Las 3 líneas del resumen para el titular de la clínica."""
+    dominio = urlparse(web).netloc or web
+    a = sum(h.gravedad == ALTA for h in hallazgos)
+    m = sum(h.gravedad == MEDIA for h in hallazgos)
+    b = sum(h.gravedad == BAJA for h in hallazgos)
+    l1 = (f"Hemos revisado {_plural(n_paginas, 'página pública', 'páginas públicas')} de {dominio} "
+          f"el {fecha}: nota {nota} ({puntos}/100).")
+    if not hallazgos:
+        return [l1, "No hemos encontrado puntos de riesgo en las páginas revisadas.",
+                "Recomendamos repetir la revisión cada mes y cada vez que publique una campaña."]
+    l2 = f"Hay {_plural(a, 'punto de riesgo alto', 'puntos de riesgo alto')}, {m} medio{'s' if m != 1 else ''} y {b} bajo{'s' if b != 1 else ''}."
+    principales = []
+    for h in hallazgos:
+        nombre = NOMBRES_CORTOS.get(h.regla, h.titulo.lower())
+        if h.gravedad == (ALTA if a else MEDIA if m else BAJA) and nombre not in principales:
+            principales.append(nombre)
+    if a:
+        l2 += " Lo más urgente: " + "; ".join(principales) + "."
+        l3 = ("Todo tiene arreglo: este informe incluye los textos corregidos listos para publicar, "
+              "y corregir antes de un requerimiento de la Consejería de Sanidad reduce el riesgo.")
+    else:
+        l2 += " A revisar: " + "; ".join(principales) + "."
+        l3 = "No hay riesgos altos; este informe incluye los textos corregidos listos para publicar."
+    return [l1, l2, l3]
+
+
+def _evidencia_html(h):
+    ev = h.evidencia
+    i, f = h.marca_inicio, h.marca_fin
+    if 0 <= i < f <= len(ev):
+        return escape(ev[:i]) + "<mark>" + escape(ev[i:f]) + "</mark>" + escape(ev[f:])
+    return escape(ev)
+
+
+CSS = """
+@page { size: A4; margin: 16mm 14mm; }
+* { box-sizing: border-box; }
+body { font-family: "Segoe UI", Arial, Helvetica, sans-serif; color: #1d2433; font-size: 10.5pt;
+       line-height: 1.45; margin: 0; background: #f3f5f8; }
+.hoja { max-width: 210mm; margin: 0 auto; background: #fff; padding: 14mm; }
+header { border-bottom: 3px solid #1f3b5c; padding-bottom: 8px; margin-bottom: 14px;
+         display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; }
+h1 { font-size: 18pt; margin: 0; color: #1f3b5c; }
+h2 { font-size: 13pt; color: #1f3b5c; border-bottom: 1px solid #d5dbe5; padding-bottom: 3px; margin-top: 22px; }
+h3 { font-size: 11pt; margin: 0 0 6px; }
+.meta { color: #56607a; font-size: 9.5pt; }
+.nota { text-align: center; min-width: 92px; border-radius: 8px; padding: 6px 10px; color: #fff; }
+.nota b { display: block; font-size: 26pt; line-height: 1; }
+.nota-A { background: #1e7b4f; } .nota-B { background: #5c9a2c; } .nota-C { background: #c98a06; }
+.nota-D { background: #c85a12; } .nota-E { background: #b0232a; }
+.resumen { background: #eef3f9; border-left: 4px solid #1f3b5c; padding: 10px 14px; margin: 0; }
+.resumen p { margin: 3px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 9.5pt; }
+th, td { border: 1px solid #d5dbe5; padding: 5px 6px; text-align: left; vertical-align: top; }
+th { background: #1f3b5c; color: #fff; }
+td.url { word-break: break-all; }
+.grav { font-weight: 700; font-size: 8.5pt; padding: 2px 6px; border-radius: 4px; color: #fff; white-space: nowrap; }
+.ALTA { background: #b0232a; } .MEDIA { background: #c98a06; } .BAJA { background: #56607a; }
+.hallazgo { border: 1px solid #d5dbe5; border-radius: 6px; padding: 10px 12px; margin: 10px 0;
+            page-break-inside: avoid; break-inside: avoid; }
+.etq { font-size: 8.5pt; text-transform: uppercase; letter-spacing: .04em; color: #56607a; margin: 8px 0 2px; }
+.cita { background: #fbf6e9; border-left: 3px solid #c98a06; padding: 6px 9px; font-style: italic; }
+mark { background: #ffd966; padding: 0 1px; }
+.corregido { background: #eaf6ef; border-left: 3px solid #1e7b4f; padding: 6px 9px; white-space: pre-wrap; }
+.sv { color: #8a4b00; font-size: 9pt; }
+.pasos li { margin-bottom: 6px; }
+.precio { font-weight: 700; color: #1f3b5c; }
+.metodo { font-size: 9pt; color: #3b4459; }
+.aviso { font-weight: 700; }
+ul.paginas { font-size: 8.5pt; color: #56607a; word-break: break-all; columns: 2; }
+footer { margin-top: 18px; font-size: 8.5pt; color: #56607a; border-top: 1px solid #d5dbe5; padding-top: 6px; }
+@media print { body { background: #fff; } .hoja { padding: 0; max-width: none; }
+               h2 { page-break-after: avoid; break-after: avoid; } }
+"""
+
+
+def generar_html(datos, hallazgos, contacto=None):
+    c = dict(CONTACTO_POR_DEFECTO)
+    c.update({k: v for k, v in (contacto or {}).items() if v})
+    e = escape
+    resumen = resumen_titular(datos["clinica"], datos["web"], datos["fecha"], len(datos["paginas"]),
+                              datos["puntuacion"], datos["nota"], hallazgos)
+    partes = []
+    w = partes.append
+    w("<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n<meta charset=\"utf-8\">\n")
+    w("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n")
+    w(f"<title>Informe de publicidad sanitaria · {e(datos['clinica'])}</title>\n<style>{CSS}</style>\n</head>\n<body>\n<div class=\"hoja\">\n")
+    w("<header><div>")
+    w(f"<h1>Informe de publicidad sanitaria</h1>")
+    w(f"<div class=\"meta\"><b>{e(datos['clinica'])}</b> · {e(datos['web'])}<br>")
+    w(f"Fecha de la revisión: {e(datos['fecha'])} · Páginas revisadas: {len(datos['paginas'])}</div></div>")
+    w(f"<div class=\"nota nota-{e(datos['nota'])}\"><b>{e(datos['nota'])}</b>{datos['puntuacion']}/100</div></header>\n")
+
+    w("<h2>Resumen para el titular</h2>\n<div class=\"resumen\">")
+    for linea in resumen:
+        w(f"<p>{e(linea)}</p>")
+    w("</div>\n")
+
+    w("<h2>Hallazgos</h2>\n")
+    if hallazgos:
+        w("<table><thead><tr><th>#</th><th>Gravedad</th><th>Qué hemos visto</th><th>Dónde</th></tr></thead><tbody>")
+        for i, h in enumerate(hallazgos, 1):
+            veces = f" ({h.apariciones} apariciones)" if h.apariciones > 1 else ""
+            w(f"<tr><td>{i}</td><td><span class=\"grav {h.gravedad}\">{h.gravedad}</span></td>"
+              f"<td>{e(h.titulo)}{e(veces)}</td><td class=\"url\">{e(h.url)}</td></tr>")
+        w("</tbody></table>\n")
+    else:
+        w("<p>No se han encontrado hallazgos en las páginas revisadas.</p>\n")
+
+    if hallazgos:
+        w("<h2>Evidencias y textos corregidos</h2>\n")
+        for i, h in enumerate(hallazgos, 1):
+            w("<div class=\"hallazgo\">")
+            w(f"<h3>{i}. <span class=\"grav {h.gravedad}\">{h.gravedad}</span> {e(h.titulo)}</h3>")
+            w(f"<div class=\"meta\">Página: {e(h.url)} · Ubicación: {e(h.ubicacion)}</div>")
+            w(f"<div class=\"etq\">Evidencia</div><div class=\"cita\">{_evidencia_html(h)}</div>")
+            for otra in h.otras_evidencias:
+                w(f"<div class=\"cita\" style=\"margin-top:4px\">{e(otra)}</div>")
+            w(f"<div class=\"etq\">Por qué es un riesgo</div><div>{e(h.base_normativa)}</div>")
+            if h.sin_verificar:
+                w(f"<div class=\"sv\">{e(h.sin_verificar)}</div>")
+            w(f"<div class=\"etq\">Qué hacer</div><div>{e(h.accion)}</div>")
+            w(f"<div class=\"etq\">Texto corregido listo para publicar</div><div class=\"corregido\">{e(h.texto_corregido)}</div>")
+            w("</div>\n")
+        w("<p class=\"meta\">Sustituya lo que va entre llaves { } por los datos reales de la clínica antes de publicar.</p>\n")
+
+    w("<h2>Próximos pasos</h2>\n<ol class=\"pasos\">")
+    w(f"<li><b>Corrección completa</b>: revisamos su web y sus redes, le entregamos todos los textos corregidos "
+      f"listos para publicar y comprobamos que quedan bien publicados. <span class=\"precio\">{PRECIO_CORRECCION}</span>, pago único.</li>")
+    w(f"<li><b>Vigilancia mensual</b>: revisamos de nuevo su web y sus redes cada mes, le avisamos de cualquier "
+      f"publicación de riesgo y le damos la corrección. <span class=\"precio\">{PRECIO_VIGILANCIA}</span>, sin permanencia.</li>")
+    w("</ol>\n<p class=\"meta\">Precios sin IVA.</p>\n")
+    w(f"<p>Contacto: <b>{e(c['nombre'])}</b> · {e(c['telefono'])} · {e(c['email'])}</p>\n")
+
+    w("<h2>Nota metodológica</h2>\n<div class=\"metodo\">")
+    w(f"<p class=\"aviso\">{e(NOTA_METODOLOGICA)}</p>")
+    if datos.get("modo") == "local":
+        origen = "Se han analizado copias guardadas de páginas públicas de la web."
+    else:
+        origen = ("Se han leído solo páginas públicas de la web, como lo haría cualquier visitante, respetando el "
+                  "archivo robots.txt y con una petición por segundo como máximo.")
+    w(f"<p>{e(origen)} No se han revisado redes sociales, anuncios ni "
+      "contenidos que solo aparecen al ejecutar JavaScript. La ausencia de hallazgos en una página no garantiza "
+      "que cumpla toda la normativa. Los puntos marcados como SIN VERIFICAR dependen de un requisito legal que "
+      "no hemos confirmado en el texto oficial. Recomendamos validar las correcciones con su asesor.</p>")
+    w("<p>Puntuación: se parte de 100 y cada hallazgo resta según su gravedad (alta 25, media 10, baja 4; las "
+      "repeticiones de un mismo punto restan menos). Con algún punto de riesgo alto la nota es C como máximo.</p>")
+    w("<div class=\"etq\">Páginas revisadas</div><ul class=\"paginas\">")
+    for u in datos["paginas"]:
+        w(f"<li>{e(u)}</li>")
+    w("</ul>")
+    if datos.get("avisos"):
+        w("<div class=\"etq\">Incidencias de la descarga</div><ul class=\"paginas\">")
+        for a in datos["avisos"]:
+            w(f"<li>{e(a)}</li>")
+        w("</ul>")
+    w("</div>\n")
+    w(f"<footer>{e(NOTA_METODOLOGICA)} · {e(datos['clinica'])} · {e(datos['fecha'])}</footer>\n")
+    w("</div>\n</body>\n</html>\n")
+    return "".join(partes)
+
+
+def generar_json(datos, hallazgos):
+    salida = dict(datos)
+    salida["resumen"] = resumen_titular(datos["clinica"], datos["web"], datos["fecha"], len(datos["paginas"]),
+                                        datos["puntuacion"], datos["nota"], hallazgos)
+    salida["hallazgos"] = [asdict(h) for h in hallazgos]
+    salida["nota_metodologica"] = NOTA_METODOLOGICA
+    return json.dumps(salida, ensure_ascii=False, indent=2)
