@@ -1,9 +1,17 @@
 # Plan: respuesta inmediata a leads para inmobiliarias de Madrid
 
 ## Qué vendemos
-A inmobiliarias pequeñas y medianas de Madrid (1-15 agentes): **cada lead de Idealista/Fotocasa/web
-recibe respuesta por WhatsApp en menos de 2 minutos, 24/7**, se cualifica (presupuesto, zona,
-financiación, plazo) y se le agenda la visita en el calendario del agente. El agente solo ve leads cualificados.
+A inmobiliarias pequeñas y medianas de Madrid (1-15 agentes): **cada lead de Idealista, Fotocasa o su web
+recibe respuesta en menos de 2 minutos, 24/7.** La primera respuesta va por email (el formato en que llegan
+todos los leads) con un botón para seguir por WhatsApp; cuando el comprador escribe por WhatsApp, un asistente
+**identificado como automático** cualifica (presupuesto, zona, financiación, plazo) y agenda la visita en el
+calendario del agente. El agente solo ve leads cualificados.
+
+Por qué así (ver `investigacion/whatsapp_idealista.md`):
+- WhatsApp solo deja a la empresa escribir primero con plantilla aprobada y consentimiento explícito; un teléfono dejado en un portal no lo es. Si el comprador abre él el WhatsApp desde el botón, el consentimiento es limpio y la conversación es gratis de iniciar.
+- El teléfono del lead no siempre viene; el email sí.
+- Ley de IA de la UE, art. 50.1: desde el 2-ago-2026 el asistente debe decir que es automático.
+- Desde el 1-oct-2026 Meta cobra también los mensajes dentro de la ventana de 24 h: coste pequeño, **a cargo del cliente, con su tarjeta**.
 
 ## Por qué aquí hay dinero (hipótesis a verificar en las primeras 20 conversaciones)
 - Un piso vendido en Madrid deja miles de euros de comisión; perder un lead por responder tarde cuesta más que el servicio.
@@ -16,7 +24,7 @@ financiación, plazo) y se le agenda la visita en el calendario del agente. El a
 ## Precio
 - **1.900 € instalación + 290 €/mes** (mantenimiento, ajustes, informe mensual).
 - Pago de la instalación: 50 % al firmar, 50 % a la entrega. Sin permanencia.
-- Los costes de WhatsApp Business API y del servidor los paga el cliente (unos 15-40 €/mes, según volumen). **Nosotros: 0 €.**
+- Los costes de WhatsApp (Meta, con la tarjeta del cliente) y del servidor los paga el cliente. **Nosotros: 0 €.** Importe exacto: SIN VERIFICAR, se mide en el piloto.
 
 ## Matemática de los 10.000 €
 - 5 clientes × (1.900 + 290) = **10.950 €**.
