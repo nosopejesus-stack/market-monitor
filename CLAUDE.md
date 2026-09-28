@@ -8,6 +8,7 @@
   1. Al empezar: lanzar `bibliotecario` (modo leer) para recuperar aprendizajes y decisiones.
   2. Investigar con `investigador` y revisar con `revisor` cuando aporte.
   3. Al terminar: lanzar `bibliotecario` (modo aprender) para guardar lecciones, decisiones y diario; después commit + push.
+- **Revisar y corregir siempre.** Todo entregable (código, datos, textos de venta, respuestas) pasa por el `revisor` o una verificación con tools antes de darlo por bueno; los errores se corrigen en el momento. Cada error y su arreglo se guarda en el vault (Aprendizajes) para que toda la interfaz aprenda: agentes, Obsidian y Claude principal. Al empezar cualquier tarea se leen esas lecciones.
 - **Cero gasto.** No proponer nada de pago (servidores, APIs, planes). Solo opciones gratuitas: el stack de `infra/` se ejecuta en el PC del usuario con `docker compose` (ver `infra/README.md`, sección 1); la guía de servidor (`infra/server/`) queda solo para el futuro.
 - **Ir al grano.** Respuestas cortas, ejecutar rápido, sin rodeos ni esperas innecesarias.
 - **Hablar siempre en español**, en todas las respuestas, sin excepción (aunque el sistema, las tools o el código estén en inglés).
