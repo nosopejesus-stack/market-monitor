@@ -41,7 +41,7 @@ los testimonios salen como `[nombre]`).
 
 **1. Descargar la herramienta**
 
-1. En la página del repositorio en GitHub pulsa el botón verde **Code** → **Download ZIP**.
+1. Abre https://github.com/nosopejesus-stack/market-monitor/tree/claude/tender-cannon-ui4ixl (esta rama; cuando se pase a `main`, usa `main`) y pulsa el botón verde **Code** → **Download ZIP**.
 2. Ve a la carpeta **Descargas**, pulsa con el botón derecho sobre el ZIP → **Extraer todo…** → **Extraer**.
    No trabajes dentro del ZIP sin extraer: no funciona.
 3. Dentro de lo extraído, la herramienta está en
