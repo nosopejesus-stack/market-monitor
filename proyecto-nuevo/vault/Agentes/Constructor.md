@@ -4,3 +4,7 @@ Definición: `.claude/agents/constructor.md`. Volver a [[Equipo de agentes]].
 
 ## Historial de aprendizajes de este agente
 - 2026-09-28 (`negocio/demo/`): banner "SIMULACIÓN", textos calculados de los datos, tests del generador, JSON escapado + `textContent`, sin scraping de portales. Ver [[Aprendizajes/2026-09-28 Demos comerciales seguras y honestas]].
+- 2026-09-28 (`arcend/blindaje/`): detectores con negación, contexto explicativo y lista blanca; exclusiones que ocupan su tramo; nombres propios sin distinguir mayúsculas. Ver [[Aprendizajes/2026-09-28 Detectores de lenguaje prohibido con negación y contexto]].
+- 2026-09-28 (`arcend/blindaje/`): reglas "falta X" solo con ≥ 300 caracteres y ≥ 2 páginas leídas; si no, aviso "revisión no fiable". Ver [[Aprendizajes/2026-09-28 Reglas de ausencia solo con lectura suficiente]].
+- 2026-09-28 (`arcend/blindaje/`): rastreador que deduplica por URL final, quita utm/fbclid/gclid sin recodificar, try/except por enlace y UTF-8 estricto primero. Ver [[Aprendizajes/2026-09-28 Rastreadores robustos - URL final, parámetros y codificación]].
+- 2026-09-28 (`arcend/blindaje/`): `n_puntos_norma` calculado y deduplicado por la herramienta; `--previo` sin textos corregidos; avisos visibles, nunca en comentarios HTML. Ver [[Aprendizajes/2026-09-28 Cifra comercial calculada por la herramienta]], [[Aprendizajes/2026-09-28 Documento previo a la venta sin entregable de pago]] y [[Aprendizajes/2026-09-28 Avisos de verificar visibles, nunca en comentarios HTML]].

@@ -26,3 +26,12 @@ Lecciones que los agentes y tú hemos aprendido. Cada lección es una nota en es
 | 2026-09-28 | [[2026-09-28 Comparar estrategias sin razonamiento circular]] | #metodo #decision |
 | 2026-09-28 | [[2026-09-28 Verificar cada cifra de un resumen]] | #error #revision #cifras |
 | 2026-09-28 | [[2026-09-28 Fuentes oficiales bloqueadas en el contenedor]] | #entorno #investigacion |
+| 2026-09-28 | [[2026-09-28 Detectores de lenguaje prohibido con negación y contexto]] | #arcend #blindaje #reglas #falsos-positivos |
+| 2026-09-28 | [[2026-09-28 Reglas de ausencia solo con lectura suficiente]] | #arcend #blindaje #rastreador #javascript |
+| 2026-09-28 | [[2026-09-28 Textos corregidos sin afirmar hechos del cliente]] | #arcend #blindaje #textos #legal |
+| 2026-09-28 | [[2026-09-28 Cifra comercial calculada por la herramienta]] | #arcend #blindaje #ventas #cifras |
+| 2026-09-28 | [[2026-09-28 Documento previo a la venta sin entregable de pago]] | #arcend #blindaje #ventas |
+| 2026-09-28 | [[2026-09-28 Avisos de verificar visibles, nunca en comentarios HTML]] | #arcend #informes #revision |
+| 2026-09-28 | [[2026-09-28 Rastreadores robustos - URL final, parámetros y codificación]] | #arcend #blindaje #rastreador #python |
+| 2026-09-28 | [[2026-09-28 Front matter YAML y documentar opciones que existen]] | #error #markdown #yaml #proceso |
+| 2026-09-28 | [[2026-09-28 Prospección - comprobar direcciones y distinguir cadenas]] | #arcend #prospeccion #datos |

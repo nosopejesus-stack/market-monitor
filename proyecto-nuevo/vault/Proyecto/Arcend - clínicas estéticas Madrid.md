@@ -22,6 +22,8 @@ fuente: Notion "Proyecto Arcend · Clínicas estéticas Madrid" (https://app.not
 ## Estado 2026-09-28
 **Decisión vigente:** [[Decisiones/2026-09-28 Arcend - Blindaje continuo por teléfono]]. Se entra con el Blindaje (informe 390 € + vigilancia 190 €/mes, sin permanencia), captado por teléfono con el informe ya hecho. Atención (paquetes 1 y 2 de arriba) queda solo como subida para la semana 4-8. 10.000 € en 30 días no es realista; se decide con las primeras 40 llamadas (condiciones de muerte en la decisión).
 
+**Blindaje construido (2026-09-28):** herramienta `arcend/blindaje/` (79 tests; es la que usa `PASO_A_PASO.md` para los informes previos; si sustituye del todo al risk-scanner: SIN VERIFICAR), kit de ventas y 49 clínicas. Ruta corregida: IME en Vallehermoso 9 (Lagasca 95 es Clínica Londres, cadena); Face Clinic es un grupo de 4 centros. Ver [[Decisiones/2026-09-28 Arcend - Informe previo y N calculado por la herramienta]] y `arcend/PASO_A_PASO.md`.
+
 **Datos de mercado** (`proyecto-nuevo/arcend/investigacion/mercado.md`; extractos del buscador, SIN VERIFICAR salvo que se diga):
 - **Código correcto: U.48 "Medicina estética"** (RD 1277/2003), no U.90.
 - **Tamaño:** ~350-550 clínicas cuyo negocio principal es la medicina estética en Madrid capital (extrapolación propia desde 6.305 centros U.48 en España en 2021; dato oficial por municipio pendiente del registro de la Comunidad). 80-90 % independientes (SIN VERIFICAR).
