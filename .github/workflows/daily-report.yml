@@ -1,0 +1,27 @@
+name: Informe diario de mercado
+
+on:
+  schedule:
+    # 07:00 hora España (verano UTC+2) -> 05:00 UTC. Ajusta si cambia horario.
+    - cron: "0 5 * * *"
+  workflow_dispatch: {}  # permite ejecutarlo manualmente desde GitHub
+
+jobs:
+  daily-report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+      - name: Descargar corpus de TextBlob
+        run: python -m textblob.download_corpora
+      - name: Ejecutar informe diario
+        env:
+          NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+        run: python main.py --mode daily

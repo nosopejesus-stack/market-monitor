@@ -1,0 +1,27 @@
+name: Chequeo de alertas de mercado
+
+on:
+  schedule:
+    # Cada 30 minutos, solo en horario de mercado activo (7:00-21:00 UTC aprox)
+    - cron: "*/30 7-21 * * 1-5"
+  workflow_dispatch: {}
+
+jobs:
+  alert-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+      - name: Descargar corpus de TextBlob
+        run: python -m textblob.download_corpora
+      - name: Ejecutar chequeo de alertas
+        env:
+          NEWSAPI_KEY: ${{ secrets.NEWSAPI_KEY }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+        run: python main.py --mode alert
