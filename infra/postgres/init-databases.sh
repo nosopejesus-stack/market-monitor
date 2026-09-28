@@ -1,14 +1,28 @@
 #!/bin/bash
-# Crea una base de datos y un usuario por servicio (solo en el primer arranque).
+# Crea (o actualiza) un usuario y una base de datos por servicio.
+# Idempotente: se puede re-ejecutar para rotar contraseñas tras cambiar .env:
+#   docker compose exec postgres bash /docker-entrypoint-initdb.d/10-init-databases.sh
 set -euo pipefail
-create() {
-  psql -v ON_ERROR_STOP=1 -U postgres <<SQL
-CREATE USER $1 WITH PASSWORD '$2';
-CREATE DATABASE $1 OWNER $1;
+PSQL=(psql -v ON_ERROR_STOP=1 -U postgres)
+
+ensure() {  # usuario contraseña
+  "${PSQL[@]}" -v u="$1" -v pw="$2" <<'SQL'
+SELECT format('CREATE ROLE %I LOGIN', :'u') WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = :'u')\gexec
+ALTER ROLE :"u" WITH LOGIN NOSUPERUSER PASSWORD :'pw';
+SELECT format('CREATE DATABASE %I OWNER %I', :'u', :'u') WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = :'u')\gexec
 SQL
 }
-create n8n "$N8N_DB_PASSWORD"
-create chatwoot "$CHATWOOT_DB_PASSWORD"
-create umami "$UMAMI_DB_PASSWORD"
-# Chatwoot necesita pgvector y crear extensiones
-psql -v ON_ERROR_STOP=1 -U postgres -d chatwoot -c "CREATE EXTENSION IF NOT EXISTS vector; ALTER USER chatwoot WITH SUPERUSER;"
+ensure n8n "$N8N_DB_PASSWORD"
+ensure chatwoot "$CHATWOOT_DB_PASSWORD"
+ensure umami "$UMAMI_DB_PASSWORD"
+
+# Extensiones que piden las migraciones de Chatwoot, creadas por postgres
+# (así el usuario chatwoot no necesita SUPERUSER).
+"${PSQL[@]}" -d chatwoot <<'SQL'
+CREATE EXTENSION IF NOT EXISTS vector;
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+SQL
+"${PSQL[@]}" -d postgres -c "SELECT 1" >/dev/null
+echo "[init-databases] usuarios y bases de datos listos"

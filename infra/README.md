@@ -18,7 +18,9 @@ cd infra
 docker compose up -d               # la primera vez tarda: descarga imágenes y construye ComfyUI
 ./scripts/smoke-test.sh            # comprueba que los 5 servicios responden
 ```
-Para descargar modelos de Ollama: `OLLAMA_MODELS="llama3.2:3b"` en `.env` y `docker compose up ollama-pull`.
+Para descargar modelos de Ollama: `OLLAMA_MODELS="llama3.2:3b"` en `.env` y `docker compose --profile pull up ollama-pull`.
+
+Los puertos solo escuchan en `127.0.0.1` (variable `BIND_ADDRESS`): no quedan abiertos a internet.
 
 ## 2. Siempre encendido: servidor + Coolify
 Este stack tiene que vivir en un servidor propio (el contenedor de Claude en la nube se borra al cerrar la sesión).
@@ -34,8 +36,19 @@ Este stack tiene que vivir en un servidor propio (el contenedor de Claude en la 
    con ruta `infra/docker-compose.yml`.
 3. En **Environment Variables** del recurso, pega el contenido de tu `.env`
    (generado con `scripts/generate-env.sh`) y cambia las URLs por tus dominios con https.
-4. Asigna un dominio a cada servicio (n8n, chatwoot, umami, comfyui) y despliega.
-   Coolify gestiona los certificados HTTPS y reinicia los servicios si caen.
+   Para HTTPS pon además `N8N_PROTOCOL=https`, `N8N_PROXY_HOPS=1` y `N8N_SECURE_COOKIE=true`.
+4. Asigna un dominio a cada servicio **incluyendo el puerto interno** (si no, da error 502):
+   `https://n8n.tudominio.com:5678`, `https://chat.tudominio.com:3000`,
+   `https://umami.tudominio.com:3000`, `https://comfy.tudominio.com:8188`.
+   **No** pongas dominio a Ollama: n8n lo usa por dentro en `http://ollama:11434`.
+   A ComfyUI (no tiene login) ponle *Basic Auth* en Coolify o no lo publiques.
+5. Despliega. Coolify gestiona los certificados HTTPS y reinicia los servicios si caen.
+6. **Inmediatamente**, antes de compartir los dominios, crea las cuentas de administrador:
+   n8n, Chatwoot (`/installation/onboarding`) y Coolify dan el control al primer visitante,
+   y Umami arranca con `admin` / `umami`: cambia esa contraseña en cuanto entres.
+
+Con GPU en Coolify: Coolify usa un único archivo compose, así que copia el bloque
+`deploy.resources` de `docker-compose.gpu.yml` dentro de `docker-compose.yml`.
 
 ## 3. Conectar n8n con Claude (una sola vez)
 1. Abre n8n y crea tu cuenta de administrador.
@@ -50,7 +63,15 @@ Este stack tiene que vivir en un servidor propio (el contenedor de Claude en la 
 
 Desde ese momento Claude puede crear y ejecutar flujos de n8n, y a través de ellos usar Chatwoot, Ollama, Umami y ComfyUI.
 
+## Rotar secretos
+Las contraseñas de las bases de datos se guardan en el volumen de Postgres la primera vez.
+Si cambias `.env` (o pegas otro en Coolify) después del primer despliegue:
+1. Cambia las contraseñas de BD en `.env` y aplica con
+   `docker compose exec postgres bash /docker-entrypoint-initdb.d/10-init-databases.sh`.
+2. **Nunca** cambies `N8N_ENCRYPTION_KEY`: n8n no arrancará y perderás sus credenciales guardadas.
+
 ## Notas
 - `.env` contiene todas las contraseñas: guárdalo en un gestor de contraseñas y **nunca** lo subas a git.
 - En producción fija versiones concretas (`N8N_VERSION`, `CHATWOOT_VERSION`…) en vez de `latest`.
+- ComfyUI: los volúmenes `models` y `custom_nodes` conservan su contenido al actualizar la imagen.
 - Copias de seguridad: en Coolify, activa los backups programados del volumen `postgres_data`.

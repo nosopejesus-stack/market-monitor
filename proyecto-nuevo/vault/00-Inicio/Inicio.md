@@ -11,6 +11,8 @@ Memoria compartida del proyecto entre tú y los agentes. **Todo lo importante vi
 - **Nombre:** _(pendiente)_
 - **Objetivo:** _(pendiente — definir en [[Proyecto/Visión]])_
 - **Fase actual:** arranque
+- **Infraestructura:** stack en `infra/` (n8n, Chatwoot, Ollama, Umami, ComfyUI + Postgres 17/pgvector + Redis) probado en el contenedor cloud; pendiente de desplegar 24/7 en un VPS con Coolify. Claude usará los servicios a través del MCP de instancia de n8n. Ver [[Decisiones/2026-09-28 Stack de servicios en infra con n8n como puerta de Claude]].
+- **Pendiente del usuario:** servidor, dominios, cuentas admin y token MCP de n8n.
 
 ## Mapa
 - [[Proyecto/Visión]] — qué construimos y para quién
