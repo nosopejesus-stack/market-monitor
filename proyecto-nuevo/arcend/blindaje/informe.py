@@ -1,5 +1,10 @@
 """Genera el informe HTML autocontenido (imprimible en A4) y el JSON.
 
+Dos modos:
+- completo (por defecto): entregable de pago, con evidencias y textos corregidos.
+- previo (``previo=True``): una página para enseñar antes de vender: N puntos con norma
+  concreta, cada punto con su norma y gravedad, y la oferta. SIN textos corregidos.
+
 Regla comercial: el informe no usa la palabra "IA" (hay un test que lo comprueba).
 Todo el texto que viene de la web analizada se escapa con html.escape.
 """
@@ -7,11 +12,12 @@ Todo el texto que viene de la web analizada se escapa con html.escape.
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import asdict
 from html import escape
 from urllib.parse import urlparse
 
-from reglas import ALTA, BAJA, MEDIA
+from reglas import ALTA, BAJA, MEDIA, n_puntos_norma
 
 NOTA_METODOLOGICA = ("Revisión basada solo en información pública, sin acceder a ningún sistema. "
                      "No constituye asesoramiento jurídico.")
@@ -28,6 +34,7 @@ CONTACTO_POR_DEFECTO = {
 
 NOMBRES_CORTOS = {
     "toxina": "publicidad de toxina botulínica (medicamento con receta)",
+    "toxina_revisar": "mención explicativa de la toxina botulínica (revisar a mano)",
     "promesas": "promesas sanitarias prohibidas",
     "registro": "falta el nº de registro sanitario",
     "promociones": "promociones sobre tratamientos",
@@ -44,30 +51,44 @@ def _plural(n, uno, varios):
     return f"{n} {uno if n == 1 else varios}"
 
 
-def resumen_titular(clinica, web, fecha, n_paginas, puntos, nota, hallazgos):
+def resumen_titular(clinica, web, fecha, n_paginas, puntos, nota, hallazgos, modo="web", previo=False,
+                    lectura_fiable=True):
     """Las 3 líneas del resumen para el titular de la clínica."""
     dominio = urlparse(web).netloc or web
     a = sum(h.gravedad == ALTA for h in hallazgos)
     m = sum(h.gravedad == MEDIA for h in hallazgos)
     b = sum(h.gravedad == BAJA for h in hallazgos)
-    l1 = (f"Hemos revisado {_plural(n_paginas, 'página pública', 'páginas públicas')} de {dominio} "
-          f"el {fecha}: nota {nota} ({puntos}/100).")
+    n_norma = n_puntos_norma(hallazgos)
+    if modo == "local":
+        guardadas = _plural(n_paginas, "página guardada", "páginas guardadas")
+        origen = f"{guardadas} de {dominio}" if dominio else f"{guardadas} de la web de {clinica}"
+    else:
+        origen = f"{_plural(n_paginas, 'página pública', 'páginas públicas')} de {dominio}"
+    l1 = f"Hemos revisado {origen} el {fecha}: nota {nota} ({puntos}/100)."
     if not hallazgos:
+        if not lectura_fiable:
+            return [l1, "No se ha podido leer bien el contenido de la web: esta revisión no es fiable.",
+                    "Para una revisión fiable, guarde las páginas desde el navegador y repita la revisión."]
         return [l1, "No hemos encontrado puntos de riesgo en las páginas revisadas.",
                 "Recomendamos repetir la revisión cada mes y cada vez que publique una campaña."]
-    l2 = f"Hay {_plural(a, 'punto de riesgo alto', 'puntos de riesgo alto')}, {m} medio{'s' if m != 1 else ''} y {b} bajo{'s' if b != 1 else ''}."
+    l2 = (f"Hay {_plural(a, 'punto de riesgo alto', 'puntos de riesgo alto')}, {m} medio{'s' if m != 1 else ''} "
+          f"y {b} bajo{'s' if b != 1 else ''} ({_plural(n_norma, 'punto', 'puntos')} con norma concreta).")
     principales = []
     for h in hallazgos:
         nombre = NOMBRES_CORTOS.get(h.regla, h.titulo.lower())
         if h.gravedad == (ALTA if a else MEDIA if m else BAJA) and nombre not in principales:
             principales.append(nombre)
+    if previo:
+        entrega = "con la corrección completa le entregamos los textos corregidos listos para publicar"
+    else:
+        entrega = "este informe incluye los textos corregidos listos para publicar"
     if a:
         l2 += " Lo más urgente: " + "; ".join(principales) + "."
-        l3 = ("Todo tiene arreglo: este informe incluye los textos corregidos listos para publicar, "
-              "y corregir antes de un requerimiento de la Consejería de Sanidad reduce el riesgo.")
+        l3 = (f"Todo tiene arreglo: {entrega}, y corregir antes de un requerimiento de la Consejería de Sanidad "
+              "reduce el riesgo.")
     else:
         l2 += " A revisar: " + "; ".join(principales) + "."
-        l3 = "No hay riesgos altos; este informe incluye los textos corregidos listos para publicar."
+        l3 = f"No hay riesgos altos; {entrega}."
     return [l1, l2, l3]
 
 
@@ -114,6 +135,9 @@ mark { background: #ffd966; padding: 0 1px; }
 .precio { font-weight: 700; color: #1f3b5c; }
 .metodo { font-size: 9pt; color: #3b4459; }
 .aviso { font-weight: 700; }
+.alerta { background: #fdecea; border: 2px solid #b0232a; color: #7a1419; padding: 10px 14px; font-weight: 700;
+          margin: 0 0 14px; }
+.cifra { font-size: 13pt; font-weight: 700; color: #1f3b5c; margin: 8px 0; }
 ul.paginas { font-size: 8.5pt; color: #56607a; word-break: break-all; columns: 2; }
 footer { margin-top: 18px; font-size: 8.5pt; color: #56607a; border-top: 1px solid #d5dbe5; padding-top: 6px; }
 @media print { body { background: #fff; } .hoja { padding: 0; max-width: none; }
@@ -121,27 +145,75 @@ footer { margin-top: 18px; font-size: 8.5pt; color: #56607a; border-top: 1px sol
 """
 
 
-def generar_html(datos, hallazgos, contacto=None):
+def _resumen(datos, hallazgos, previo):
+    return resumen_titular(datos["clinica"], datos["web"], datos["fecha"], len(datos["paginas"]),
+                           datos["puntuacion"], datos["nota"], hallazgos, modo=datos.get("modo", "web"),
+                           previo=previo, lectura_fiable=datos.get("lectura_fiable", True))
+
+
+def _proximos_pasos(w, c):
+    e = escape
+    w("<h2>Próximos pasos</h2>\n<ol class=\"pasos\">")
+    w(f"<li><b>Corrección completa</b>: revisamos su web y sus redes sociales (publicaciones de los últimos 12 "
+      f"meses), le entregamos todos los textos corregidos listos para publicar en un plazo de 5 días hábiles desde "
+      f"el cobro y comprobamos que quedan bien publicados. <span class=\"precio\">{PRECIO_CORRECCION}</span>, "
+      f"pago único.</li>")
+    w(f"<li><b>Vigilancia mensual</b>: una revisión al mes de su web y sus redes (periódica, no en tiempo real); "
+      f"le avisamos de las publicaciones nuevas con riesgo y le damos su corrección. "
+      f"<span class=\"precio\">{PRECIO_VIGILANCIA}</span>, sin permanencia: baja con 15 días de preaviso.</li>")
+    w("</ol>\n<p class=\"meta\">Todos los importes son sin IVA.</p>\n")
+    w(f"<p>Contacto: <b>{e(c['nombre'])}</b> · {e(c['telefono'])} · {e(c['email'])}</p>\n")
+
+
+def generar_html(datos, hallazgos, contacto=None, previo=False):
     c = dict(CONTACTO_POR_DEFECTO)
     c.update({k: v for k, v in (contacto or {}).items() if v})
     e = escape
-    resumen = resumen_titular(datos["clinica"], datos["web"], datos["fecha"], len(datos["paginas"]),
-                              datos["puntuacion"], datos["nota"], hallazgos)
+    resumen = _resumen(datos, hallazgos, previo)
+    n_norma = datos.get("n_puntos_norma", n_puntos_norma(hallazgos))
+    web = datos["web"] or "copia guardada de la web"
+    titulo = "Informe previo de publicidad sanitaria" if previo else "Informe de publicidad sanitaria"
     partes = []
     w = partes.append
     w("<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n<meta charset=\"utf-8\">\n")
     w("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n")
-    w(f"<title>Informe de publicidad sanitaria · {e(datos['clinica'])}</title>\n<style>{CSS}</style>\n</head>\n<body>\n<div class=\"hoja\">\n")
+    w(f"<title>{titulo} · {e(datos['clinica'])}</title>\n<style>{CSS}</style>\n</head>\n<body>\n<div class=\"hoja\">\n")
     w("<header><div>")
-    w(f"<h1>Informe de publicidad sanitaria</h1>")
-    w(f"<div class=\"meta\"><b>{e(datos['clinica'])}</b> · {e(datos['web'])}<br>")
+    w(f"<h1>{titulo}</h1>")
+    w(f"<div class=\"meta\"><b>{e(datos['clinica'])}</b> · {e(web)}<br>")
     w(f"Fecha de la revisión: {e(datos['fecha'])} · Páginas revisadas: {len(datos['paginas'])}</div></div>")
     w(f"<div class=\"nota nota-{e(datos['nota'])}\"><b>{e(datos['nota'])}</b>{datos['puntuacion']}/100</div></header>\n")
+
+    if not datos.get("lectura_fiable", True):
+        w(f"<div class=\"alerta\">{e(datos.get('aviso_lectura', ''))} No se incluyen los puntos que afirman que "
+          "falta algo en la web (registro sanitario, páginas legales, médico responsable).</div>\n")
 
     w("<h2>Resumen para el titular</h2>\n<div class=\"resumen\">")
     for linea in resumen:
         w(f"<p>{e(linea)}</p>")
     w("</div>\n")
+    w(f"<p class=\"cifra\">{_plural(n_norma, 'punto', 'puntos')} con norma concreta</p>\n")
+
+    if previo:
+        w("<h2>Puntos encontrados</h2>\n")
+        if hallazgos:
+            w("<table><thead><tr><th>#</th><th>Gravedad</th><th>Qué hemos visto</th><th>Norma</th>"
+              "<th>Dónde</th></tr></thead><tbody>")
+            for i, h in enumerate(hallazgos, 1):
+                norma = e(h.norma or h.base_normativa)
+                if h.sin_verificar:
+                    norma += " <span class=\"sv\">(SIN VERIFICAR)</span>"
+                w(f"<tr><td>{i}</td><td><span class=\"grav {h.gravedad}\">{h.gravedad}</span></td>"
+                  f"<td>{e(h.titulo)}</td><td>{norma}</td><td class=\"url\">{e(h.url)}</td></tr>")
+            w("</tbody></table>\n")
+        else:
+            w("<p>No se han encontrado puntos de riesgo en las páginas revisadas.</p>\n")
+        _proximos_pasos(w, c)
+        w(f"<p class=\"metodo\"><span class=\"aviso\">{e(NOTA_METODOLOGICA)}</span> Los puntos marcados SIN "
+          "VERIFICAR dependen de un requisito legal que no hemos confirmado en el texto oficial.</p>\n")
+        w(f"<footer>{e(NOTA_METODOLOGICA)} · {e(datos['clinica'])} · {e(datos['fecha'])}</footer>\n")
+        w("</div>\n</body>\n</html>\n")
+        return "".join(partes)
 
     w("<h2>Hallazgos</h2>\n")
     if hallazgos:
@@ -169,15 +241,10 @@ def generar_html(datos, hallazgos, contacto=None):
             w(f"<div class=\"etq\">Qué hacer</div><div>{e(h.accion)}</div>")
             w(f"<div class=\"etq\">Texto corregido listo para publicar</div><div class=\"corregido\">{e(h.texto_corregido)}</div>")
             w("</div>\n")
-        w("<p class=\"meta\">Sustituya lo que va entre llaves { } por los datos reales de la clínica antes de publicar.</p>\n")
+        w("<p class=\"meta\">Sustituya lo que va entre llaves { } por los datos reales de la clínica y quite lo que va "
+          "entre corchetes [ ] tras comprobarlo, antes de publicar.</p>\n")
 
-    w("<h2>Próximos pasos</h2>\n<ol class=\"pasos\">")
-    w(f"<li><b>Corrección completa</b>: revisamos su web y sus redes, le entregamos todos los textos corregidos "
-      f"listos para publicar y comprobamos que quedan bien publicados. <span class=\"precio\">{PRECIO_CORRECCION}</span>, pago único.</li>")
-    w(f"<li><b>Vigilancia mensual</b>: revisamos de nuevo su web y sus redes cada mes, le avisamos de cualquier "
-      f"publicación de riesgo y le damos la corrección. <span class=\"precio\">{PRECIO_VIGILANCIA}</span>, sin permanencia.</li>")
-    w("</ol>\n<p class=\"meta\">Precios sin IVA.</p>\n")
-    w(f"<p>Contacto: <b>{e(c['nombre'])}</b> · {e(c['telefono'])} · {e(c['email'])}</p>\n")
+    _proximos_pasos(w, c)
 
     w("<h2>Nota metodológica</h2>\n<div class=\"metodo\">")
     w(f"<p class=\"aviso\">{e(NOTA_METODOLOGICA)}</p>")
@@ -191,7 +258,9 @@ def generar_html(datos, hallazgos, contacto=None):
       "que cumpla toda la normativa. Los puntos marcados como SIN VERIFICAR dependen de un requisito legal que "
       "no hemos confirmado en el texto oficial. Recomendamos validar las correcciones con su asesor.</p>")
     w("<p>Puntuación: se parte de 100 y cada hallazgo resta según su gravedad (alta 25, media 10, baja 4; las "
-      "repeticiones de un mismo punto restan menos). Con algún punto de riesgo alto la nota es C como máximo.</p>")
+      "repeticiones de un mismo punto restan menos). Con algún punto de riesgo alto la nota es C como máximo. "
+      "«Puntos con norma concreta»: riesgos altos y medios con una norma identificada (sin los SIN VERIFICAR), "
+      "contando una sola vez la misma frase.</p>")
     w("<div class=\"etq\">Páginas revisadas</div><ul class=\"paginas\">")
     for u in datos["paginas"]:
         w(f"<li>{e(u)}</li>")
@@ -207,10 +276,33 @@ def generar_html(datos, hallazgos, contacto=None):
     return "".join(partes)
 
 
+# "Texto del testimonio" - Ana  ->  "Texto del testimonio" - [nombre]
+_NOMBRE_TRAS_GUION = re.compile(
+    r"([\"”»']\s*[-–—]\s*)[A-ZÁÉÍÓÚÑ][a-záéíóúñü]+(\s+[A-ZÁÉÍÓÚÑ](\.|[a-záéíóúñü]+))?")
+
+
+def anonimizar(texto: str) -> str:
+    return _NOMBRE_TRAS_GUION.sub(r"\1[nombre]", texto)
+
+
+def _hallazgo_json(h):
+    d = asdict(h)
+    ev, i, f = h.evidencia, h.marca_inicio, h.marca_fin
+    if 0 <= i <= f <= len(ev):
+        antes, marca, despues = anonimizar(ev[:i]), ev[i:f], anonimizar(ev[f:])
+        d["evidencia"] = antes + marca + despues
+        d["marca_inicio"], d["marca_fin"] = len(antes), len(antes) + len(marca)
+    else:
+        d["evidencia"] = anonimizar(ev)
+    d["otras_evidencias"] = [anonimizar(o) for o in h.otras_evidencias]
+    d["texto_corregido"] = anonimizar(h.texto_corregido)
+    return d
+
+
 def generar_json(datos, hallazgos):
     salida = dict(datos)
-    salida["resumen"] = resumen_titular(datos["clinica"], datos["web"], datos["fecha"], len(datos["paginas"]),
-                                        datos["puntuacion"], datos["nota"], hallazgos)
-    salida["hallazgos"] = [asdict(h) for h in hallazgos]
+    salida["resumen"] = _resumen(datos, hallazgos, datos.get("previo", False))
+    salida["n_puntos_norma"] = n_puntos_norma(hallazgos)
+    salida["hallazgos"] = [_hallazgo_json(h) for h in hallazgos]
     salida["nota_metodologica"] = NOTA_METODOLOGICA
     return json.dumps(salida, ensure_ascii=False, indent=2)

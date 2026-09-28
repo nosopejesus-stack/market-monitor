@@ -14,11 +14,15 @@ Cómo están escritos los patrones
 Normativa en la que se apoya cada regla (fuente: arcend/investigacion/mercado.md)
 - Toxina botulínica y marcas: RD 1416/1994 + RDL 1/2015 (prohibida la
   publicidad al público de medicamentos con receta, también por alusiones
-  indirectas: "neuromoduladores", siglas, hashtags). ALTA.
+  indirectas: "neuromoduladores", siglas, hashtags). ALTA. Si la frase niega o
+  explica la prohibición ("no anunciamos...", "la ley prohíbe...") pasa a BAJA
+  de revisión manual ("toxina_revisar").
 - Promesas: RD 1907/1996, art. 4 (garantías de resultado, "sin riesgo",
   ausencia de efectos secundarios...). El apartado exacto de cada supuesto está
-  SIN VERIFICAR (boe.es bloqueado al investigar). ALTA.
-- Nº de registro sanitario: Decreto 51/2006 de la Comunidad de Madrid. ALTA.
+  SIN VERIFICAR (boe.es bloqueado al investigar). ALTA. "Sin dolor"/"indoloro"
+  y "milagro" son MEDIA ("puede considerarse...").
+- Nº de registro sanitario: Decreto 51/2006 de la Comunidad de Madrid. ALTA
+  (artículo concreto SIN VERIFICAR).
 - Promociones sobre actos médicos: criterio de riesgo (incentivo al consumo);
   si afectan a toxina, entra en la infracción del RDL 1/2015. MEDIA.
 - Antes/después: RGPD/AEPD (consentimiento del paciente). No está prohibido
@@ -34,11 +38,18 @@ Falsos positivos evitados (cada uno tiene test)
   ninguna palabra de exclusión (datos, pago, privacidad...).
 - "tratamiento de datos" no cuenta como tratamiento médico.
 - "casi sin dolor" / "prácticamente indoloro": no es una promesa absoluta.
-- "Dra. Milagros" / "Calle Milagros": nombre propio, no "milagro".
-- "eliminar toxinas" (plural, detox) no es toxina botulínica.
-- "antes y después del tratamiento evite el sol": sin contexto de foto no es
-  una galería de antes/después.
-- "parking gratuito", "envío gratis": promociones sin tratamiento cerca.
+- Negaciones: "no garantizamos resultados", "ningún médico serio le ofrecerá
+  resultados garantizados", "no hace milagros", "no existe un tratamiento sin
+  riesgo", "el láser no es indoloro".
+- "Dra. Milagros" / "Calle Milagros" / "DRA. MILAGROS PÉREZ": nombre propio.
+- "eliminar toxinas" (plural, detox), "botox capilar", "efecto botox" no son
+  toxina botulínica.
+- "antes y después del tratamiento evite el sol", "cuidados antes y después
+  del tratamiento": sin contexto de foto no es una galería de antes/después.
+- "parking gratuito", "envío gratis", "nuestra oferta de tratamientos".
+- Textos que explican que la ley prohíbe los testimonios.
+- Registro: un teléfono, una calle o un código postal cerca de "registro
+  sanitario" no cuentan como número de registro.
 - Las páginas legales (aviso legal, privacidad, cookies) no se revisan con
   las reglas de promesas, promociones ni testimonios.
 """
@@ -277,6 +288,7 @@ class Hallazgo:
     sin_verificar: str = ""
     apariciones: int = 1
     otras_evidencias: list = field(default_factory=list)
+    norma: str = ""          # referencia corta (para el informe previo)
 
 
 def _hallazgo_de_coincidencias(regla, coincidencias, url, **kw):
@@ -316,6 +328,7 @@ PATRONES_TOXINA = [
 TOXINA = dict(
     titulo="Publicidad de un medicamento con receta (toxina botulínica)",
     gravedad=ALTA,
+    norma="RD 1416/1994 y RDL 1/2015 (publicidad de medicamentos con receta)",
     base_normativa=("RD 1416/1994 de publicidad de medicamentos y RDL 1/2015 (Ley de garantías y uso "
                     "racional de los medicamentos): está prohibida la publicidad dirigida al público de "
                     "medicamentos que necesitan receta, como la toxina botulínica, también por alusiones "
@@ -327,16 +340,44 @@ TOXINA = dict(
 )
 
 
+# No es el medicamento: tratamientos capilares y el "efecto bótox" de cosméticos.
+EXCLUSION_TOXINA = r"botox\s*capilar|efecto\s+(tipo\s+)?botox|botox\s+(para\s+el\s+)?(pelo|cabello)"
+# Texto que explica la prohibición: no es publicidad del medicamento, pero hay que revisarlo a mano.
+EXPLICATIVO_TOXINA = r"prohib|\bno\s+(anunciamos|publicitamos|podemos\s+anunciar|se\s+puede\s+anunciar)"
+
+TOXINA_REVISAR = dict(
+    titulo="Mención de la toxina botulínica en un texto explicativo o negativo: revisar a mano",
+    gravedad=BAJA,
+    norma="RD 1416/1994 y RDL 1/2015 (publicidad de medicamentos con receta)",
+    base_normativa=("La frase parece explicar o negar el uso del medicamento, no anunciarlo. Aun así, nombrarlo "
+                    "(o sus marcas) en la web puede interpretarse como alusión publicitaria."),
+    accion="Revisar la frase a mano; si no es imprescindible, hablar de la consulta médica sin nombrar el medicamento.",
+    texto_corregido=TOXINA["texto_corregido"],
+    sin_verificar="Criterio de la Consejería sobre menciones explicativas o informativas: SIN VERIFICAR.",
+)
+
+
 def regla_toxina(p: Pagina):
-    coinc = []
+    coinc, revisar = [], []
     for ubic, texto in _segmentos(p, con_url=True):
         pl = plegar(texto)
         for patron in PATRONES_TOXINA:
             for m in re.finditer(patron, pl):
-                coinc.append((ubic, texto, m.start(), m.end()))
+                ini, fin = m.start(), m.end()
+                if _hay(EXCLUSION_TOXINA, _ventana(pl, ini, fin, 20)):
+                    continue
+                c = (ubic, texto, ini, fin)
+                if _negado(pl, ini, fin, 25) or _hay(EXPLICATIVO_TOXINA, _ventana(pl, ini, fin, 80)):
+                    revisar.append(c)
+                else:
+                    coinc.append(c)
+    orden = lambda c: (c[0] != "texto de la página", c[2])  # noqa: E731
     if not coinc:
-        return []
-    coinc.sort(key=lambda c: (c[0] != "texto de la página", c[2]))
+        if not revisar:
+            return []
+        revisar.sort(key=orden)
+        return [_hallazgo_de_coincidencias("toxina_revisar", revisar, p.url, **TOXINA_REVISAR)]
+    coinc.sort(key=orden)
     kw = dict(TOXINA)
     if any(c[0].startswith("dirección") for c in coinc):
         kw["accion"] += (" La dirección de la página también nombra el medicamento: cámbiela por una neutra "
@@ -397,13 +438,30 @@ TEXTO_PROMESA_GENERICO = "En la consulta de valoración le explicamos qué resul
 AVISO_RESULTADOS = ("Los resultados varían en cada persona; el médico le explicará en la consulta "
                     "los posibles riesgos y efectos secundarios.")
 
+SV_ART4 = "Apartado concreto del art. 4 del RD 1907/1996: SIN VERIFICAR (texto oficial no consultado)."
+
 PROMESA_BASE = dict(
     titulo="Promesa sanitaria prohibida",
     gravedad=ALTA,
+    norma="RD 1907/1996, art. 4",
     base_normativa=("RD 1907/1996 (publicidad con pretendida finalidad sanitaria), art. 4: prohíbe la publicidad "
                     "que ofrezca garantías de resultado o seguridades de ausencia de riesgos o efectos secundarios."),
     accion="Sustituir la frase por el texto corregido.",
+    sin_verificar=SV_ART4,
 )
+# Afirmaciones que no son una garantía expresa: riesgo medio, redactado como "puede considerarse".
+PROMESA_MEDIA = {
+    "sin dolor": dict(
+        titulo="Afirmación absoluta sobre dolor o riesgo",
+        base_normativa=("Puede considerarse una seguridad de ausencia de molestias o riesgos, que el RD 1907/1996 "
+                        "(art. 4) no permite en la publicidad con finalidad sanitaria."),
+    ),
+    "milagro": dict(
+        titulo="Posible promesa de resultado",
+        base_normativa=("Puede considerarse una promesa o garantía de resultado, que el RD 1907/1996 (art. 4) no "
+                        "permite en la publicidad con finalidad sanitaria."),
+    ),
+}
 
 
 def sustituir(texto: str, reglas) -> str:
@@ -443,17 +501,66 @@ def corregir_promesa(frase: str) -> str:
     return f"{corregido} {AVISO_RESULTADOS}".strip()
 
 
+# Negación o contexto explicativo: "no garantizamos", "ningún médico le garantizará...",
+# "no existe un tratamiento sin riesgo", "la medicina estética no hace milagros".
+NEGACION = r"\b(no|ningun\w*|nunca|ni|sin\s+que|jamas)\b"
+NEGACION_DETRAS = r"^\W{0,3}\s*(no|nunca)\s+(hacen?|existen?|hay|son|es)\b"
+PREFIJO_NOMBRE = r"(\bdra?\.?|\bdoctora?|\bcalle|\bc/|\bavda?\.?|\bavenida|\bplaza|\bsanta|\bvirgen|\bnuestra\s+senora)\s+(de\s+(los?\s+|las?\s+)?)?$"
+
+
+def _negado(pl: str, ini: int, fin: int, ancho: int = 40) -> bool:
+    """True si la coincidencia está negada en su misma frase (hasta ``ancho`` caracteres antes)."""
+    antes = pl[max(0, ini - ancho):ini]
+    corte = max(antes.rfind(c) for c in ".!?¡¿:;\n")
+    if corte != -1:
+        antes = antes[corte + 1:]
+    # "no invasivo", "no espere más"... no niegan la promesa
+    antes = re.sub(r"\bno\s+(invasiv|quirurgic|agresiv|esper|dud|lo\s+dud|te\s+lo\s+pierd)\w*", " ", antes)
+    if _hay(NEGACION, antes):
+        return True
+    return _hay(NEGACION_DETRAS, pl[fin:fin + 20]) or _hay(r"\bno\s+hacen?\s+$", antes)
+
+
+def _es_nombre_propio(texto: str, pl: str, ini: int, fin: int) -> bool:
+    """"Milagros" como nombre de persona o calle: Dra. Milagros, calle de los Milagros, MILAGROS PÉREZ."""
+    if pl[ini:fin] != "milagros" or not texto[ini:ini + 1].isupper():
+        return False
+    if re.search(PREFIJO_NOMBRE, pl[max(0, ini - 30):ini]):
+        return True
+    siguiente = re.match(r"\s+(\w+)", texto[fin:])
+    if siguiente and siguiente.group(1)[:1].isupper():
+        return True       # Milagros Pérez / MILAGROS PÉREZ
+    inicio_frase = not texto[:ini].strip() or texto[:ini].rstrip()[-1:] in ".!?¡¿:\n"
+    return texto[ini:fin] == "Milagros" and not inicio_frase   # "...en Milagros" a mitad de frase
+
+
 def _es_promesa(pid, pl, texto, m, exige_ctx, excluir):
     ini, fin = m.start(), m.end()
-    if pid == "milagro" and texto[ini:fin] == "Milagros":
-        return False  # nombre propio: Dra. Milagros, calle Milagros
+    if pid == "milagro" and _es_nombre_propio(texto, pl, ini, fin):
+        return False
     if pid == "sin dolor" and re.search(MATIZ_DOLOR, pl[max(0, ini - 30):ini]):
+        return False
+    if _negado(pl, ini, fin):
         return False
     if excluir and _hay(EXCLUSION_PROMESA, _ventana(pl, ini, fin, 40)):
         return False
     if exige_ctx and not _hay(CONTEXTO_RESULTADO, _ventana(pl, ini, fin, 60)):
         return False
     return True
+
+
+def _ajustar_promesa(h: Hallazgo, pids: list):
+    """Título, gravedad y norma según los tipos de promesa de la frase (manda el más grave)."""
+    altas = [x for x in pids if x not in PROMESA_MEDIA]
+    if altas:
+        h.gravedad, h.base_normativa = ALTA, PROMESA_BASE["base_normativa"]
+        titulo = PROMESA_BASE["titulo"]
+    else:
+        media = PROMESA_MEDIA[pids[0]]
+        h.gravedad, h.base_normativa = MEDIA, media["base_normativa"]
+        titulo = media["titulo"] if len({PROMESA_MEDIA[x]["titulo"] for x in pids}) == 1 else \
+            "Afirmación absoluta o posible promesa de resultado"
+    h.titulo = f"{titulo}: " + ", ".join(f"«{x}»" for x in pids)
 
 
 def regla_promesas(p: Pagina, max_por_pagina: int = 8):
@@ -466,23 +573,25 @@ def regla_promesas(p: Pagina, max_por_pagina: int = 8):
         for pid, patron, ctx, exc in PROMESAS:
             for m in re.finditer(patron, pl):
                 if any(a <= m.start() < b for a, b in ocupados):
-                    continue  # ya cubierto por un patrón más específico
+                    continue  # ya cubierto (aceptado o descartado) por un patrón más específico
+                ocupados.append((m.start(), m.end()))
                 if not _es_promesa(pid, pl, texto, m, ctx, exc):
                     continue
-                ocupados.append((m.start(), m.end()))
                 ev, mi, mf = fragmento(texto, m.start(), m.end())
                 if ev in vistos:
-                    h = vistos[ev]
+                    h, pids = vistos[ev]
                     h.apariciones += 1
-                    if f"«{pid}»" not in h.titulo:
-                        h.titulo += f", «{pid}»"
+                    if pid not in pids:
+                        pids.append(pid)
+                        _ajustar_promesa(h, pids)
                     continue
                 h = Hallazgo(regla="promesas", url=p.url, ubicacion=ubic, evidencia=ev,
                              marca_inicio=mi, marca_fin=mf,
                              texto_corregido=corregir_promesa(ev), **PROMESA_BASE)
-                h.titulo = f"Promesa sanitaria prohibida: «{pid}»"
-                vistos[ev] = h
+                vistos[ev] = (h, [pid])
+                _ajustar_promesa(h, [pid])
                 out.append(h)
+    out.sort(key=lambda h: ORDEN_GRAVEDAD[h.gravedad])
     return out[:max_por_pagina]
 
 
@@ -492,8 +601,22 @@ def regla_promesas(p: Pagina, max_por_pagina: int = 8):
 
 FRASE_REGISTRO = (
     r"registro\s+sanitario|n[o0º°]\.?\s*(de\s+)?registro(?!\s+mercantil)|numero\s+de\s+registro(?!\s+mercantil)|"
-    r"autorizacion\s+sanitaria|centro\s+sanitario\s+autorizado|registro\s+de\s+centros"
+    r"autorizacion\s+sanitaria|centro\s+sanitario\s+autorizado|registro\s+de\s+centros|"
+    r"inscripcion\s+en\s+el\s+registro(?!\s+mercantil)"
 )
+# Número "pegado" a la frase: como mucho 15 caracteres entre medias, sin teléfono ni dirección.
+NUMERO_TRAS_FRASE = r"^(?P<hueco>[^\d\n]{0,15}?)(?P<num>\d[\d/.\-]{2,})"
+HUECO_NO_VALIDO = r"\btel|\bmovil|\bfax|\bc/|\bcalle|\bavda|\bavenida|\bplaza|\bcp\b|\bwhatsapp"
+
+
+def _numero_pegado(pl: str, fin: int) -> bool:
+    m = re.match(NUMERO_TRAS_FRASE, pl[fin:fin + 40])
+    if not m or _hay(HUECO_NO_VALIDO, m.group("hueco")):
+        return False
+    resto = pl[fin + m.end():fin + m.end() + 12]
+    if re.fullmatch(r"\d{5}", m.group("num")) and re.match(r"\s*,?\s*(madrid|\()", resto):
+        return False      # código postal: 28001 Madrid
+    return True
 NUMERO_REGISTRO = r"(?<![a-z])(cs|nica)\s*[-:.º°n]*\s*\d{3,}"
 
 
@@ -506,27 +629,33 @@ def estado_registro(paginas):
             if _hay(NUMERO_REGISTRO, pl):
                 return "con_numero", None
             for m in re.finditer(FRASE_REGISTRO, pl):
-                if re.search(r"\d{3,}", pl[m.end():m.end() + 60]):
+                if _numero_pegado(pl, m.end()):
                     return "con_numero", None
                 if mencion is None:
                     mencion = (p.url, ubic, texto, m.start(), m.end())
     return ("sin_numero", mencion) if mencion else ("ausente", None)
 
 
+CONDICION_REGISTRO = ("[Solo si el centro está inscrito en el Registro de centros sanitarios de la Comunidad de "
+                      "Madrid — comprobar antes de publicar]")
+
 REGISTRO_BASE = dict(
+    norma="Decreto 51/2006 de la Comunidad de Madrid",
     base_normativa=("Decreto 51/2006 de la Comunidad de Madrid (autorización y registro de centros sanitarios), "
                     "en relación con el RD 1277/2003: la publicidad del centro debe incluir su número de registro sanitario."),
     accion="Añadir el número de registro sanitario en el pie de todas las páginas y en cada anuncio.",
-    texto_corregido=("{razon_social} · Centro sanitario autorizado por la Comunidad de Madrid · "
-                     "Nº de registro sanitario: {numero_registro_sanitario}"),
+    texto_corregido=(CONDICION_REGISTRO + "\n{razon_social} · Centro sanitario inscrito en el Registro de centros "
+                     "sanitarios de la Comunidad de Madrid · Nº de registro sanitario: {numero_registro_sanitario}"),
+    sin_verificar=("Artículo concreto del Decreto 51/2006 que exige el nº de registro en la publicidad: SIN VERIFICAR "
+                   "(texto oficial no consultado)."),
 )
 
 
-def regla_registro(paginas):
+def regla_registro(paginas, ausencias=True):
     if not paginas:
         return []
     estado, mencion = estado_registro(paginas)
-    if estado == "con_numero":
+    if estado == "con_numero" or (estado == "ausente" and not ausencias):
         return []
     if estado == "sin_numero":
         url, ubic, texto, i, f = mencion
@@ -559,9 +688,13 @@ TRATAMIENTO_MEDICO = (
 )
 EXCLUSION_PROMO = r"envio|parking|aparcamiento|wifi|wi-fi|llamada|telefono|newsletter|suscri|\bcafe\b|descarga|ebook|guia"
 
+# "nuestra oferta de tratamientos" = catálogo, no promoción
+NO_PROMO = r"ofertas?\s+de\s+(tratamientos|servicios)"
+
 PROMO = dict(
     titulo="Promoción o descuento sobre un tratamiento médico",
     gravedad=MEDIA,
+    norma="RD 1907/1996 y criterio de la Consejería de Sanidad; RDL 1/2015 si afecta a la toxina",
     base_normativa=("Publicidad sanitaria (RD 1907/1996 y criterios de la Consejería de Sanidad): las promociones sobre "
                     "actos médicos pueden considerarse un incentivo al consumo. Si afectan a un medicamento con "
                     "receta (toxina), es infracción del RDL 1/2015."),
@@ -579,6 +712,8 @@ def regla_promociones(p: Pagina):
     for ubic, texto in _segmentos(p):
         pl = plegar(texto)
         for m in re.finditer(PATRON_PROMO, pl):
+            if re.match(NO_PROMO, pl[m.start():m.end() + 25]):
+                continue
             if _hay(EXCLUSION_PROMO, _ventana(pl, m.start(), m.end(), 40)):
                 continue
             if _hay(TRATAMIENTO_MEDICO, _ventana(pl, m.start(), m.end(), 100)):
@@ -591,7 +726,10 @@ def regla_promociones(p: Pagina):
 # --------------------------------------------------------------------------
 
 PATRON_ANTES_DESPUES = r"antes\s*(y|e|/|-|&|\+)?\s*despues|before\s*(and|&|/|-|\+)?\s*after"
-CONTEXTO_FOTO = r"foto|imagen|imagenes|galeria|resultad|casos?\s+real|pacientes?|ver\s+m"
+CONTEXTO_FOTO = r"foto|imagen|imagenes|galeria|resultad|casos?\s+real|ver\s+m"
+# Consejos de cuidados: "cuidados antes y después del tratamiento" no es una galería.
+CUIDADOS_ANTES_DESPUES = r"(cuidados|instrucciones|recomendaciones|consejos|indicaciones)\s+(\w+\s+){0,2}$"
+ENLACE_GALERIA = r"galeria|casos|resultados"
 
 ANTES_DESPUES = dict(
     titulo="Imágenes de «antes y después» de pacientes",
@@ -601,8 +739,9 @@ ANTES_DESPUES = dict(
                     "está garantizado (RD 1907/1996)."),
     accion=("Retirar las fotos salvo que tenga el consentimiento expreso y por escrito de cada paciente para uso "
             "publicitario, y guardarlo. Si lo tiene, acompañe cada imagen del texto corregido."),
-    texto_corregido=("Imágenes publicadas con el consentimiento expreso y por escrito del paciente. "
-                     "Los resultados varían en cada persona y no se garantizan."),
+    norma="RGPD (consentimiento del paciente) y RD 1907/1996",
+    texto_corregido=("[Solo si es cierto] Imágenes publicadas con el consentimiento expreso y por escrito del "
+                     "paciente. Los resultados varían en cada persona y no se garantizan."),
     sin_verificar=("La exigencia de consentimiento es cierta (RGPD); que la Consejería prohíba en sí las fotos de "
                    "antes/después en Madrid está SIN VERIFICAR."),
 )
@@ -623,7 +762,7 @@ def regla_antes_despues(p: Pagina):
     for href, txt in p.enlaces:
         pl = plegar(_ruta_legible(href))
         m = re.search(PATRON_ANTES_DESPUES, pl)
-        if m:
+        if m and _hay(ENLACE_GALERIA, pl + " " + plegar(txt)):
             coinc.append(("enlace a galería", _ruta_legible(href), m.start(), m.end()))
     # 3) texto: solo con contexto de foto/galería o como encabezado corto
     for ubic, texto in _segmentos(p, con_url=True):
@@ -631,6 +770,9 @@ def regla_antes_despues(p: Pagina):
             continue
         pl = plegar(texto)
         for m in re.finditer(PATRON_ANTES_DESPUES, pl):
+            if re.search(CUIDADOS_ANTES_DESPUES, pl[max(0, m.start() - 40):m.start()]) and \
+                    re.match(r"\s*(del|de\s+la|de\s+los|de\s+las)\b", pl[m.end():]):
+                continue
             a = pl.rfind("\n", 0, m.start()) + 1
             b = pl.find("\n", m.end())
             linea = pl[a: len(pl) if b == -1 else b]
@@ -654,16 +796,20 @@ PATRON_TESTIMONIOS = (
     r"|experiencias?\s+de\s+" + _QUIEN + r"|valoraciones\s+de\s+" + _QUIEN + r"|\bresenas\b|\breviews?\b"
 )
 
+# Texto que explica que la ley los prohíbe: no es un testimonio.
+EXPLICA_TESTIMONIOS = r"prohib|no\s+(publicamos|mostramos|incluimos|usamos|utilizamos)|no\s+se\s+permite"
+
 TESTIMONIOS = dict(
     titulo="Testimonios u opiniones de pacientes en la publicidad",
     gravedad=MEDIA,
+    norma="RD 1907/1996, art. 4",
     base_normativa=("RD 1907/1996, art. 4: prohíbe usar testimonios de pacientes, reales o supuestos, como medio de "
                     "inducción al consumo en publicidad con finalidad sanitaria."),
     accion=("Retirar de las páginas de tratamientos los testimonios, opiniones y reseñas de pacientes (también los "
             "widgets de reseñas incrustados)."),
     texto_corregido=("¿Quiere saber si este tratamiento es adecuado para usted? Pida una consulta de valoración y "
                      "el médico le explicará sus opciones, beneficios y riesgos."),
-    sin_verificar="Apartado concreto del art. 4 del RD 1907/1996: SIN VERIFICAR (texto oficial no consultado).",
+    sin_verificar=SV_ART4,
 )
 
 
@@ -674,6 +820,8 @@ def regla_testimonios(p: Pagina):
     for ubic, texto in _segmentos(p):
         pl = plegar(texto)
         for m in re.finditer(PATRON_TESTIMONIOS, pl):
+            if _hay(EXPLICA_TESTIMONIOS, _ventana(pl, m.start(), m.end(), 60)):
+                continue
             coinc.append((ubic, texto, m.start(), m.end()))
     for valor in p.atributos:
         pl = plegar(valor)
@@ -690,29 +838,36 @@ def regla_testimonios(p: Pagina):
 
 # Se buscan en enlaces (texto y href), títulos y URL de las páginas descargadas,
 # y en el texto solo con la frase completa (para no contar "garantizamos su privacidad").
+BORRADOR = "[Borrador mínimo: completar y validar con su asesor]"
+NORMAS_LEGALES = {"aviso_legal": "LSSI (Ley 34/2002), art. 10", "privacidad": "RGPD, art. 13",
+                  "cookies": "LSSI, art. 22.2 (autoridad: AEPD)"}
+
 LEGALES = [
     ("aviso_legal", "Falta el aviso legal",
      r"aviso[\s\-_]*legal|legal[\s\-_]*notice|nota[\s\-_]*legal|informacion[\s\-_]*legal",
      r"aviso\s+legal",
      "LSSI (Ley 34/2002), art. 10: la web debe identificar al titular (nombre, NIF, domicilio, contacto, registro).",
      ("Aviso legal. Titular: {razon_social}. NIF: {nif}. Domicilio: {domicilio}. Correo: {email}. Teléfono: {telefono}. "
-      "Inscrita en {registro_mercantil}. Centro sanitario autorizado por la Comunidad de Madrid, nº de registro "
-      "sanitario {numero_registro_sanitario}. Director/a médico/a: {nombre_medico}, nº de colegiado {numero_colegiado}.")),
+      "Inscrita en {registro_mercantil}. " + CONDICION_REGISTRO + " Centro sanitario inscrito en el Registro de "
+      "centros sanitarios de la Comunidad de Madrid, nº de registro sanitario {numero_registro_sanitario}. "
+      "Director/a médico/a: {nombre_medico}, nº de colegiado {numero_colegiado} del {colegio}.")),
     ("privacidad", "Falta la política de privacidad",
      r"privacidad|privacy|proteccion[\s\-_]*de[\s\-_]*datos|\brgpd\b|\bgdpr\b",
      r"politica\s+de\s+privacidad|proteccion\s+de\s+datos",
      "RGPD, art. 13: hay que informar de quién trata los datos, para qué, con qué base y cómo ejercer los derechos.",
-     ("Política de privacidad. Responsable: {razon_social} ({nif}), {domicilio}, {email}. Tratamos sus datos para "
-      "gestionar sus citas y su historia clínica, con base en la prestación de asistencia sanitaria y, para las "
-      "comunicaciones, en su consentimiento. Puede ejercer sus derechos de acceso, rectificación, supresión, "
+     (BORRADOR + "\nPolítica de privacidad. Responsable: {razon_social} ({nif}), {domicilio}, {email}. Tratamos sus "
+      "datos para gestionar sus citas y su historia clínica, con base en la prestación de asistencia sanitaria y, "
+      "para las comunicaciones, en su consentimiento. Conservamos los datos durante {plazos_conservacion}. "
+      "Destinatarios: {destinatarios}. Puede ejercer sus derechos de acceso, rectificación, supresión, "
       "oposición, limitación y portabilidad en {email} y reclamar ante la AEPD (www.aepd.es).")),
     ("cookies", "Falta la política de cookies",
      r"cookies?",
      r"politica\s+de\s+cookies|uso\s+de\s+cookies|utiliza(mos)?\s+cookies",
-     "LSSI, art. 22.2: si la web usa cookies no técnicas, debe informar y pedir consentimiento.",
-     ("Política de cookies. Esta web usa cookies técnicas, necesarias para su funcionamiento, y, solo si usted lo "
-      "acepta, cookies de análisis y publicidad: {lista_de_cookies}. Puede aceptarlas, rechazarlas o configurarlas "
-      "en el aviso de cookies y cambiar su elección en cualquier momento.")),
+     ("LSSI, art. 22.2: si la web usa cookies no técnicas, debe informar y pedir consentimiento. En cookies, el "
+      "organismo competente es la Agencia Española de Protección de Datos (AEPD), no la Consejería de Sanidad."),
+     (BORRADOR + "\nPolítica de cookies. Cookies que usa esta web: {lista_de_cookies} (para cada una: nombre, "
+      "titular, finalidad y duración). {cookies_no_tecnicas_y_como_se_aceptan} Puede cambiar su elección en "
+      "cualquier momento desde {enlace_configuracion_cookies}.")),
 ]
 
 
@@ -734,7 +889,7 @@ def reglas_legales(paginas):
                 regla=rid, gravedad=BAJA, titulo=titulo, url=paginas[0].url,
                 ubicacion="enlaces y textos de las páginas revisadas",
                 evidencia=f"No se encontró enlace ni texto de esta página legal en {n} página{'s' if n != 1 else ''}.",
-                marca_inicio=0, marca_fin=0, base_normativa=base,
+                marca_inicio=0, marca_fin=0, base_normativa=base, norma=NORMAS_LEGALES[rid],
                 accion="Publicar la página y enlazarla desde el pie de todas las páginas.",
                 texto_corregido=texto,
                 sin_verificar=("El aviso de cookies suele cargarse con JavaScript y esta revisión no lo ejecuta: "
@@ -769,8 +924,8 @@ def regla_medico(paginas):
         base_normativa=("Buena práctica y códigos deontológicos médicos; la LSSI (art. 10) pide los datos colegiales "
                         "cuando se ejerce una profesión regulada."),
         accion="Identificar al director/a médico/a con su nº de colegiado en la página del equipo y en el aviso legal.",
-        texto_corregido=("Dirección médica: {nombre_medico}, colegiado/a nº {numero_colegiado} del Ilustre Colegio "
-                         "Oficial de Médicos de Madrid."),
+        norma="Buena práctica; LSSI art. 10 (datos colegiales)",
+        texto_corregido="Dirección médica: {nombre_medico}, colegiado/a nº {numero_colegiado} del {colegio}.",
         sin_verificar=("Requisito SIN VERIFICAR: no hemos confirmado una norma que exija con carácter general el nº de "
                        "colegiado en la publicidad del centro."))]
 
@@ -784,16 +939,56 @@ REGLAS_DE_SITIO = [regla_registro, reglas_legales, regla_medico]
 ORDEN_GRAVEDAD = {ALTA: 0, MEDIA: 1, BAJA: 2}
 
 
-def analizar(paginas):
-    """paginas: lista de Pagina. Devuelve los hallazgos ordenados por gravedad."""
+def analizar(paginas, ausencias=True):
+    """paginas: lista de Pagina. Devuelve los hallazgos ordenados por gravedad.
+
+    Con ``ausencias=False`` (web que no se ha podido leer bien) no se emiten las reglas que
+    afirman que algo FALTA (registro ausente, páginas legales, médico): no sería fiable.
+    """
     hallazgos = []
     for p in paginas:
         for regla in REGLAS_POR_PAGINA:
             hallazgos.extend(regla(p))
-    for regla in REGLAS_DE_SITIO:
-        hallazgos.extend(regla(paginas))
+    if ausencias:
+        for regla in REGLAS_DE_SITIO:
+            hallazgos.extend(regla(paginas))
+    else:
+        hallazgos.extend(regla_registro(paginas, ausencias=False))
     hallazgos.sort(key=lambda h: ORDEN_GRAVEDAD[h.gravedad])
     return hallazgos
+
+
+# Web no legible: poco texto (se carga con JavaScript) o una sola página.
+MIN_CARACTERES = 300
+MIN_PAGINAS = 2
+AVISO_NO_LEGIBLE = ("No se ha podido leer el contenido (probablemente se carga con JavaScript); revisión no fiable. "
+                    "Guarde las páginas desde el navegador (Ctrl+S) y use --html-local CARPETA.")
+AVISO_UNA_PAGINA = ("Solo se ha podido leer {n} página; revisión no fiable para afirmar que falta algo en la web. "
+                    "Guarde más páginas desde el navegador (Ctrl+S) y use --html-local CARPETA.")
+
+
+def evaluar_lectura(paginas):
+    """Devuelve (fiable, aviso). No fiable si hay poco texto o menos de 2 páginas."""
+    total = sum(len(p.texto) for p in paginas)
+    if total < MIN_CARACTERES:
+        return False, AVISO_NO_LEGIBLE
+    if len(paginas) < MIN_PAGINAS:
+        return False, AVISO_UNA_PAGINA.format(n=len(paginas))
+    return True, ""
+
+
+def _clave_evidencia(h) -> str:
+    return " ".join(re.sub(r"[^a-z0-9 ]", " ", plegar(h.evidencia)).split())
+
+
+def n_puntos_norma(hallazgos) -> int:
+    """Puntos con norma concreta: ALTA/MEDIA sin SIN VERIFICAR, deduplicados por regla y frase.
+
+    La misma frase en el texto y en la descripción (o repetida en varias páginas) cuenta una vez.
+    """
+    claves = {(h.regla, _clave_evidencia(h)) for h in hallazgos
+              if h.gravedad in (ALTA, MEDIA) and not h.sin_verificar}
+    return len(claves)
 
 
 # Resta por hallazgo: el primero de cada regla resta el peso completo, cada uno

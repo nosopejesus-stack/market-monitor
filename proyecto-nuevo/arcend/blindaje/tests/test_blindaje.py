@@ -81,7 +81,10 @@ class TestPromesas(unittest.TestCase):
         for pid in ("resultados garantizados", "garantía", "sin riesgo", "sin efectos secundarios",
                     "100 % seguro", "sin dolor", "milagro"):
             self.assertIn(f"«{pid}»", titulos)
-        self.assertTrue(all(h.gravedad == reglas.ALTA for h in hs))
+        for h in hs:
+            esperada = reglas.MEDIA if ("«sin dolor»" in h.titulo or "«milagro»" in h.titulo) else reglas.ALTA
+            self.assertEqual(h.gravedad, esperada, h.titulo)
+            self.assertIn("SIN VERIFICAR", h.sin_verificar)
 
     def test_textos_corregidos_ya_no_infringen(self):
         for h in reglas.regla_promesas(pagina("promesas.html")):
@@ -358,6 +361,324 @@ class TestRastreador(unittest.TestCase):
     def test_user_agent_identificable(self):
         self.assertIn(blindaje.AGENTE, blindaje.USER_AGENT)
         self.assertIn("revision pasiva", blindaje.USER_AGENT)
+
+
+def _pag(texto, url="https://c.test/x"):
+    return reglas.extraer(url, f"<p>{texto}</p>")
+
+
+class TestTextosCorregidosCondicionados(unittest.TestCase):
+    """Revisor 1: los textos corregidos no afirman hechos del cliente."""
+
+    def test_registro_condicionado_y_sin_verificar(self):
+        hs = reglas.regla_registro([pagina("falsos_positivos.html")])
+        self.assertIn("Solo si el centro está inscrito en el Registro de centros sanitarios de la Comunidad de "
+                      "Madrid — comprobar antes de publicar", hs[0].texto_corregido)
+        self.assertIn("SIN VERIFICAR", hs[0].sin_verificar)
+
+    def test_colegio_como_marcador(self):
+        h = reglas.regla_medico([pagina("promesas.html")])[0]
+        self.assertIn("{colegio}", h.texto_corregido)
+        self.assertNotIn("Colegio Oficial de Médicos de Madrid", h.texto_corregido)
+        aviso = next(x for x in reglas.reglas_legales([pagina("promesas.html")]) if x.regla == "aviso_legal")
+        self.assertIn("{colegio}", aviso.texto_corregido)
+        self.assertIn("Solo si el centro está inscrito", aviso.texto_corregido)
+
+    def test_antes_despues_solo_si_es_cierto(self):
+        h = reglas.regla_antes_despues(pagina("antes_despues.html"))[0]
+        self.assertTrue(h.texto_corregido.startswith("[Solo si es cierto]"))
+
+    def test_promesas_sin_verificar(self):
+        self.assertIn("SIN VERIFICAR", reglas.PROMESA_BASE["sin_verificar"])
+        self.assertIn("SIN VERIFICAR", reglas.REGISTRO_BASE["sin_verificar"])
+
+
+class TestNegacionYContexto(unittest.TestCase):
+    """Revisor 2: negaciones, nombre propio y menciones explicativas."""
+
+    def test_negaciones_no_son_promesa(self):
+        for t in ("No garantizamos resultados en su piel.",
+                  "Ningún médico serio le ofrecerá resultados garantizados.",
+                  "La medicina estética no hace milagros.",
+                  "No existe un tratamiento sin riesgo.",
+                  "El láser no es indoloro.",
+                  "Le atiende la DRA. MILAGROS PÉREZ.",
+                  "DRA. MILAGROS PÉREZ"):
+            self.assertEqual(reglas.regla_promesas(_pag(t)), [], t)
+
+    def test_no_invasivo_no_niega_la_promesa(self):
+        hs = reglas.regla_promesas(_pag("Técnica no invasiva y sin dolor."))
+        self.assertEqual(len(hs), 1)
+
+    def test_milagro_en_mayusculas_sigue_contando(self):
+        hs = reglas.regla_promesas(_pag("¡RESULTADOS MILAGROSOS en su piel!"))
+        self.assertEqual([h.gravedad for h in hs], [reglas.MEDIA])
+
+    def test_toxina_explicativa_no_es_alta(self):
+        p = _pag("¿Por qué no anunciamos la toxina botulínica? La ley prohíbe la publicidad de medicamentos "
+                 "con receta.")
+        hs = reglas.regla_toxina(p)
+        self.assertEqual([(h.regla, h.gravedad) for h in hs], [("toxina_revisar", reglas.BAJA)])
+
+    def test_toxina_negada_no_es_alta(self):
+        hs = reglas.regla_toxina(_pag("En nuestra clínica no usamos bótox."))
+        self.assertTrue(all(h.gravedad == reglas.BAJA for h in hs))
+
+    def test_botox_capilar_y_efecto_botox(self):
+        for t in ("Botox capilar para un pelo brillante.", "Crema con efecto botox.",
+                  "Tratamiento de botox capilar"):
+            self.assertEqual(reglas.regla_toxina(_pag(t, "https://c.test/peluqueria")), [], t)
+
+    def test_toxina_real_sigue_siendo_alta(self):
+        hs = reglas.regla_toxina(_pag("Tratamiento con bótox en Madrid."))
+        self.assertEqual([h.gravedad for h in hs], [reglas.ALTA])
+
+
+class TestGravedadDolorYMilagro(unittest.TestCase):
+    """Revisor 5: "sin dolor"/"indoloro" y "milagro" son MEDIA; cookies -> AEPD."""
+
+    def test_sin_dolor_media(self):
+        for t in ("Depilación sin dolor.", "Láser indoloro para su piel."):
+            h = reglas.regla_promesas(_pag(t))[0]
+            self.assertEqual(h.gravedad, reglas.MEDIA)
+            self.assertIn("Afirmación absoluta sobre dolor o riesgo", h.titulo)
+            self.assertIn("Puede considerarse", h.base_normativa)
+
+    def test_milagro_media(self):
+        h = reglas.regla_promesas(_pag("¡El efecto milagro que tu piel necesita!"))[0]
+        self.assertEqual(h.gravedad, reglas.MEDIA)
+        self.assertIn("Posible promesa de resultado", h.titulo)
+
+    def test_frase_mixta_manda_la_alta(self):
+        h = reglas.regla_promesas(_pag("Relleno de labios sin dolor y resultados garantizados."))[0]
+        self.assertEqual(h.gravedad, reglas.ALTA)
+
+    def test_cookies_aepd(self):
+        h = next(x for x in reglas.reglas_legales([pagina("promesas.html")]) if x.regla == "cookies")
+        self.assertIn("AEPD", h.base_normativa)
+        self.assertIn("no la Consejería", h.base_normativa)
+
+
+class TestPlantillasLegales(unittest.TestCase):
+    """Revisor 9."""
+
+    def test_borrador_y_campos(self):
+        hs = {h.regla: h for h in reglas.reglas_legales([pagina("promesas.html")])}
+        for rid in ("privacidad", "cookies"):
+            self.assertIn("Borrador mínimo: completar y validar con su asesor", hs[rid].texto_corregido)
+        self.assertIn("{plazos_conservacion}", hs["privacidad"].texto_corregido)
+        self.assertIn("{destinatarios}", hs["privacidad"].texto_corregido)
+        self.assertNotIn("solo si usted lo acepta", hs["cookies"].texto_corregido.lower())
+
+
+class TestFalsosPositivosRevisor(unittest.TestCase):
+    """Revisor 10."""
+
+    def test_oferta_de_tratamientos(self):
+        self.assertEqual(reglas.regla_promociones(_pag("Conozca nuestra oferta de tratamientos faciales.")), [])
+        self.assertEqual(reglas.regla_promociones(_pag("Amplia oferta de servicios de medicina estética.")), [])
+        self.assertTrue(reglas.regla_promociones(_pag("Oferta: 20 % en relleno de labios.")))
+
+    def test_cuidados_antes_y_despues(self):
+        for t in ("Cuidados antes y después del tratamiento: evite el sol.",
+                  "Instrucciones antes y después de la sesión de láser para pacientes."):
+            self.assertEqual(reglas.regla_antes_despues(_pag(t + " Texto largo para que no sea un titular.")), [], t)
+
+    def test_pacientes_ya_no_es_contexto_de_foto(self):
+        t = "Recomendamos a los pacientes hidratarse antes y después, durante toda la semana del tratamiento."
+        self.assertEqual(reglas.regla_antes_despues(_pag(t)), [])
+
+    def test_enlace_exige_galeria(self):
+        p = reglas.extraer("https://c.test/", '<p>Hola, bienvenida a la clínica de medicina estética.</p>'
+                                               '<a href="/consejos-antes-y-despues">Leer consejos</a>')
+        self.assertEqual(reglas.regla_antes_despues(p), [])
+        p2 = reglas.extraer("https://c.test/", '<p>Hola, bienvenida a la clínica de medicina estética.</p>'
+                                                '<a href="/casos-antes-y-despues">Ver</a>')
+        self.assertEqual(len(reglas.regla_antes_despues(p2)), 1)
+
+    def test_testimonios_explicados_no_cuentan(self):
+        t = "La normativa prohíbe publicar testimonios de pacientes, por eso no los mostramos."
+        self.assertEqual(reglas.regla_testimonios(_pag(t)), [])
+
+
+class TestRegistroPegado(unittest.TestCase):
+    """Revisor 11."""
+
+    def _estado(self, t):
+        return reglas.estado_registro([_pag(t)])[0]
+
+    def test_no_cuentan_telefono_calle_ni_cp(self):
+        for t in ("Registro sanitario. Tel. 912 345 678", "Registro sanitario: c/ Alcalá 123",
+                  "Centro con registro sanitario, 28001 Madrid",
+                  "Centro con registro sanitario en la Comunidad de Madrid desde hace muchos años 2015"):
+            self.assertEqual(self._estado(t), "sin_numero", t)
+
+    def test_cuentan_numeros_pegados(self):
+        for t in ("Inscripción en el Registro: 10953", "Nº de registro sanitario 1234/2020",
+                  "Nº registro sanitario: CS9876"):
+            self.assertEqual(self._estado(t), "con_numero", t)
+
+
+class TestLecturaNoFiable(unittest.TestCase):
+    """Revisor 3: web que no se puede leer (SPA con JavaScript)."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+
+    def test_spa_no_emite_ausencias(self):
+        spa = ('<!DOCTYPE html><html><head><title>Clínica</title></head><body><div id="root"></div>'
+               '<script src="/static/js/main.js"></script></body></html>')
+        paginas = [("https://spa.test/", spa), ("https://spa.test/tratamientos", spa)]
+        carpeta, datos, hs = blindaje.ejecutar(paginas, "SPA", "https://spa.test", self.tmp.name)
+        self.assertFalse(datos["lectura_fiable"])
+        self.assertEqual(hs, [])
+        html = (carpeta / "informe.html").read_text(encoding="utf-8")
+        self.assertIn("No se ha podido leer el contenido (probablemente se carga con JavaScript); revisión no "
+                      "fiable", html)
+        self.assertIn("--html-local", html)
+        self.assertIn('class="alerta"', html)
+
+    def test_una_pagina_no_emite_ausencias_pero_si_promesas(self):
+        texto = "<p>" + "Resultados garantizados en su piel. " * 20 + "</p>"
+        _, datos, hs = blindaje.ejecutar([("index.html", texto)], "X", "https://x.test", self.tmp.name)
+        self.assertFalse(datos["lectura_fiable"])
+        reglas_vistas = {h.regla for h in hs}
+        self.assertIn("promesas", reglas_vistas)
+        self.assertFalse(reglas_vistas & {"registro", "aviso_legal", "privacidad", "cookies", "medico"})
+
+    def test_sitio_legible(self):
+        _, datos, _ = blindaje.ejecutar(blindaje.cargar_local(FIX / "sitio_malo"), "X", "https://x.test",
+                                        self.tmp.name)
+        self.assertTrue(datos["lectura_fiable"])
+
+
+class TestPuntosNormaYPrevio(unittest.TestCase):
+    """Revisor 4, 8, 15, 19, 21."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+
+    def _h(self, regla, grav, ev, sv=""):
+        return reglas.Hallazgo(regla, grav, "t", "u", "x", ev, 0, 0, "a", "c", "b", sin_verificar=sv)
+
+    def test_n_puntos_norma_deduplica(self):
+        hs = [self._h("toxina", "ALTA", "Bótox en Madrid."),
+              self._h("toxina", "ALTA", "Bótox en Madrid"),           # misma frase (texto y meta)
+              self._h("promociones", "MEDIA", "Bótox en Madrid."),    # otra norma: cuenta
+              self._h("promesas", "ALTA", "Sin riesgos.", sv="SIN VERIFICAR"),
+              self._h("cookies", "BAJA", "No hay cookies.")]
+        self.assertEqual(reglas.n_puntos_norma(hs), 2)
+
+    def test_json_expone_n_puntos_norma_y_anonimiza(self):
+        carpeta, datos, hs = blindaje.ejecutar(blindaje.cargar_local(FIX / "sitio_malo"), "X", "https://x.test",
+                                               self.tmp.name)
+        js = json.loads((carpeta / "informe.json").read_text(encoding="utf-8"))
+        self.assertEqual(js["n_puntos_norma"], reglas.n_puntos_norma(hs))
+        self.assertGreaterEqual(js["n_puntos_norma"], 2)   # toxina y promoción
+        texto_json = json.dumps(js, ensure_ascii=False)
+        self.assertNotIn("- Ana", texto_json)
+        self.assertIn("- [nombre]", texto_json)
+        html = (carpeta / "informe.html").read_text(encoding="utf-8")
+        self.assertIn(f"{js['n_puntos_norma']} puntos con norma concreta", html)
+        for h in js["hallazgos"]:
+            self.assertEqual(h["evidencia"][h["marca_inicio"]:h["marca_fin"]].strip() != "", h["marca_fin"] > 0)
+
+    def test_anonimizar(self):
+        self.assertEqual(informe.anonimizar('"Me encantó" - Laura, 45 años'), '"Me encantó" - [nombre], 45 años')
+        self.assertEqual(informe.anonimizar('«Genial» — Ana M.'), '«Genial» — [nombre]')
+
+    def test_previo_sin_textos_corregidos(self):
+        paginas = blindaje.cargar_local(FIX / "sitio_malo")
+        carpeta, datos, hs = blindaje.ejecutar(paginas, "X", "https://x.test", self.tmp.name, previo=True)
+        self.assertFalse((carpeta / "informe.html").exists())
+        html = (carpeta / "informe_previo.html").read_text(encoding="utf-8")
+        self.assertIn("Informe previo", html)
+        self.assertNotIn("Texto corregido", html)
+        self.assertNotIn("incluye los textos corregidos", html)
+        for h in hs:
+            self.assertNotIn(escape_html(h.texto_corregido), html)
+        self.assertIn("puntos con norma concreta", html)
+        self.assertIn("RD 1416/1994", html)          # norma de cada punto
+        self.assertIn("390 €", html)
+        self.assertNotRegex(html, r"\bIA\b")
+
+    def test_completo_si_incluye_textos(self):
+        carpeta, _, _ = blindaje.ejecutar(blindaje.cargar_local(FIX / "sitio_malo"), "X", "https://x.test",
+                                          self.tmp.name)
+        html = (carpeta / "informe.html").read_text(encoding="utf-8")
+        self.assertIn("este informe incluye los textos corregidos", html)
+
+    def test_proximos_pasos_condiciones(self):
+        carpeta, _, _ = blindaje.ejecutar(blindaje.cargar_local(FIX / "sitio_malo"), "X", "https://x.test",
+                                          self.tmp.name, previo=True)
+        html = (carpeta / "informe_previo.html").read_text(encoding="utf-8")
+        for txt in ("5 días hábiles desde el cobro", "últimos 12 meses", "no en tiempo real",
+                    "15 días de preaviso", "sin IVA"):
+            self.assertIn(txt, html)
+
+    def test_modo_local_sin_url(self):
+        salida = io.StringIO()
+        with redirect_stdout(salida):
+            code = blindaje.main(["--html-local", str(FIX / "sitio_malo"), "--nombre", "Clínica X",
+                                  "--salida", self.tmp.name, "--previo"])
+        self.assertEqual(code, 0)
+        js = json.loads((Path(self.tmp.name) / "clinica-x" / "informe.json").read_text(encoding="utf-8"))
+        self.assertTrue(js["resumen"][0].startswith("Hemos revisado 3 páginas guardadas de la web de Clínica X"))
+        self.assertIn("informe_previo.html", salida.getvalue())
+
+
+def escape_html(t):
+    from html import escape
+    return escape(t)
+
+
+class TestDescargaRevisor(unittest.TestCase):
+    """Revisor 6, 7, 17, 18, 20."""
+
+    def test_enlaces_mal_formados_no_rompen(self):
+        self.assertIsNone(blindaje.normalizar_url("http://c.test:abc/x"))
+        self.assertIsNone(blindaje.normalizar_url("http://[::1/x"))
+        B = "https://www.clinica.test"
+        sitio = SitioFalso({B + "/": (200, "text/html", _html("http://www.clinica.test:abc/x", "http://[::1/x",
+                                                               "/ok"))})
+        r = blindaje.Rastreador(B, obtener=sitio, dormir=lambda s: None, log=lambda *a: None)
+        self.assertEqual([u for u, _ in r.rastrear()], [B + "/"])
+
+    def test_quita_parametros_de_seguimiento(self):
+        self.assertEqual(blindaje.normalizar_url("https://c.test/a?utm_source=x&id=3&fbclid=9&gclid=1#f"),
+                         "https://c.test/a?id=3")
+
+    def test_deduplica_por_url_final(self):
+        B = "https://www.clinica.test"
+        sitio = SitioFalso({B + "/": (200, "text/html", _html("/botox", "/botox/", "/botox?utm_campaign=z")),
+                            B + "/botox/": (200, "text/html", _html())},
+                           redirecciones={B + "/botox": B + "/botox/"})
+        r = blindaje.Rastreador(B, obtener=sitio, dormir=lambda s: None, log=lambda *a: None)
+        urls = [u for u, _ in r.rastrear()]
+        self.assertEqual(urls.count(B + "/botox/"), 1)
+        self.assertEqual(len(urls), 2)
+
+    def test_error_ssl_sugiere_html_local(self):
+        import ssl
+        import urllib.error
+
+        def falla(url):
+            raise urllib.error.URLError(ssl.SSLCertVerificationError("certificate verify failed"))
+        r = blindaje.Rastreador("https://c.test", obtener=falla, dormir=lambda s: None, log=lambda *a: None)
+        self.assertEqual(r.rastrear(), [])
+        self.assertTrue(any("--html-local" in a and "SSL" in a for a in r.avisos), r.avisos)
+
+    def test_utf8_estricto_primero(self):
+        self.assertEqual(blindaje.decodificar("Bótox".encode("utf-8"), "text/html; charset=iso-8859-1"), "Bótox")
+        self.assertEqual(blindaje.decodificar("Bótox".encode("cp1252"), "text/html; charset=windows-1252"), "Bótox")
+
+    def test_user_agent_con_contacto(self):
+        ua = blindaje.crear_user_agent("yo@ejemplo.es")
+        self.assertIn("(+contacto: yo@ejemplo.es)", ua)
+        self.assertIn(blindaje.AGENTE, ua)
+        self.assertNotIn("contacto", blindaje.crear_user_agent(""))
 
 
 if __name__ == "__main__":
