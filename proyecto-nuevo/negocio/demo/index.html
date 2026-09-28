@@ -42,11 +42,13 @@
     background: #fff3cd;
     color: #664d03;
     font-size: 12px;
+    font-weight: 600;
     text-align: center;
     padding: 4px 8px;
     border-bottom: 1px solid #ffe69c;
+    position: relative;
+    z-index: 20; /* por encima de la ficha: siempre visible */
   }
-  .aviso[hidden] { display: none; }
   .barra-demo {
     background: #111b21;
     color: #e9edef;
@@ -108,6 +110,19 @@
     box-shadow: 0 1px .5px rgba(0,0,0,.13);
   }
   .sistema.ok { background: #d1f4e0; color: #0b5132; }
+  .email {
+    align-self: stretch; background: #fff; border: 1px solid #d1d7db; border-radius: 10px;
+    padding: 8px 10px; font-size: 13px; line-height: 1.35; margin: 4px 0;
+    box-shadow: 0 1px .5px rgba(0,0,0,.13); animation: entra .18s ease-out;
+  }
+  .email .tipo { font-size: 11px; font-weight: 700; color: var(--texto-suave); text-transform: uppercase; letter-spacing: .03em; }
+  .email .asunto { font-weight: 600; margin: 2px 0 4px; }
+  .email .cuerpo { white-space: pre-wrap; color: var(--texto); }
+  .email .boton-wa {
+    display: inline-block; margin-top: 8px; background: #25d366; color: #fff; font-weight: 700;
+    border-radius: 18px; padding: 6px 14px; font-size: 13px;
+  }
+  .email.salida { border-left: 4px solid var(--marca); }
   .msg {
     max-width: 82%;
     padding: 6px 8px 4px 9px;
@@ -204,7 +219,7 @@
 </head>
 <body>
 <div class="app">
-  <div class="aviso" id="aviso" hidden></div>
+  <div class="aviso" id="aviso" role="note">SIMULACIÓN · conversación y comprador inventados; tiempos orientativos</div>
   <div class="barra-demo">
     <span class="titulo" id="titulo-demo">Demo</span>
     <button type="button" id="btn-velocidad" aria-label="Cambiar velocidad">x1</button>
@@ -214,7 +229,7 @@
     <div class="avatar" id="avatar">?</div>
     <div class="cabecera-texto">
       <div class="nombre" id="nombre-lead">Lead</div>
-      <div class="estado" id="estado-lead">WhatsApp Business · en línea</div>
+      <div class="estado" id="estado-lead">WhatsApp Business · asistente automático</div>
     </div>
   </header>
   <nav class="pisos" id="pisos" aria-label="Elegir piso de la demo"></nav>
@@ -232,9 +247,9 @@
         <span class="insignia" id="ficha-insignia">CUALIFICADO</span>
       </div>
       <div class="metricas">
-        <div><strong id="m-resp">-</strong><span>1.ª respuesta</span></div>
-        <div><strong id="m-total">-</strong><span>de lead a visita</span></div>
-        <div><strong id="m-humano">0 min</strong><span>tiempo del agente</span></div>
+        <div><strong id="m-resp">-</strong><span>1.ª respuesta por email (simulada)</span></div>
+        <div><strong id="m-total">-</strong><span>de lead a visita (simulado)</span></div>
+        <div><strong id="m-visita">Sí</strong><span>visita propuesta y agendada</span></div>
       </div>
       <dl id="ficha-datos"></dl>
       <div class="resumen"><b>Resumen para el agente</b><span id="ficha-resumen"></span></div>
@@ -242,7 +257,7 @@
         <button type="button" class="sec" id="btn-cerrar">Ver chat</button>
         <button type="button" class="prim" id="btn-repetir">Repetir demo</button>
       </div>
-      <div class="pie" id="ficha-pie">Simulación. Así vería el agente cada lead en su móvil o CRM.</div>
+      <div class="pie" id="ficha-pie">Simulación con datos inventados; tiempos orientativos. Así vería el agente cada lead en su móvil o CRM.</div>
     </section>
   </div>
 </div>
@@ -251,16 +266,54 @@
 /*CONFIG_INICIO*/{
   "ejemplo": true,
   "agencia": {
-    "nombre": "Inmobiliaria Ejemplo (ficticia)",
+    "nombre": "Inmobiliaria Demo Arbolar (ficticia)",
     "color": "#0f5f8c",
     "agente": "Laura (agente ficticia)",
-    "asistente": "Sofía"
+    "url_privacidad": "https://example.com/privacidad",
+    "horario": {
+      "apertura": "09:00",
+      "cierre": "20:00"
+    }
   },
-  "lead": { "nombre": "Carlos M. (lead ficticio)", "hora": "21:47" },
+  "lead": {
+    "nombre": "Carlos M. (comprador ficticio)",
+    "hora": "21:47",
+    "primera_respuesta_seg": 40
+  },
   "pisos": [
-    { "ref": "EJ-001", "direccion": "Calle del Ejemplo, 12", "barrio": "Chamberí", "precio": 425000, "m2": 78, "habitaciones": 2 },
-    { "ref": "EJ-002", "direccion": "Avenida Ficticia, 5", "barrio": "Retiro", "precio": 610000, "m2": 104, "habitaciones": 3 }
-  ]
+    {
+      "ref": "EJ-001",
+      "direccion": "Calle del Ejemplo, 12",
+      "barrio": "Chamberí",
+      "precio": 425000,
+      "m2": 78,
+      "habitaciones": 2
+    },
+    {
+      "ref": "EJ-002",
+      "direccion": "Avenida Ficticia, 5",
+      "barrio": "Retiro",
+      "precio": 610000,
+      "m2": 104,
+      "habitaciones": 3,
+      "presupuesto_lead": 560000
+    }
+  ],
+  "calculado": {
+    "banner": "SIMULACIÓN · conversación y comprador inventados; tiempos orientativos · agencia ficticia",
+    "fuera_horario": true,
+    "crono": "objetivo \u003c 2 min (simulado) · fuera de horario (21:47), sin intervención humana",
+    "pisos": [
+      {
+        "presupuesto": 460000,
+        "rama": "CALIENTE"
+      },
+      {
+        "presupuesto": 560000,
+        "rama": "REVISAR PRESUPUESTO"
+      }
+    ]
+  }
 }/*CONFIG_FIN*/
 </script>
 <script>
@@ -268,16 +321,19 @@
   "use strict";
 
   // ---------- Configuración ----------
+  // Los textos que dependen de los datos vienen ya calculados por build_demo.py en CFG.calculado.
   var raw = document.getElementById("config").textContent;
   raw = raw.replace(/\/\*CONFIG_(INICIO|FIN)\*\//g, "");
   var CFG = JSON.parse(raw);
   var AG = CFG.agencia || {};
   var LEAD = CFG.lead || {};
   var PISOS = CFG.pisos || [];
-  var nombreLead = LEAD.nombre || "Lead de Idealista";
+  var CALC = CFG.calculado || {};
+  var nombreAgencia = AG.nombre || "la agencia";
+  var nombreLead = LEAD.nombre || "Comprador";
   var primerNombre = nombreLead.split(" ")[0];
   var agente = AG.agente || "tu agente";
-  var asistente = AG.asistente || "Sofía";
+  var urlPrivacidad = AG.url_privacidad || "(enlace a la política de privacidad de la agencia)";
 
   function $(id) { return document.getElementById(id); }
 
@@ -297,20 +353,17 @@
     if (meta) meta.setAttribute("content", AG.color);
   }
 
-  if (CFG.ejemplo) {
-    $("aviso").textContent = "EJEMPLO: agencia, pisos y lead son ficticios.";
-    $("aviso").hidden = false;
-  }
-  document.title = "Demo · " + (AG.nombre || "Agencia");
-  $("titulo-demo").textContent = "Demo · " + (AG.nombre || "Agencia");
+  // Banner siempre visible (el texto base ya está en el HTML).
+  if (CALC.banner) $("aviso").textContent = CALC.banner;
+  document.title = "Demo · " + nombreAgencia;
+  $("titulo-demo").textContent = "Demo · " + nombreAgencia;
   $("nombre-lead").textContent = nombreLead;
   $("avatar").textContent = primerNombre.charAt(0).toUpperCase();
-  $("estado-lead").textContent = "WhatsApp de " + (AG.nombre || "la agencia") + " · asistente activo";
+  $("estado-lead").textContent = "WhatsApp de " + nombreAgencia + " · asistente automático";
 
   // ---------- Utilidades ----------
   var fmtEur = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
   function eur(n) { return fmtEur.format(n); }
-  function redondeaArriba(n, paso) { return Math.ceil(n / paso) * paso; }
 
   function parseHora(h) {
     var m = /^(\d{1,2}):(\d{2})$/.exec(h || "");
@@ -333,12 +386,21 @@
     }
     return res;
   }
+  function datosPiso(i) {
+    // Presupuesto y rama calculados por build_demo.py; si faltan, misma regla por defecto.
+    var c = (CALC.pisos || [])[i];
+    var piso = PISOS[i];
+    var presupuesto = c && c.presupuesto ? c.presupuesto : Math.ceil(piso.precio * 1.06 / 10000) * 10000;
+    var caliente = presupuesto >= piso.precio;
+    return { presupuesto: presupuesto, caliente: caliente, rama: caliente ? "CALIENTE" : "REVISAR PRESUPUESTO" };
+  }
 
   // ---------- Motor de reproducción ----------
   var velocidad = 1;
   var temporizadores = [];
   var ejecucion = 0;
   var chat = $("chat");
+  var TEXTO_CAJA = "Asistente automático activo 24/7";
 
   function limpiar() {
     ejecucion++;
@@ -364,8 +426,7 @@
     if (extra && extra.opciones) {
       var ops = nodo("div", "opciones");
       extra.opciones.forEach(function (o, i) {
-        var s = nodo("span", i === extra.elegida ? "elegida" : "", o);
-        ops.appendChild(s);
+        ops.appendChild(nodo("span", i === extra.elegida ? "elegida" : "", o));
       });
       el.appendChild(ops);
     }
@@ -377,19 +438,32 @@
     return el;
   }
 
+  function tarjetaEmail(clase, tipo, asunto, cuerpo, boton) {
+    var el = nodo("div", "email " + clase);
+    el.appendChild(nodo("div", "tipo", tipo));
+    el.appendChild(nodo("div", "asunto", asunto));
+    el.appendChild(nodo("div", "cuerpo", cuerpo));
+    // Botón solo visual: la demo no abre enlaces ni hace peticiones.
+    if (boton) el.appendChild(nodo("span", "boton-wa", boton));
+    chat.appendChild(el);
+    bajar();
+    return el;
+  }
+
   function reproducir(indicePiso) {
     limpiar();
     var yo = ejecucion;
     var piso = PISOS[indicePiso];
     marcarPiso(indicePiso);
 
-    var presupuesto = redondeaArriba(piso.precio * 1.06, 10000);
+    var dp = datosPiso(indicePiso);
+    var presupuesto = dp.presupuesto;
     var h = huecos();
     var reloj = parseHora(LEAD.hora || "21:47");
     var inicio = new Date(reloj.getTime());
     var primeraRespuestaSeg = Number(LEAD.primera_respuesta_seg) || 40;
+    var minEmail = Math.max(1, Math.ceil(primeraRespuestaSeg / 60));
 
-    // Cada paso: [espera en ms antes del paso, función]
     var pasos = [];
     var t = 0;
     function paso(espera, fn) { t += espera; pasos.push([t, fn]); }
@@ -401,12 +475,12 @@
       escribiendoEl.innerHTML = "<i></i><i></i><i></i>";
       chat.appendChild(escribiendoEl);
       bajar();
-      $("caja-texto").textContent = lado === "entrada" ? primerNombre + " está escribiendo…" : asistente + " está escribiendo…";
+      $("caja-texto").textContent = lado === "entrada" ? primerNombre + " está escribiendo…" : "El asistente automático está escribiendo…";
     }
     function quitaEscribiendo() {
       if (escribiendoEl && escribiendoEl.parentNode) escribiendoEl.parentNode.removeChild(escribiendoEl);
       escribiendoEl = null;
-      $("caja-texto").textContent = "Asistente automático activo 24/7";
+      $("caja-texto").textContent = TEXTO_CAJA;
     }
     function bot(espera, texto, extra, seg) {
       paso(espera, function () { escribiendo("salida"); });
@@ -418,48 +492,67 @@
     }
 
     paso(300, function () { chat.appendChild(nodo("div", "fecha", "HOY")); });
+    // 1) El lead llega por email (aviso del portal).
     paso(500, function () {
-      chat.appendChild(nodo("div", "sistema", "Nuevo lead de Idealista · " + piso.ref + " · " + piso.direccion));
+      tarjetaEmail("entrada", "Email de Idealista · " + hhmm(reloj),
+        "Nuevo contacto: " + piso.ref + " · " + piso.direccion,
+        nombreLead + " escribe: «Hola, me interesa el piso de " + piso.direccion + " (" + piso.barrio +
+        "). ¿Sigue disponible? ¿Se puede ver esta semana?»");
+    });
+    // 2) Primer contacto: email automático de respuesta con botón para seguir por WhatsApp.
+    paso(1200, function () {
+      var horaEmail = avanza(primeraRespuestaSeg);
+      chat.appendChild(nodo("div", "sistema",
+        "Email automático enviado al comprador en " + minEmail + " min (" + horaEmail + ")"));
+      tarjetaEmail("salida", "Email automático de " + nombreAgencia,
+        "Asunto: Tu consulta sobre " + piso.direccion + " · " + nombreAgencia,
+        "Hola " + primerNombre + ", gracias por tu interés. El piso de " + piso.direccion + " sigue disponible: " +
+        piso.m2 + " m², " + piso.habitaciones + " hab., " + eur(piso.precio) + ".\n" +
+        "Si quieres organizar una visita, pulsa el botón y te atiende nuestro asistente automático por WhatsApp.",
+        "Seguir por WhatsApp");
+      chat.appendChild(nodo("div", "crono", CALC.crono || "objetivo < 2 min (simulado)"));
       bajar();
     });
-    paso(700, function () {
-      burbuja("entrada",
-        "Hola, me interesa el piso de " + piso.direccion + " (" + piso.barrio + "). ¿Sigue disponible? ¿Se puede ver esta semana?",
-        hhmm(reloj), { etiqueta: "Vía Idealista" });
+    // 3) El comprador abre él la conversación de WhatsApp.
+    paso(1300, function () {
+      avanza(150);
+      chat.appendChild(nodo("div", "sistema",
+        primerNombre + " pulsa «Seguir por WhatsApp» y abre él la conversación"));
+      bajar();
     });
-    paso(900, function () { escribiendo("salida"); });
-    paso(1400, function () {
-      quitaEscribiendo();
-      burbuja("salida",
-        "¡Hola " + primerNombre + "! Soy " + asistente + ", asistente virtual de " + AG.nombre + ". " +
-        "Sí, el piso de " + piso.direccion + " sigue disponible: " + piso.m2 + " m², " +
-        piso.habitaciones + " hab., " + eur(piso.precio) + ".\n\n" +
-        "Para organizarte la visita con " + agente + " te hago 4 preguntas rápidas.",
-        avanza(primeraRespuestaSeg));
-      var c = nodo("div", "crono", "Respondido en " + primeraRespuestaSeg + " s · fuera de horario, sin intervención humana");
-      chat.appendChild(c); bajar();
-    });
+    cliente(600, "Hola, vengo del email por el piso " + piso.ref + " de " + piso.direccion + ". ¿Se puede ver esta semana?", 20);
+    bot(700,
+      "¡Hola " + primerNombre + "! Soy el asistente automático de " + nombreAgencia + ". " +
+      "Para organizarte la visita con " + agente + " te hago 4 preguntas rápidas.\n\n" +
+      "Info de privacidad: " + urlPrivacidad + " · Responde BAJA para no recibir más mensajes",
+      null, 6);
     bot(900, "1/4 · ¿Cuál es tu presupuesto máximo aproximado?", null, 3);
     cliente(1200, "Hasta unos " + eur(presupuesto) + ".", 35);
+    if (!dp.caliente) {
+      bot(700, "Anotado. Este piso está por encima de ese importe; " + agente +
+        " lo revisará contigo en la visita.", null, 4);
+    }
     bot(700, "2/4 · ¿Cómo lo financiarías? ¿Hipoteca ya preaprobada, en estudio o al contado?", null, 5);
     cliente(1200, "Tengo la hipoteca preaprobada con mi banco, el 80 %.", 50);
     bot(700, "3/4 · ¿En qué plazo te gustaría comprar?", null, 4);
     cliente(1200, "En los próximos 2-3 meses.", 30);
     bot(700, "4/4 · ¿Buscas solo en " + piso.barrio + " o te valen otras zonas?", null, 4);
     cliente(1200, piso.barrio + " o alrededores, cerca del metro.", 40);
-    bot(800, "¡Perfecto, encajas con este piso! " + agente + " puede enseñártelo en estos huecos. ¿Cuál te viene mejor?",
+    bot(800, (dp.caliente ? "¡Gracias! Encajas con este piso. " : "¡Gracias! ") + agente +
+      " puede enseñártelo en estos huecos. ¿Cuál te viene mejor?",
       { opciones: ["1) " + cap(h[0]), "2) " + cap(h[1])] }, 6);
     cliente(1300, "La 1, gracias.", 25);
     bot(700,
-      "Hecho. Visita confirmada:\n" + cap(h[0]) + "\n" + piso.direccion + "\nCon " + agente + ".\n\n" +
-      "Te enviaré un recordatorio el día antes. Si necesitas cambiarla, escribe aquí.",
+      "Hecho. Visita agendada:\n" + cap(h[0]) + "\n" + piso.direccion + "\nCon " + agente + ".\n\n" +
+      "¿Quieres que te la recuerde el día antes? Responde SÍ. Si necesitas cambiarla, escribe aquí.",
       null, 7);
+    cliente(1100, "Sí, gracias.", 15);
     paso(900, function () {
-      chat.appendChild(nodo("div", "sistema ok", "Visita añadida al calendario de " + agente + " · Ficha enviada al agente"));
+      chat.appendChild(nodo("div", "sistema ok", "Visita agendada en el calendario de " + agente + " · Ficha enviada al agente"));
       bajar();
       $("btn-ficha").disabled = false;
       var totalMin = Math.max(1, Math.round((reloj - inicio) / 60000));
-      rellenaFicha(piso, presupuesto, h[0], primeraRespuestaSeg, totalMin);
+      rellenaFicha(piso, dp, h[0], minEmail, totalMin);
     });
     paso(1600, function () { $("ficha-fondo").hidden = false; });
 
@@ -470,23 +563,24 @@
 
   function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
-  function rellenaFicha(piso, presupuesto, visita, respSeg, totalMin) {
-    $("ficha-sup").textContent = (AG.nombre || "Agencia") + " · Lead de Idealista";
+  function rellenaFicha(piso, dp, visita, minEmail, totalMin) {
+    $("ficha-sup").textContent = nombreAgencia + " · Lead de Idealista";
     $("ficha-nombre").textContent = nombreLead;
-    var encaja = presupuesto >= piso.precio;
-    $("ficha-insignia").textContent = encaja ? "CUALIFICADO · CALIENTE" : "CUALIFICADO · REVISAR PRESUPUESTO";
-    $("m-resp").textContent = respSeg + " s";
+    $("ficha-insignia").textContent = "CUALIFICADO · " + dp.rama;
+    $("m-resp").textContent = minEmail + " min";
     $("m-total").textContent = totalMin + " min";
+    var falta = piso.precio - dp.presupuesto;
     var datos = [
       ["Piso", piso.ref + " · " + piso.direccion + " (" + piso.barrio + ")"],
       ["Precio", eur(piso.precio) + " · " + piso.m2 + " m² · " + piso.habitaciones + " hab."],
-      ["Presupuesto", "Hasta " + eur(presupuesto) + (encaja ? " (encaja)" : " (por debajo)")],
+      ["Presupuesto", "Hasta " + eur(dp.presupuesto) + (dp.caliente ? " (encaja)" : " (por debajo: faltan " + eur(falta) + ")")],
       ["Financiación", "Hipoteca preaprobada (80 %)"],
       ["Plazo", "2-3 meses"],
       ["Zona", piso.barrio + " y alrededores"],
       ["Visita", cap(visita)],
-      ["Contacto", "WhatsApp · +34 6XX XXX XXX (ficticio)"],
-      ["Origen", "Idealista · recibido a las " + (LEAD.hora || "21:47")]
+      ["Recordatorio", "Aceptado por el comprador"],
+      ["Contacto", "WhatsApp abierto por el comprador · +34 6XX XXX XXX (inventado)"],
+      ["Origen", "Email de Idealista · recibido a las " + (LEAD.hora || "21:47")]
     ];
     var dl = $("ficha-datos");
     dl.innerHTML = "";
@@ -495,8 +589,9 @@
       dl.appendChild(nodo("dd", "", d[1]));
     });
     $("ficha-resumen").textContent =
-      "Comprador con hipoteca preaprobada y presupuesto " + (encaja ? "suficiente" : "algo justo") +
-      ", quiere comprar en 2-3 meses en " + piso.barrio + ". Visita ya agendada: solo tienes que presentarte.";
+      "Comprador con hipoteca preaprobada y presupuesto " +
+      (dp.caliente ? "suficiente" : "por debajo del precio (revisar antes o en la visita)") +
+      ", quiere comprar en 2-3 meses en " + piso.barrio + ". Visita propuesta y agendada en el calendario de " + agente + ".";
   }
 
   // ---------- Selector de pisos ----------

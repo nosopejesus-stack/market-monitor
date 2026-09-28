@@ -1,15 +1,17 @@
 {
-  "_aviso": "DATOS FICTICIOS DE EJEMPLO. Ni la agencia, ni los pisos, ni el lead existen. Para una agencia real, copia este archivo y rellénalo con sus pisos publicados.",
+  "_aviso": "DATOS FICTICIOS DE EJEMPLO. Ni la agencia, ni los pisos, ni el comprador existen. Para una agencia real, copia este archivo, pon ejemplo=false y rellénalo con pisos que te dé la propia agencia con su permiso.",
   "ejemplo": true,
   "agencia": {
-    "nombre": "Inmobiliaria Ejemplo Chamberí (ficticia)",
+    "nombre": "Inmobiliaria Demo Arbolar (ficticia)",
     "color": "#8c1d40",
     "agente": "Laura (agente ficticia)",
-    "asistente": "Sofía"
+    "url_privacidad": "https://example.com/privacidad",
+    "horario": { "apertura": "09:00", "cierre": "20:00" }
   },
   "lead": {
-    "nombre": "Carlos M. (lead ficticio)",
-    "hora": "21:47"
+    "nombre": "Carlos M. (comprador ficticio)",
+    "hora": "21:47",
+    "primera_respuesta_seg": 40
   },
   "pisos": [
     {
@@ -18,7 +20,8 @@
       "barrio": "Chamberí",
       "precio": 425000,
       "m2": 78,
-      "habitaciones": 2
+      "habitaciones": 2,
+      "presupuesto_lead": 450000
     },
     {
       "ref": "EJ-102",
@@ -26,7 +29,8 @@
       "barrio": "Salamanca",
       "precio": 690000,
       "m2": 110,
-      "habitaciones": 3
+      "habitaciones": 3,
+      "presupuesto_lead": 620000
     },
     {
       "ref": "EJ-103",
@@ -34,7 +38,8 @@
       "barrio": "Retiro",
       "precio": 355000,
       "m2": 62,
-      "habitaciones": 1
+      "habitaciones": 1,
+      "presupuesto_lead": 380000
     }
   ]
 }
