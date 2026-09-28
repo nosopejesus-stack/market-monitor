@@ -1,0 +1,40 @@
+{
+  "_aviso": "DATOS FICTICIOS DE EJEMPLO. Ni la agencia, ni los pisos, ni el lead existen. Para una agencia real, copia este archivo y rellénalo con sus pisos publicados.",
+  "ejemplo": true,
+  "agencia": {
+    "nombre": "Inmobiliaria Ejemplo Chamberí (ficticia)",
+    "color": "#8c1d40",
+    "agente": "Laura (agente ficticia)",
+    "asistente": "Sofía"
+  },
+  "lead": {
+    "nombre": "Carlos M. (lead ficticio)",
+    "hora": "21:47"
+  },
+  "pisos": [
+    {
+      "ref": "EJ-101",
+      "direccion": "Calle del Ejemplo, 12",
+      "barrio": "Chamberí",
+      "precio": 425000,
+      "m2": 78,
+      "habitaciones": 2
+    },
+    {
+      "ref": "EJ-102",
+      "direccion": "Calle Ficticia, 7",
+      "barrio": "Salamanca",
+      "precio": 690000,
+      "m2": 110,
+      "habitaciones": 3
+    },
+    {
+      "ref": "EJ-103",
+      "direccion": "Plaza Inventada, 3",
+      "barrio": "Retiro",
+      "precio": 355000,
+      "m2": 62,
+      "habitaciones": 1
+    }
+  ]
+}
