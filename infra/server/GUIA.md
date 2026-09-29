@@ -1,4 +1,5 @@
 # Guía de despliegue seguro (de cero a funcionando)
+> **FUTURO (no activo):** requiere servidor de pago; por la regla de cero gasto no se usa ahora. Ver `EMPIEZA_AQUI.md`.
 
 Tiempo estimado: 1 hora. Solo tienes que copiar y pegar comandos.
 Lo que está marcado con 🔐 lo haces tú: son cuentas, pagos o claves, que nadie más debe crear.
