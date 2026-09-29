@@ -10,6 +10,9 @@ robots.txt y 1 petición/segundo) y escribe informes/<slug>/informe_previo.html 
 Al final (y tras cada clínica, por si se corta) escribe informes/RESUMEN.csv y informes/RESUMEN.html,
 ordenados por prioridad de llamada.
 
+Cada web descargada se guarda en informes/<slug>/paginas.json; con --reanalizar se vuelven a pasar
+las reglas sobre esa copia sin descargar nada (útil tras corregir una regla).
+
 Salta las filas sin web, con cadena=si o con "no_llamar" en notas. Un error en una clínica
 (SSL, tiempo de espera, web no legible) se anota en su fila y el lote sigue.
 No contacta con nadie: solo prepara la lista; las llamadas las hace el usuario.
@@ -19,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import json
 import sys
 import time
 from datetime import date
@@ -31,7 +35,7 @@ import blindaje  # noqa: E402
 import reglas  # noqa: E402
 
 COLUMNAS = ["id", "nombre", "telefono", "web", "lectura_fiable", "n_puntos_norma", "n_puntos_revisar", "nota",
-            "hallazgo_principal", "frase_llamada", "estado", "informe"]
+            "hallazgo_principal", "frase_llamada", "posible_cadena", "estado", "informe"]
 ESTADO_NO_LEGIBLE = "revisar a mano: usar --html-local"
 ESTADO_SIN_GANCHO = "ok: sin gancho"
 
@@ -103,28 +107,61 @@ def _una_linea(texto: str, maximo: int = 300) -> str:
     return t if len(t) <= maximo else t[: maximo - 1] + "…"
 
 
+CACHE = "paginas.json"
+
+
+def guardar_cache(carpeta, web, paginas_html, avisos):
+    """Guarda lo descargado (URL + HTML) para volver a analizar sin descargar otra vez (--reanalizar)."""
+    carpeta = Path(carpeta)
+    carpeta.mkdir(parents=True, exist_ok=True)
+    datos = {"web": web, "fecha": date.today().isoformat(), "avisos": list(avisos),
+             "paginas": [{"url": u, "html": h} for u, h in paginas_html]}
+    (carpeta / CACHE).write_text(json.dumps(datos, ensure_ascii=False), encoding="utf-8")
+
+
+def leer_cache(carpeta):
+    """Devuelve (paginas_html, avisos) de la descarga guardada, o None si no hay."""
+    ruta = Path(carpeta) / CACHE
+    if not ruta.is_file():
+        return None
+    datos = json.loads(ruta.read_text(encoding="utf-8"))
+    return [(p["url"], p["html"]) for p in datos.get("paginas", [])], list(datos.get("avisos", []))
+
+
 def procesar_clinica(fila, salida, max_paginas=15, contacto=None, html_local=None, obtener=None,
-                     dormir=time.sleep, log=print, subcarpeta=None, fecha=None) -> dict:
-    """Informe previo de una clínica. Nunca lanza excepción: los errores van a la columna estado."""
+                     dormir=time.sleep, log=print, subcarpeta=None, fecha=None, reanalizar=False) -> dict:
+    """Informe previo de una clínica. Nunca lanza excepción: los errores van a la columna estado.
+
+    Lo descargado se guarda en informes/<slug>/paginas.json; con ``reanalizar`` se usa esa copia
+    (si existe) en vez de descargar otra vez: sirve para volver a pasar las reglas tras corregirlas.
+    """
     nombre = fila.get("nombre") or fila.get("id") or "clinica"
     web = fila.get("web", "")
     if web and "://" not in web:
         web = "https://" + web
     res = {"id": fila.get("id", ""), "nombre": nombre, "telefono": fila.get("telefono_publico", ""),
            "web": web, "lectura_fiable": "", "n_puntos_norma": "", "n_puntos_revisar": "", "nota": "",
-           "hallazgo_principal": "", "frase_llamada": "", "estado": "", "informe": "", "_puntuacion": None}
+           "hallazgo_principal": "", "frase_llamada": "", "posible_cadena": "", "estado": "", "informe": "", "_puntuacion": None}
     contacto = contacto or {}
+    carpeta_clinica = Path(salida) / (subcarpeta or blindaje.slug(nombre))
     try:
         avisos = []
+        cache = leer_cache(carpeta_clinica) if reanalizar and not html_local else None
         if html_local:
             paginas_html = blindaje.cargar_local(html_local)
             modo = "local"
+        elif cache is not None:
+            paginas_html, avisos = cache
+            modo = "web"
+            log(f"  (copia guardada: {len(paginas_html)} página(s), sin descargar)")
         else:
             r = blindaje.Rastreador(web, max_paginas=max_paginas, obtener=obtener, dormir=dormir,
                                     user_agent=blindaje.crear_user_agent(contacto.get("email", "")), log=log)
             paginas_html = r.rastrear()
             avisos = r.avisos
             modo = "web"
+            if paginas_html:
+                guardar_cache(carpeta_clinica, web, paginas_html, avisos)
         if not paginas_html:
             # El aviso de conexión (SSL, timeout...) explica más que "robots.txt no permite".
             conexion = [a for a in avisos if a.startswith("No se pudo")]
@@ -148,6 +185,7 @@ def procesar_clinica(fila, salida, max_paginas=15, contacto=None, html_local=Non
         "nota": f"{datos['nota']} ({datos['puntuacion']}/100)",
         "hallazgo_principal": hallazgo_principal(hallazgos),
         "frase_llamada": datos["frase_llamada"],
+        "posible_cadena": "; ".join(datos.get("senales_cadena", [])),
         "informe": f"{carpeta.name}/informe_previo.html",
         "_puntuacion": datos["puntuacion"],
     })
@@ -237,7 +275,7 @@ def generar_html(resultados, saltadas=(), fecha=None, completo=True):
       "El informe no es asesoramiento jurídico.</p>\n")
     w("<table><thead><tr><th>#</th><th>Id</th><th>Clínica</th><th>Teléfono</th><th>Web</th><th>Lectura fiable</th>"
       "<th>Puntos con norma</th><th>Puntos a revisar</th><th>Nota</th><th>Hallazgo principal</th>"
-      "<th>Frase para la llamada</th><th>Estado</th></tr></thead><tbody>\n")
+      "<th>Frase para la llamada</th><th>Posible cadena (verificar)</th><th>Estado</th></tr></thead><tbody>\n")
     for i, r in enumerate(filas, 1):
         nombre = e(r["nombre"])
         if r["informe"]:
@@ -246,7 +284,7 @@ def generar_html(resultados, saltadas=(), fecha=None, completo=True):
           f"<td>{e(r['telefono'])}</td><td class=\"web\">{e(r['web'])}</td><td>{e(r['lectura_fiable'])}</td>"
           f"<td>{e(str(r['n_puntos_norma']))}</td><td>{e(str(r['n_puntos_revisar']))}</td><td>{e(r['nota'])}</td>"
           f"<td>{e(r['hallazgo_principal'])}</td><td class=\"frase\">{e(r['frase_llamada'])}</td>"
-          f"<td>{e(r['estado'])}</td></tr>\n")
+          f"<td>{e(r.get('posible_cadena', ''))}</td><td>{e(r['estado'])}</td></tr>\n")
     w("</tbody></table>\n")
     if saltadas:
         w("<h2>Saltadas</h2>\n<table><thead><tr><th>Id</th><th>Clínica</th><th>Motivo</th></tr></thead><tbody>\n")
@@ -279,7 +317,7 @@ def _html_local_por_id(valores):
 
 
 def ejecutar_lote(ruta_csv, salida, solo=None, max_paginas=15, contacto=None, html_local_id=None, obtener=None,
-                  dormir=time.sleep, log=print, fecha=None):
+                  dormir=time.sleep, log=print, fecha=None, reanalizar=False):
     """Procesa el CSV y escribe los informes y el resumen. Devuelve (resultados, saltadas)."""
     filas = leer_clinicas(ruta_csv)
     procesar, saltadas, desconocidos = seleccionar(filas, solo)
@@ -298,7 +336,8 @@ def ejecutar_lote(ruta_csv, salida, solo=None, max_paginas=15, contacto=None, ht
             usadas.add(sub)
             log(f"\n[{n}/{len(procesar)}] {fila.get('id', '')} {nombre} · {fila.get('web', '')}")
             r = procesar_clinica(fila, salida, max_paginas, contacto, html_local=html_local_id.get(fila.get("id")),
-                                 obtener=obtener, dormir=dormir, log=log, subcarpeta=sub, fecha=fecha)
+                                 obtener=obtener, dormir=dormir, log=log, subcarpeta=sub, fecha=fecha,
+                                 reanalizar=reanalizar)
             log(f"  -> {r['estado']}" + (f" · {r['frase_llamada']}" if r["frase_llamada"] else ""))
             resultados.append(r)
             escribir_resumen(resultados, saltadas, salida, fecha, completo=False)
@@ -324,6 +363,8 @@ def main(argv=None):
     ap.add_argument("--contacto-telefono", default="", help="tu teléfono para los informes")
     ap.add_argument("--contacto-email", default="",
                     help="tu email para los informes (también va en el User-Agent: +contacto)")
+    ap.add_argument("--reanalizar", action="store_true",
+                    help="usar la copia guardada de cada web (informes/<clinica>/paginas.json) en vez de descargar")
     # Opción oculta (tests y casos puntuales): usar HTML guardado para un id en vez de descargar.
     ap.add_argument("--html-local-id", action="append", default=[], metavar="ID=CARPETA", help=argparse.SUPPRESS)
     args = ap.parse_args(argv)
@@ -332,7 +373,7 @@ def main(argv=None):
     contacto = {"nombre": args.contacto_nombre, "telefono": args.contacto_telefono, "email": args.contacto_email}
     try:
         resultados, saltadas = ejecutar_lote(args.csv, args.salida, args.solo, args.max_paginas, contacto,
-                                             _html_local_por_id(args.html_local_id))
+                                             _html_local_por_id(args.html_local_id), reanalizar=args.reanalizar)
     except KeyboardInterrupt:
         print("\nInterrumpido: el resumen parcial está en", Path(args.salida) / "RESUMEN.html")
         return 130

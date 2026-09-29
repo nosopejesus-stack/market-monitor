@@ -121,7 +121,7 @@ Documentos, junto a `blindaje`).
 Con PowerShell abierto en la carpeta `blindaje`, **un solo comando**:
 
 ```powershell
-py lote.py ..\prospectos\clinicas.csv --contacto-nombre "Tu Nombre" --contacto-telefono "600 000 000"
+python lote.py ..\prospectos\clinicas.csv --contacto-nombre "Tu Nombre" --contacto-telefono "600 000 000"
 ```
 
 Y al terminar:
@@ -132,7 +132,7 @@ start .\informes\RESUMEN.html
 
 - Salta las filas **sin web**, con **`cadena` = si** o con **`no_llamar`** en `notas`.
 - Revisa como máximo 15 páginas por clínica (`--max-paginas 25` para más). Con 1 petición por segundo, unas
-  50 clínicas tardan del orden de 15-20 minutos (estimación, SIN VERIFICAR con webs reales). Solo algunas:
+  50 clínicas tardaron unos 35 minutos en la primera pasada real (29-09-2026). Solo algunas:
   `--solo ARC-001,ARC-002`. Opcional: `--contacto-email "tu@correo.es"` (también va en el User-Agent).
 - Si una clínica falla (certificado SSL, tiempo de espera, web que no responde) se anota en su fila y el lote
   **sigue** con la siguiente. El resumen se reescribe tras cada clínica: si cierras la ventana a mitad, lo hecho
@@ -151,8 +151,19 @@ start .\informes\RESUMEN.html
     según la normativa de publicidad sanitaria."*
   - si no hay ninguno: vacía, estado `ok: sin gancho` (no llamar con esa frase).
   - si la web no se ha leído bien: vacía, estado `revisar a mano: usar --html-local`. Guarda sus páginas y
-    pasa esa clínica sola con `py blindaje.py ... --html-local ... --previo` (sección siguiente).
+    pasa esa clínica sola con `python blindaje.py ... --html-local ... --previo` (sección siguiente).
 - Antes de llamar, abre el informe previo de la clínica y comprueba en su web el hallazgo principal.
+- **Copia de cada web y `--reanalizar`:** cada web descargada se guarda en `informes\<clínica>\paginas.json`.
+  Para volver a generar todos los informes sin descargar nada (tras corregir una regla, o para poner tu nombre y
+  teléfono en los informes): `python lote.py ..\prospectos\clinicas.csv --reanalizar --contacto-nombre "…"
+  --contacto-telefono "…"`. Tarda segundos.
+- **Columna `posible_cadena`** (uso interno, no sale en el informe de la clínica): señales de varias sedes
+  («nuestras clínicas», «franquicia», varios nº de registro, otras ciudades). Si sale algo, mira antes de llamar.
+- **Qué no cuenta en N** (revisión manual del lote real): reseñas de pacientes (widgets de Google/Trustindex o
+  frases en primera persona), consulta/cita/diagnóstico gratuitos, teléfonos gratuitos, «Promociones» del menú
+  sin precio ni descuento (sale como BAJA «revisar a mano»), bonos con precio pero sin descuento, promociones de
+  tratamientos no médicos (masajes, higiene facial, aparatología estética), currículum del médico («formación en
+  toxina»), y la falta del nº de registro si no se ha leído el aviso legal.
 
 ### Si la web bloquea la descarga, da error de certificado (SSL) o sale "revisión no fiable": `--html-local`
 
@@ -185,7 +196,7 @@ Cada hallazgo lleva URL, fragmento de evidencia, norma, qué hacer y **texto cor
 antes de publicar.
 
 **Puntos con norma concreta** (`n_puntos_norma`): hallazgos ALTA o MEDIA sin nada SIN VERIFICAR, contando una
-sola vez la misma frase (aunque salga en el texto y en la descripción). Es la cifra que se usa en la oferta.
+sola vez cada tipo de punto (p. ej. la publicidad de la toxina cuenta 1 aunque salga en 15 páginas o en el menú). Es la cifra que se usa en la oferta.
 
 **Puntos a revisar** (`n_puntos_revisar`): lo mismo pero **incluyendo** los ALTA/MEDIA que dependen de algo
 SIN VERIFICAR (siempre ≥ puntos con norma). Sale en el informe previo ("Puntos a revisar") y en `informe.json`

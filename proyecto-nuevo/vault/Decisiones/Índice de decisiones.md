@@ -10,4 +10,5 @@ Registro de decisiones (plantilla: [[Plantillas/Decisión]]).
 | 2026-09-28 | [[2026-09-28 Cero gasto]] | aceptada |
 | 2026-09-28 | [[2026-09-28 Negocio respuesta inmediata a leads inmobiliarios]] | propuesta (promesa reformulada 2026-09-28) |
 | 2026-09-28 | [[2026-09-28 Arcend - Blindaje continuo por teléfono]] | aceptada |
-| 2026-09-28 | [[2026-09-28 Arcend - Informe previo y N calculado por la herramienta]] | aceptada |
+| 2026-09-28 | [[2026-09-28 Arcend - Informe previo y N calculado por la herramienta]] | aceptada (criterio de N sustituido el 2026-09-29) |
+| 2026-09-29 | [[2026-09-29 Arcend - N por tipos y grupos del mismo titular]] | aceptada |

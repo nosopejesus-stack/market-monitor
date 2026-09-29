@@ -1,4 +1,4 @@
-**[VERIFICAR ANTES DE IMPRIMIR: la cifra de 90.001 € y el caso 90.001 € → 6.000 € salen de extractos del buscador (`investigacion/mercado.md`) y no se han comprobado en la fuente original (RDL 1/2015 y la publicación del despacho). Léela en el PC; si no se puede verificar, quita el párrafo del caso. Copia {hallazgo_x}, {norma_x} y {N} literalmente del informe previo de la clínica (N = `n_puntos_norma`). Borra este aviso antes de imprimir.]**
+**[ANTES DE IMPRIMIR: cifras de sanción VERIFICADO 29-09-2026: RDL 1/2015 (BOE-A-2015-8343), art. 111.2.c) 16.ª (muy grave) y art. 114.1.c) (muy grave, grado mínimo: 90.001-300.000 €; leve, grado mínimo: hasta 6.000 €). Caso: JL Casajuana Abogados, Orden sancionadora de 13-11-2025 (90.001 €) rebajada en recurso de reposición a 6.000 € (leve). Copia {hallazgo_x}, {norma_x} y {N} literalmente del informe previo de la clínica (N = `n_puntos_norma`). Borra este aviso antes de imprimir.]**
 
 # Arcend · Publicidad sanitaria sin sustos
 
@@ -15,9 +15,9 @@ Los tres principales:
 3. {hallazgo_3} — {norma_3}
 
 La publicidad de medicamentos con receta (por ejemplo, la toxina botulínica) está prohibida al público y puede
-dar lugar a sanciones que pueden llegar a importes muy altos (en casos publicados, 90.001 € **[VERIFICAR]**).
-Hay un caso público de una clínica cuya sanción propuesta de 90.001 € quedó en **6.000 €** **[VERIFICAR]**
-porque ya había retirado los contenidos antes de la resolución.
+dar lugar a sanciones que parten de 90.001 € (infracción muy grave, RDL 1/2015, art. 114).
+Hay un caso publicado de una clínica multada con 90.001 € cuya sanción se rebajó a **6.000 €** en recurso,
+porque pudo acreditar que había ido retirando esos contenidos y consultado a la Consejería.
 
 ## Qué le ofrecemos
 

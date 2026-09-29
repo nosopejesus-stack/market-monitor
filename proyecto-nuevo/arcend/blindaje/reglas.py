@@ -50,6 +50,40 @@ Falsos positivos evitados (cada uno tiene test)
 - Textos que explican que la ley prohíbe los testimonios.
 - Registro: un teléfono, una calle o un código postal cerca de "registro
   sanitario" no cuentan como número de registro.
+- "El resultado definitivo se aprecia a las dos semanas": no es una promesa
+  (por eso "definitivo" no está en la regla; sí "resultados permanentes",
+  "para siempre" y "cura definitiva").
+
+Revisión manual del lote real (2026-09-29, 996 hallazgos de 39 webs; cada caso tiene test)
+- Reseñas de pacientes (widgets con class/id review, testimon, trustindex, ti-...
+  o frases en primera persona "me puse bótox", "llevo viniendo"): no son
+  publicidad redactada por la clínica; solo cuentan en la regla de testimonios,
+  y una clase CSS sin texto visible no basta.
+- Promociones: consulta/cita/diagnóstico/asesoramiento gratuitos, línea 900,
+  "promoción de la salud", "5 promociones médicas", newsletter, "amplia/nuestra
+  oferta", negaciones ("incompatibles con ese tipo de ofertas"), preguntas de
+  blog, bonos con precio sin descuento y tratamientos no médicos (masaje,
+  higiene facial, dermocosmética, aparatología, psicología). "Promociones" sin
+  precio ni descuento queda como BAJA "promociones_revisar" (no cuenta en N).
+- Toxina en el currículum del médico ("formación en neuromoduladores") o en una
+  reseña: pasa a "toxina_revisar". "POST-TOXINA" (cosmético) no es el medicamento.
+- Promesas: "garantizar" como consejo, finalidad o dicho de la AEMPS; "sin
+  dolor" matizado (suelen ser, generalmente, la mayoría, significativo) o como
+  síntoma; "dietas milagro", "La Milagrosa"; "sin riesgo de rechazo" es MEDIA.
+- Antes/después sin fotos: cuidados, preguntas frecuentes.
+- Registro: no se afirma que falte si no se ha leído el aviso legal
+  ("registro_sin_lectura", BAJA); "asegúrese de que la clínica cuente con
+  autorización" es un consejo, no una mención.
+- N = tipos de infracción distintos, no frases: el menú repetido en 15 páginas
+  inflaba la cifra.
+
+Traído del risk-scanner antiguo (2026-09-29)
+- Promesas "100 % eficaz/efectivo", "resultados permanentes", "cura
+  definitiva" (sanitario.py). Sus superlativos ("el mejor de Madrid") NO se
+  han traído: no hay norma sanitaria concreta verificada que los prohíba.
+- Detector de posible cadena (chain_detector.py) como dato interno del lote.
+- No traído: comprobar si los enlaces legales acaban en la portada (solo
+  evitaría falsos negativos) ni la valoración schema (va en <script>).
 - Las páginas legales (aviso legal, privacidad, cookies) no se revisan con
   las reglas de promesas, promociones ni testimonios.
 """
@@ -84,6 +118,13 @@ def plegar(texto: str) -> str:
 
 def _hay(patron: str, texto_plegado: str) -> bool:
     return re.search(patron, texto_plegado) is not None
+
+
+def _frase(plegado: str, ini: int, fin: int) -> str:
+    """Frase (entre puntos o saltos de línea) que contiene la coincidencia, en texto plegado."""
+    a = max(plegado.rfind(c, 0, ini) for c in ".!?\n") + 1
+    fins = [i for i in (plegado.find(c, fin) for c in ".!?\n") if i != -1]
+    return plegado[a:min(fins) if fins else len(plegado)]
 
 
 def _ventana(plegado: str, ini: int, fin: int, ancho: int) -> str:
@@ -135,6 +176,13 @@ _BLOQUES = {
     "figcaption", "dd", "dt", "hr", "option", "label",
 }
 _OMITIR = {"script", "style", "noscript", "template", "svg"}
+_VACIAS = {"img", "br", "hr", "input", "meta", "link", "source", "area", "col", "embed", "wbr", "base", "track"}
+# Bloques de reseñas o testimonios (widgets de Google, Trustindex, Elementor...): su texto lo escribe
+# un paciente, no la clínica, y nunca cuenta como publicidad redactada por la clínica.
+ATRIBUTO_RESENA = (r"testimon|review|resena|trustindex|\bti-|elfsight|grw-|google-reviews|"
+                   r"opiniones-clientes|valoraciones")
+# Menú, migas y pie: el mismo texto se repite en todas las páginas.
+ATRIBUTO_MENU = r"(^|[\s_-])(menu|navbar|nav|navigation|breadcrumbs?|migas|footer|pie)([\s_-]|$)"
 
 
 class _Extractor(HTMLParser):
@@ -149,6 +197,9 @@ class _Extractor(HTMLParser):
         self._omitir = 0
         self._en_titulo = False
         self._enlace = None
+        self.resenas: list[str] = []
+        self.menu: list[str] = []
+        self._zona = None          # [tipo, etiqueta, profundidad]
 
     def handle_starttag(self, tag, attrs):
         if self._omitir:
@@ -174,8 +225,22 @@ class _Extractor(HTMLParser):
         for k in ("class", "id"):
             if a.get(k):
                 self.atributos.append(a[k])
+        if self._zona is not None:
+            if tag == self._zona[1]:
+                self._zona[2] += 1
+        elif tag not in _VACIAS:
+            attr = " ".join(a.get(k, "") for k in ("class", "id")).lower()
+            if re.search(ATRIBUTO_RESENA, attr):
+                self._zona = ["resena", tag, 1]
+            elif tag in ("nav", "footer") or re.search(ATRIBUTO_MENU, attr):
+                self._zona = ["menu", tag, 1]
         if tag in _BLOQUES:
-            self.partes.append("\n")
+            self._anadir("\n")
+
+    def _anadir(self, texto):
+        self.partes.append(texto)
+        if self._zona is not None:
+            (self.resenas if self._zona[0] == "resena" else self.menu).append(texto)
 
     def handle_startendtag(self, tag, attrs):
         self.handle_starttag(tag, attrs)
@@ -194,7 +259,11 @@ class _Extractor(HTMLParser):
         elif tag == "a":
             self._cerrar_enlace()
         if tag in _BLOQUES:
-            self.partes.append("\n")
+            self._anadir("\n")
+        if self._zona is not None and tag == self._zona[1]:
+            self._zona[2] -= 1
+            if self._zona[2] <= 0:
+                self._zona = None
 
     def _cerrar_enlace(self):
         if self._enlace is not None:
@@ -208,7 +277,7 @@ class _Extractor(HTMLParser):
         if self._en_titulo:
             self.titulo.append(data)
             return
-        self.partes.append(data)
+        self._anadir(data)
         if self._enlace is not None:
             self._enlace[1].append(data)
 
@@ -222,6 +291,8 @@ class Pagina:
     enlaces: list
     imagenes: list
     atributos: list
+    resenas: str = ""        # texto de bloques de reseñas/testimonios (lo escribe un paciente)
+    menu: str = ""           # texto de menú, migas y pie (se repite en todas las páginas)
 
     @property
     def es_legal(self) -> bool:
@@ -239,8 +310,11 @@ def extraer(url: str, html: str) -> Pagina:
     except Exception:  # HTML muy roto: nos quedamos con lo que haya salido
         pass
     ex._cerrar_enlace()
-    lineas = [" ".join(l.split()) for l in "".join(ex.partes).split("\n")]
-    texto = "\n".join(l for l in lineas if l)
+    def limpio(partes):
+        lineas = [" ".join(l.split()) for l in "".join(partes).split("\n")]
+        return "\n".join(l for l in lineas if l)
+
+    texto = limpio(ex.partes)
     return Pagina(
         url=url,
         titulo=" ".join("".join(ex.titulo).split()),
@@ -249,6 +323,8 @@ def extraer(url: str, html: str) -> Pagina:
         enlaces=ex.enlaces,
         imagenes=ex.imagenes,
         atributos=ex.atributos,
+        resenas=limpio(ex.resenas),
+        menu=limpio(ex.menu),
     )
 
 
@@ -258,8 +334,20 @@ def _ruta_legible(url: str) -> str:
     return re.sub(r"[-_/.=&+]+", " ", ruta).strip()
 
 
-def _segmentos(p: Pagina, con_url: bool = False):
-    segs = [("texto de la página", p.texto), ("título de la página", p.titulo),
+def _sin_zona(texto: str, zona: str) -> str:
+    """Quita del texto las líneas que pertenecen a una zona (reseñas o menú)."""
+    if not zona:
+        return texto
+    fuera = set(zona.split("\n"))
+    return "\n".join(l for l in texto.split("\n") if l not in fuera)
+
+
+def _segmentos(p: Pagina, con_url: bool = False, con_menu: bool = True):
+    """Textos escritos por la clínica. Las reseñas de pacientes nunca se incluyen."""
+    segs = [("texto de la página", _sin_zona(_sin_zona(p.texto, p.resenas), p.menu))]
+    if con_menu:
+        segs.append(("menú o pie de la web", _sin_zona(p.menu, p.resenas)))
+    segs += [("título de la página", p.titulo),
             ("descripción para buscadores", p.descripcion),
             ("texto alternativo de imágenes", "\n".join(alt for _, alt, _ in p.imagenes if alt.strip()))]
     if con_url:
@@ -341,8 +429,10 @@ TOXINA = dict(
 
 
 # No es el medicamento: tratamientos capilares y el "efecto bótox" de cosméticos.
-EXCLUSION_TOXINA = r"botox\s*capilar|efecto\s+(tipo\s+)?botox|botox\s+(para\s+el\s+)?(pelo|cabello)"
+EXCLUSION_TOXINA = r"post.?toxina|botox\s*capilar|efecto\s+(tipo\s+)?botox|botox\s+(para\s+el\s+)?(pelo|cabello)"
 # Texto que explica la prohibición: no es publicidad del medicamento, pero hay que revisarlo a mano.
+# Currículum o formación del médico ("formación avanzada en toxina botulínica"): no ofrece el tratamiento.
+CV_TOXINA = r"\b(formacion|formado|formada|master|curso|cursos|congreso|experto|experta|diploma|acreditad)\b"
 EXPLICATIVO_TOXINA = r"prohib|\bno\s+(anunciamos|publicitamos|podemos\s+anunciar|se\s+puede\s+anunciar)"
 
 TOXINA_REVISAR = dict(
@@ -367,7 +457,9 @@ def regla_toxina(p: Pagina):
                 if _hay(EXCLUSION_TOXINA, _ventana(pl, ini, fin, 20)):
                     continue
                 c = (ubic, texto, ini, fin)
-                if _negado(pl, ini, fin, 25) or _hay(EXPLICATIVO_TOXINA, _ventana(pl, ini, fin, 80)):
+                frase = _frase(pl, ini, fin)
+                if _negado(pl, ini, fin, 25) or _hay(EXPLICATIVO_TOXINA, _ventana(pl, ini, fin, 80)) or \
+                        _hay(CV_TOXINA, frase) or _hay(VOZ_PACIENTE, frase):
                     revisar.append(c)
                 else:
                     coinc.append(c)
@@ -400,16 +492,35 @@ EXCLUSION_PROMESA = (
     r"privacidad|\bdatos\b|confidencial|\bpago|compra|tarjeta|cookies|envio|devolu|reembolso|dinero|"
     r"conexion|\bssl\b|navegacion|\bweb\b|informacion personal|cancelac"
 )
+# "Garantizar" solo es promesa si lo garantizado es el resultado o su eficacia, y no es una
+# finalidad ("para garantizar su comodidad", "elija un médico para garantizar resultados").
+GARANTIA_OBJETO = (r"resultad|eficacia|eficaz|efectiv|\bexito|sin\s+(ningun\s+)?(riesgo|dolor|efecto)|desaparec|"
+                   r"\belimin|\bquitar|\bborrar")
+GARANTIA_FINALIDAD = r"\bpara\s+(asi\s+|poder\s+)?$|\ba\s+fin\s+de\s+$|\bcon\s+el\s+(fin|objetivo)\s+de\s+$"
+
 # Matizadores que convierten "sin dolor" en una afirmación no absoluta.
-MATIZ_DOLOR = r"(casi|practicamente|apenas|minim\w*|poco|mas o menos|relativamente)\s*(\w+\s+){0,2}$"
+MATIZ_DOLOR = (r"(casi|practicamente|apenas|minim\w*|poco|mas o menos|relativamente|suelen?\s+ser|suelen?|"
+               r"generalmente|normalmente|habitualmente|por\s+lo\s+general|la\s+mayoria(\s+de\s+los\s+casos)?(\s+son)?|"
+               r"algunas\s+personas(\s+\w+){0,4})\s*(\w+\s+){0,2}$")
+# Matiz detrás: "sin dolor significativo", "indoloros o ligeramente molestos".
+MATIZ_DOLOR_DETRAS = r"^\s*(significativ|importante|intenso|excesivo|o\s+(ligeramente|poco|apenas)\s+molest)"
+# "Sin dolor" como síntoma que se trata ("una vida sin dolor ni molestias provocadas por el bruxismo").
+DOLOR_SINTOMA = r"vida\s+sin\s+dolor|sin\s+dolor\s+ni\s+molestias\s+(provocad|causad)|dolor\s+(provocad|causad)"
+# "Milagro" despectivo o nombre propio: "sin dietas milagro", "Vithas La Milagrosa".
+MILAGRO_NO_PROMESA = r"dietas?\s*\W?\s*milagr|\bla\s+milagrosa\b|\bsin\s+(\w+\s+)?\W?milagr|productos?\s+milagro"
+# Consejo o autoridad que garantiza ("es importante... para garantizar", "la AEMPS se encarga de garantizar").
+GARANTIA_CONSEJO = (r"\b(debe|deben|importante|fundamental|clave|elegir|seguir\s+las|recomendable|esencial|conviene)\b"
+                    r"[^.]{0,80}$|\b(aemps|agencia|ministerio|ley|normativa|fabricante)\b[^.]{0,60}$")
 
 PROMESAS = [
     # (id, patrón, exige_contexto, aplica_exclusion)
     ("resultados garantizados", r"resultados?\s+(100\s*%\s*)?garantizad[oa]s?|garantia\s+de\s+(los\s+)?resultados?", False, False),
-    ("garantía", r"\bgarantiz\w*|\bgarantias?\b", True, True),
+    ("garantía", r"\bgarantiz\w*", True, True),
     ("sin riesgo", r"\bsin\s+(ningun\s+)?riesgos?\b", True, True),
     ("sin efectos secundarios", r"\bsin\s+(ningun\s+|ningunos\s+)?efectos?\s+(secundarios?|adversos?)", False, False),
     ("100 % seguro", r"\b100\s*%\s*segur[oa]s?\b|\bcien\s+por\s+cien\s+segur[oa]s?\b", True, True),
+    ("100 % eficaz", r"\b100\s*%\s*(efectiv|eficaz)\w*|\bcien\s+por\s+cien\s+(efectiv|eficaz)\w*", True, True),
+    ("resultados permanentes", r"resultados?\s+(permanentes?|para\s+siempre)|\bcura\s+definitiva", False, False),
     ("sin dolor", r"\bsin\s+(ningun\s+)?dolor\b|\bindolor[oa]s?\b", False, False),
     ("milagro", r"\bmilagr(o|os|oso|osa|osos|osas)\b", False, False),
 ]
@@ -423,6 +534,7 @@ SUSTITUCIONES_PROMESA = [
     (r"\bsin\s+(ningun\s+|ningunos\s+)?efectos?\s+(secundarios?|adversos?)", "con posibles efectos secundarios, que le explicamos antes"),
     (r"\bsin\s+(ningun\s+)?riesgos?\b", "con valoración médica previa"),
     (r"\b100\s*%\s*segur[oa]s?\b|\bcien\s+por\s+cien\s+segur[oa]s?\b", "realizado por personal médico"),
+    (r"\b100\s*%\s*(efectiv|eficaz)\w*|\bcien\s+por\s+cien\s+(efectiv|eficaz)\w*", "indicado tras valoración médica"),
     (r"\bsin\s+(ningun\s+)?dolor\b", "con mínimas molestias"),
     (r"\bindolor[oa]s?\b", "con mínimas molestias"),
     (r"\b(efecto|resultado)(s?)\s+milagro(s[oa]s?)?\b", r"\1\2 natural"),
@@ -455,6 +567,11 @@ PROMESA_MEDIA = {
         titulo="Afirmación absoluta sobre dolor o riesgo",
         base_normativa=("Puede considerarse una seguridad de ausencia de molestias o riesgos, que el RD 1907/1996 "
                         "(art. 4) no permite en la publicidad con finalidad sanitaria."),
+    ),
+    "sin riesgo de…": dict(
+        titulo="Afirmación de ausencia de un riesgo concreto",
+        base_normativa=("Puede considerarse una seguridad de ausencia de riesgos, que el RD 1907/1996 (art. 4) no "
+                        "permite en la publicidad con finalidad sanitaria."),
     ),
     "milagro": dict(
         titulo="Posible promesa de resultado",
@@ -503,12 +620,18 @@ def corregir_promesa(frase: str) -> str:
 
 # Negación o contexto explicativo: "no garantizamos", "ningún médico le garantizará...",
 # "no existe un tratamiento sin riesgo", "la medicina estética no hace milagros".
-NEGACION = r"\b(no|ningun\w*|nunca|ni|sin\s+que|jamas)\b"
+NEGACION = r"\b(no|ningun\w*|nunca|ni|sin\s+que|jamas|imposible|nadie)\b"
 NEGACION_DETRAS = r"^\W{0,3}\s*(no|nunca)\s+(hacen?|existen?|hay|son|es)\b"
 PREFIJO_NOMBRE = r"(\bdra?\.?|\bdoctora?|\bcalle|\bc/|\bavda?\.?|\bavenida|\bplaza|\bsanta|\bvirgen|\bnuestra\s+senora)\s+(de\s+(los?\s+|las?\s+)?)?$"
 
 
-def _negado(pl: str, ini: int, fin: int, ancho: int = 40) -> bool:
+# Voz de un paciente (reseña pegada como texto normal): no es publicidad redactada por la clínica.
+VOZ_PACIENTE = (r"\b(me\s+hice|me\s+hizo|me\s+hicieron|me\s+puse|ponerme|poniendome|lleve\s+a\s+mi|llevo\s+viniendo|"
+                r"mi\s+experiencia|os\s+recomiendo|la\s+recomiendo|lo\s+recomiendo|recomiendo\s+(100|totalmente|la|el|a)|"
+                r"empece\s+con|me\s+atend|me\s+trat(o|aron)|acudi|volvere|repetire|super\s*bien)\b")
+
+
+def _negado(pl: str, ini: int, fin: int, ancho: int = 60) -> bool:
     """True si la coincidencia está negada en su misma frase (hasta ``ancho`` caracteres antes)."""
     antes = pl[max(0, ini - ancho):ini]
     corte = max(antes.rfind(c) for c in ".!?¡¿:;\n")
@@ -538,9 +661,22 @@ def _es_promesa(pid, pl, texto, m, exige_ctx, excluir):
     ini, fin = m.start(), m.end()
     if pid == "milagro" and _es_nombre_propio(texto, pl, ini, fin):
         return False
-    if pid == "sin dolor" and re.search(MATIZ_DOLOR, pl[max(0, ini - 30):ini]):
+    if pid == "milagro" and _hay(MILAGRO_NO_PROMESA, pl[max(0, ini - 25):fin + 5]):
         return False
+    if pid == "sin dolor" and (re.search(MATIZ_DOLOR, pl[max(0, ini - 60):ini]) or
+                               re.search(MATIZ_DOLOR_DETRAS, pl[fin:fin + 40]) or
+                               _hay(DOLOR_SINTOMA, pl[max(0, ini - 20):fin + 40])):
+        return False
+    if pid == "resultados permanentes" and re.search(r"\bsin\s+(\w+\s+){0,2}$", pl[max(0, ini - 30):ini]):
+        return False          # "sin obtener unos resultados permanentes"
+    frase = _frase(pl, ini, fin)
+    if _hay(VOZ_PACIENTE, frase) or _hay(NO_MEDICO, frase):
+        return False          # reseña de un paciente o tratamiento que no es médico
     if _negado(pl, ini, fin):
+        return False
+    if pid == "garantía" and (re.search(GARANTIA_FINALIDAD, pl[max(0, ini - 25):ini]) or
+                              re.search(GARANTIA_CONSEJO, pl[max(0, ini - 90):ini]) or
+                              not _hay(GARANTIA_OBJETO, pl[fin:fin + 35])):
         return False
     if excluir and _hay(EXCLUSION_PROMESA, _ventana(pl, ini, fin, 40)):
         return False
@@ -577,6 +713,8 @@ def regla_promesas(p: Pagina, max_por_pagina: int = 8):
                 ocupados.append((m.start(), m.end()))
                 if not _es_promesa(pid, pl, texto, m, ctx, exc):
                     continue
+                if pid == "sin riesgo" and re.match(r"\s+de\s+\w", pl[m.end():]):
+                    pid = "sin riesgo de…"          # "sin riesgo de rechazo": riesgo concreto, MEDIA
                 ev, mi, mf = fragmento(texto, m.start(), m.end())
                 if ev in vistos:
                     h, pids = vistos[ev]
@@ -617,6 +755,8 @@ def _numero_pegado(pl: str, fin: int) -> bool:
     if re.fullmatch(r"\d{5}", m.group("num")) and re.match(r"\s*,?\s*(madrid|\()", resto):
         return False      # código postal: 28001 Madrid
     return True
+# Consejo al paciente ("asegúrese de que la clínica cuente con autorización sanitaria").
+CONSEJO_REGISTRO = r"que\s+la\s+clinica\s+(cuente|tenga|este)|asegur|comprueb|verific|fijate|debe\s+contar"
 NUMERO_REGISTRO = r"(?<![a-z])(cs|nica)\s*[-:.º°n]*\s*\d{3,}"
 
 
@@ -629,6 +769,8 @@ def estado_registro(paginas):
             if _hay(NUMERO_REGISTRO, pl):
                 return "con_numero", None
             for m in re.finditer(FRASE_REGISTRO, pl):
+                if _hay(CONSEJO_REGISTRO, pl[max(0, m.start() - 60):m.start()]):
+                    continue      # "que la clínica cuente con la autorización sanitaria": consejo al lector
                 if _numero_pegado(pl, m.end()):
                     return "con_numero", None
                 if mencion is None:
@@ -657,6 +799,15 @@ def regla_registro(paginas, ausencias=True):
     estado, mencion = estado_registro(paginas)
     if estado == "con_numero" or (estado == "ausente" and not ausencias):
         return []
+    if estado == "ausente" and not any(p.es_legal for p in paginas):
+        # Sin aviso legal leído no se puede afirmar que falte: el número suele estar ahí.
+        n = len(paginas)
+        return [Hallazgo(regla="registro_sin_lectura", gravedad=BAJA,
+                         titulo="No se ha leído el aviso legal: comprobar a mano si publica el nº de registro sanitario",
+                         url=paginas[0].url, ubicacion="páginas revisadas (sin aviso legal)",
+                         evidencia=(f"No se encontró el nº de registro en {n} página{'s' if n != 1 else ''}, pero ninguna "
+                                    "era el aviso legal o la política de privacidad."),
+                         marca_inicio=0, marca_fin=0, **REGISTRO_BASE)]
     if estado == "sin_numero":
         url, ubic, texto, i, f = mencion
         ev, mi, mf = fragmento(texto, i, f)
@@ -678,7 +829,8 @@ def regla_registro(paginas, ausencias=True):
 PATRON_PROMO = (
     r"\bofertas?\b|\bdescuentos?\b|\d{1,2}\s*%\s*(de\s+)?(dto|descuento)|%\s*dto\b|\bdto\.?(?=\s|$)|"
     r"\b2\s*x\s*1\b|\b3\s*x\s*2\b|\bgratis\b|\bgratuit[oa]s?\b|\bbonos?\b|black\s*friday|cyber\s*monday|"
-    r"\bpromocion(es)?\b|\bpromo\b|precio\s+especial|rebajas?\b"
+    r"\bpromocion(es)?\b|\bpromo\b|precio\s+especial|rebajas?\b|"
+    r"\b(ahora|antes)\s*:?\s*\d[\d.,]*\s*(€|eur)"          # "Ahora: 385 € Antes: 505 €"
 )
 TRATAMIENTO_MEDICO = (
     r"tratamient(?!os?\s+de\s+(sus\s+|los\s+)?datos)|\bsesion(es)?\b|hialuronico|relleno|\blabios?\b|arrugas|toxina|botox|"
@@ -686,10 +838,33 @@ TRATAMIENTO_MEDICO = (
     r"profhilo|lipolisis|carboxiterapia|depilacion|rejuvenecimiento|ojeras|papada|\bvial(es)?\b|"
     r"\d\s*zonas?\b|neuromodulador|medicina\s+estetica|inyecci|vitaminas"
 )
-EXCLUSION_PROMO = r"envio|parking|aparcamiento|wifi|wi-fi|llamada|telefono|newsletter|suscri|\bcafe\b|descarga|ebook|guia"
+EXCLUSION_PROMO = (r"envio|parking|aparcamiento|wifi|wi-fi|llamada|telefono|\blinea\b|\b[89]00[\s.]?\d{3}|newsletter|"
+                   r"suscri|comunicaciones\s+comerciales|\bcafe\b|descarga|ebook|guia|se\s+reintegra")
 
-# "nuestra oferta de tratamientos" = catálogo, no promoción
-NO_PROMO = r"ofertas?\s+de\s+(tratamientos|servicios)"
+# Catálogo, no promoción: "nuestra oferta de tratamientos", "la mejor oferta posible de tratamientos",
+# "amplia oferta", "nuestra oferta incluye", "promoción de la salud", "5 promociones médicas" (cursos).
+NO_PROMO = (r"ofertas?(\s+\w+){0,3}\s+de\s+(tratamientos|servicios|soluciones|especialidades)|"
+            r"(nuestra|amplia|completa)\s+oferta\b|oferta\s+(incluye|asistencial|formativa)|"
+            r"promocion\s+(y\s+prevencion\s+)?(de\s+la\s+|en\s+|de\s+)?salud|\d+\s+promociones\s+(medicas|de\s+)")
+# La consulta, cita, valoración o diagnóstico gratuitos no son un descuento sobre un tratamiento.
+CONSULTA_GRATIS = (r"\b(citas?|consultas?|valoracion(es)?|diagnosticos?|asesoramiento|asesoria|estudio|visitas?|"
+                   r"revision(es)?|evaluacion|presupuestos?|dudas)\b[^.|\n]{0,40}\b(gratis|gratuit[oa]s?|sin\s+coste|"
+                   r"sin\s+compromiso)\b|\b(gratis|gratuit[oa]s?)\b[^.|\n]{0,15}\b(cita|consulta|valoracion|diagnostic|"
+                   r"asesor|estudio|visita)")
+# Negación o consejo sobre ofertas: "incompatibles con ese tipo de ofertas", "evite dejarse llevar por ofertas".
+NEGACION_PROMO = r"incompatib|desconfi|evit[ae]|cuidado\s+con|dejar(te|se)\s+llevar"
+# Promoción de algo que no es un acto médico (estética sin medicamento ni aparato sanitario, psicología).
+NO_MEDICO = (r"maderoterapia|masaje|drenaje|drenoredux|higiene\s+facial|limpieza\s+facial|hydra\s*(facial|glow)|"
+             r"facial(es)?\s+corean|\bfhos\b|gym\s*face|presoterapia|psicolog|\bemdr\b|\britual|manicura|pedicura|"
+             r"pestanas|cejas|peluqueria|ersus|sculpt|suelo\s+pelvico|dermo.?cosmetic|terapia\s+led|korean|aquapure|"
+             r"cavitacion|peeling\s+ultrasonico")
+# Promoción con contenido concreto: precio, porcentaje, "antes/ahora", 2x1, campaña o bono con precio.
+PROMO_CONCRETA = (r"\d\s*(€|eur\b|euros)|€\s*\d|\d{1,2}\s*%|\bdto\b|descuento|\bantes\b[^.\n]{0,25}\d|"
+                  r"\bahora\b[^.\n]{0,25}\d|2\s*x\s*1|3\s*x\s*2|precio\s+especial|black\s*friday|cyber\s*monday|"
+                  r"precio\s+sin\s+(oferta|promocion)|rebajas")
+
+PROMO_DESCUENTO = (r"\d{1,2}\s*%|\bdto\b|descuento|\bantes\b[^.\n]{0,25}\d|\bahora\b[^.\n]{0,25}\d|ahorr|"
+                   r"\bgratis\b|regalo|precio\s+sin\s+(oferta|promocion)")
 
 PROMO = dict(
     titulo="Promoción o descuento sobre un tratamiento médico",
@@ -703,22 +878,57 @@ PROMO = dict(
     texto_corregido=("Primera consulta de valoración médica: el médico estudia su caso y le indica el tratamiento "
                      "adecuado y su precio antes de empezar."),
 )
+PROMO_REVISAR = dict(
+    PROMO,
+    titulo="Apartado o mención de promociones sin precio ni descuento visible: revisar a mano",
+    gravedad=BAJA,
+    sin_verificar=("Solo se ha leído la palabra (menú, botón o título), no la promoción concreta: comprobar en la "
+                   "web qué tratamiento y qué descuento anuncia antes de mencionarlo."),
+)
 
 
 def regla_promociones(p: Pagina):
     if p.es_legal:
         return []
-    coinc = []
+    concretas, genericas = [], []
     for ubic, texto in _segmentos(p):
         pl = plegar(texto)
         for m in re.finditer(PATRON_PROMO, pl):
-            if re.match(NO_PROMO, pl[m.start():m.end() + 25]):
+            a, b = m.start(), m.end()
+            if re.match(NO_PROMO, pl[a:b + 40]) or _hay(NO_PROMO, pl[max(0, a - 20):b + 40]):
                 continue
-            if _hay(EXCLUSION_PROMO, _ventana(pl, m.start(), m.end(), 40)):
+            if _hay(r"gratis|gratuit", pl[a:b]) and _hay(CONSULTA_GRATIS, _ventana(pl, a, b, 45)):
                 continue
-            if _hay(TRATAMIENTO_MEDICO, _ventana(pl, m.start(), m.end(), 100)):
-                coinc.append((ubic, texto, m.start(), m.end()))
-    return [_hallazgo_de_coincidencias("promociones", coinc, p.url, **PROMO)] if coinc else []
+            if _negado(pl, a, b, 40) or _hay(NEGACION_PROMO, pl[max(0, a - 50):a]):
+                continue            # "no participamos en promociones"
+            if _hay(VOZ_PACIENTE, _ventana(pl, a, b, 80)):
+                continue            # "empecé con la oferta de groupon": lo cuenta un paciente
+            if _hay(EXCLUSION_PROMO, _frase(pl, a, b)) or _hay(NO_MEDICO, _ventana(pl, a, b, 80)):
+                continue
+            if not _hay(TRATAMIENTO_MEDICO, _ventana(pl, a, b, 100)):
+                continue
+            c = (ubic, texto, a, b)
+            frase = _frase(pl, a, b)
+            if "?" in frase or "¿" in frase:
+                genericas.append(c)           # título-pregunta de un artículo: "Descuento del bótox ¿es posible?"
+                continue
+            if re.fullmatch(r"bonos?", pl[a:b]) and not _hay(PROMO_DESCUENTO, _ventana(pl, a, b, 60)):
+                genericas.append(c)           # un bono con su precio es una tarifa, no un descuento
+                continue
+            if _hay(PROMO_CONCRETA, frase):
+                concretas.append((2,) + c)
+            elif _hay(PROMO_CONCRETA, pl[b:b + 40]):          # precio en la línea siguiente: Promoción / 280 € / Neuromoduladores
+                concretas.append((1,) + c)
+            else:
+                genericas.append(c)
+    if concretas:
+        # Evidencia: la más concreta (precio en la misma frase), del texto propio de la página, el menú al final.
+        concretas.sort(key=lambda c: (-c[0], c[1] != "texto de la página", c[3]))
+        concretas = [c[1:] for c in concretas]
+        return [_hallazgo_de_coincidencias("promociones", concretas + genericas, p.url, **PROMO)]
+    if genericas:
+        return [_hallazgo_de_coincidencias("promociones_revisar", genericas, p.url, **PROMO_REVISAR)]
+    return []
 
 
 # --------------------------------------------------------------------------
@@ -730,6 +940,8 @@ CONTEXTO_FOTO = r"foto|imagen|imagenes|galeria|resultad|casos?\s+real|ver\s+m"
 # Consejos de cuidados: "cuidados antes y después del tratamiento" no es una galería.
 CUIDADOS_ANTES_DESPUES = r"(cuidados|instrucciones|recomendaciones|consejos|indicaciones)\s+(\w+\s+){0,2}$"
 ENLACE_GALERIA = r"galeria|casos|resultados"
+# Prosa que habla de las fotos de antes/después en general o en futuro: no es una galería publicada.
+PROSA_ANTES_DESPUES = r"\b(pondre|pondremos|subire|subiremos|publicaremos)\b|muchas\s+personas|en\s+redes\s+sociales|\bconocen\b"
 
 ANTES_DESPUES = dict(
     titulo="Imágenes de «antes y después» de pacientes",
@@ -776,6 +988,12 @@ def regla_antes_despues(p: Pagina):
             a = pl.rfind("\n", 0, m.start()) + 1
             b = pl.find("\n", m.end())
             linea = pl[a: len(pl) if b == -1 else b]
+            if _hay(PROSA_ANTES_DESPUES, linea):
+                continue
+            if not _hay(r"foto|imagen|galeria|caso", linea) and (
+                    _hay(r"precaucion|cuidado|recomendacion|\bdebo\b|que\s+hacer|que\s+esperar|\?", linea) or
+                    re.match(r"\s*(del?|de\s+la)\s+(tratamiento|procedimiento|sesion|intervencion)", pl[m.end():])):
+                continue
             titular = len(linea) <= 40 and not re.search(r"\b(del|de la|de los)\s*$", pl[m.end():m.end() + 8] + " ")
             if titular or _hay(CONTEXTO_FOTO, _ventana(pl, m.start(), m.end(), 60)):
                 coinc.append((ubic, texto, m.start(), m.end()))
@@ -798,6 +1016,8 @@ PATRON_TESTIMONIOS = (
 
 # Texto que explica que la ley los prohíbe: no es un testimonio.
 EXPLICA_TESTIMONIOS = r"prohib|no\s+(publicamos|mostramos|incluimos|usamos|utilizamos)|no\s+se\s+permite"
+# Consejo al lector ("revisa referencias, opiniones de pacientes..."): no es un testimonio publicado.
+CONSEJO_TESTIMONIOS = r"\b(revisa|revise|consulta|consulte|lee|lea|busca|busque|mira|mire|compara|compare)\b"
 
 TESTIMONIOS = dict(
     titulo="Testimonios u opiniones de pacientes en la publicidad",
@@ -822,13 +1042,20 @@ def regla_testimonios(p: Pagina):
         for m in re.finditer(PATRON_TESTIMONIOS, pl):
             if _hay(EXPLICA_TESTIMONIOS, _ventana(pl, m.start(), m.end(), 60)):
                 continue
+            if _hay(CONSEJO_TESTIMONIOS, pl[max(0, m.start() - 40):m.start()]):
+                continue
             coinc.append((ubic, texto, m.start(), m.end()))
-    for valor in p.atributos:
-        pl = plegar(valor)
-        m = re.search(r"testimon", pl)
+    # Bloque de reseñas o testimonios con texto visible (una clase CSS sola no basta: puede ser
+    # solo una hoja de estilos o un contenedor vacío).
+    resenas = p.resenas.strip()
+    if len(resenas) >= 20:
+        pl = plegar(resenas)
+        m = re.search(PATRON_TESTIMONIOS, pl)
         if m:
-            coinc.append(("bloque de la página (class/id)", valor, m.start(), m.end()))
-            break
+            coinc.append(("bloque de reseñas o testimonios", resenas, m.start(), m.end()))
+        else:
+            linea = resenas.split("\n")[0]
+            coinc.append(("bloque de reseñas o testimonios", resenas, 0, min(len(linea), 120)))
     return [_hallazgo_de_coincidencias("testimonios", coinc, p.url, **TESTIMONIOS)] if coinc else []
 
 
@@ -931,6 +1158,51 @@ def regla_medico(paginas):
 
 
 # --------------------------------------------------------------------------
+# Prospección (uso interno, NO va al informe de la clínica): posible cadena
+# --------------------------------------------------------------------------
+# Traído del risk-scanner antiguo (checks/chain_detector.py, caso Face Clinic): Arcend es solo
+# para clínicas independientes. Se quitaron sus señales demasiado genéricas ("clínicas en",
+# "centros en", "únete a"), que salen en el SEO de cualquier clínica de una sede.
+
+LENGUAJE_CADENA = (
+    r"\bnuestr[oa]s\s+(clinicas|centros|sedes)\b|\btodas\s+nuestras\s+clinicas\b|"
+    r"\b(elige|selecciona|escoge)\s+tu\s+(clinica|centro|sede)\b|\bfranquicias?\b"
+)
+CIUDADES_FUERA = [
+    "barcelona", "valencia", "sevilla", "malaga", "marbella", "bilbao", "zaragoza", "murcia", "alicante",
+    "palma", "valladolid", "granada", "coruna", "vigo", "gijon", "oviedo", "pamplona", "san sebastian",
+    "santander", "cordoba", "badajoz", "ibiza", "tenerife", "las palmas", "lisboa", "miami",
+]
+
+
+def senales_cadena(paginas) -> list[str]:
+    """Señales de que la clínica es una cadena o tiene varias sedes (para verificar a mano).
+
+    Una sola señal no descarta la clínica: solo pide mirarlo antes de llamar.
+    """
+    senales = []
+    lenguaje, registros, ciudades = [], set(), set()
+    for p in paginas:
+        for _, texto in _segmentos(p):
+            pl = plegar(texto)
+            for m in re.finditer(LENGUAJE_CADENA, pl):
+                if m.group(0) not in lenguaje:
+                    lenguaje.append(m.group(0))
+            for m in re.finditer(NUMERO_REGISTRO, pl):
+                registros.add(re.sub(r"\D", "", m.group(0)))
+            for c in CIUDADES_FUERA:
+                if re.search(r"\b" + c + r"\b", pl):
+                    ciudades.add(c)
+    if lenguaje:
+        senales.append("lenguaje de varias sedes: " + ", ".join(f"«{x}»" for x in lenguaje[:3]))
+    if len(registros) >= 2:
+        senales.append(f"{len(registros)} números de registro sanitario distintos")
+    if ciudades and senales:   # sola no vale: el CV del médico nombra ciudades ("formado en Barcelona")
+        senales.append("menciona otras ciudades: " + ", ".join(sorted(ciudades)[:4]))
+    return senales
+
+
+# --------------------------------------------------------------------------
 # Motor y puntuación
 # --------------------------------------------------------------------------
 
@@ -982,22 +1254,23 @@ def _clave_evidencia(h) -> str:
 
 
 def n_puntos_norma(hallazgos) -> int:
-    """Puntos con norma concreta: ALTA/MEDIA sin SIN VERIFICAR, deduplicados por regla y frase.
+    """Puntos con norma concreta: reglas distintas con algún hallazgo ALTA/MEDIA sin SIN VERIFICAR.
 
-    La misma frase en el texto y en la descripción (o repetida en varias páginas) cuenta una vez.
+    Un punto = un tipo de infracción (p. ej. "publicidad de la toxina"), aunque aparezca en muchas
+    páginas o con frases distintas: así la cifra que se dice al médico no se infla con el menú o con
+    la misma mención repetida (revisión manual del lote real, 29-09-2026). El detalle de páginas y
+    frases está en el informe.
     """
-    claves = {(h.regla, _clave_evidencia(h)) for h in hallazgos
-              if h.gravedad in (ALTA, MEDIA) and not h.sin_verificar}
-    return len(claves)
+    return len({h.regla for h in hallazgos if h.gravedad in (ALTA, MEDIA) and not h.sin_verificar})
 
 
 def n_puntos_revisar(hallazgos) -> int:
-    """Puntos a revisar: ALTA/MEDIA deduplicados por regla y frase, INCLUIDOS los SIN VERIFICAR.
+    """Puntos a revisar: reglas distintas con algún ALTA/MEDIA, INCLUIDAS las SIN VERIFICAR.
 
     Siempre es >= n_puntos_norma. Sirve para el gancho de la llamada cuando no hay puntos con
     norma concreta ("conviene revisar", nunca "no permite").
     """
-    return len({(h.regla, _clave_evidencia(h)) for h in hallazgos if h.gravedad in (ALTA, MEDIA)})
+    return len({h.regla for h in hallazgos if h.gravedad in (ALTA, MEDIA)})
 
 
 def frase_llamada(n_norma: int, n_revisar: int, lectura_fiable: bool = True) -> str:

@@ -36,3 +36,13 @@ Lecciones que los agentes y tú hemos aprendido. Cada lección es una nota en es
 | 2026-09-28 | [[2026-09-28 Front matter YAML y documentar opciones que existen]] | #error #markdown #yaml #proceso |
 | 2026-09-28 | [[2026-09-28 Prospección - comprobar direcciones y distinguir cadenas]] | #arcend #prospeccion #datos |
 | 2026-09-29 | [[2026-09-29 Lote robusto, gancho honesto y acceso al PC]] | #arcend #blindaje #python #csv #proceso |
+| 2026-09-29 | [[2026-09-29 N por tipos de infracción, no por frases]] | #arcend #blindaje #reglas #cifras |
+| 2026-09-29 | [[2026-09-29 Extractor que separa reseñas, menú y pie]] | #arcend #blindaje #extractor #falsos-positivos |
+| 2026-09-29 | [[2026-09-29 Evidencia más concreta en cada punto]] | #arcend #blindaje #informes |
+| 2026-09-29 | [[2026-09-29 Filtros de contexto en todas las reglas que cuentan en N]] | #arcend #blindaje #reglas #falsos-positivos |
+| 2026-09-29 | [[2026-09-29 Integrar el risk-scanner antiguo en Blindaje]] | #arcend #blindaje #risk-scanner |
+| 2026-09-29 | [[2026-09-29 Guardar páginas y reanalizar sin descargar]] | #arcend #blindaje #lote #python |
+| 2026-09-29 | [[2026-09-29 Verificar clínicas en el Registro de centros sanitarios de la CAM]] | #arcend #prospeccion #registro #verificacion |
+| 2026-09-29 | [[2026-09-29 Sanciones verificadas y el matiz del recurso]] | #arcend #legal #sanciones #ventas |
+| 2026-09-29 | [[2026-09-29 En el PC del usuario el comando es python, no py]] | #entorno #python #windows |
+| 2026-09-29 | [[2026-09-29 Heredoc de bash y barras invertidas]] | #entorno #bash #regex |

@@ -239,3 +239,285 @@ class TestLote(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestIntegradoRiskScanner(unittest.TestCase):
+    """Lo traído del risk-scanner antiguo (2026-09-29): promesas nuevas y detector de cadena."""
+
+    def _pag(self, texto, url="https://c.test/tratamientos"):
+        return reglas.extraer(url, f"<html><body><p>{texto}</p></body></html>")
+
+    def test_promesas_nuevas(self):
+        for frase in ("Tratamiento facial 100% eficaz.", "Depilación láser con resultados permanentes.",
+                      "La cura definitiva para el acné.", "Relleno de labios con resultados para siempre."):
+            hs = reglas.regla_promesas(self._pag(frase))
+            self.assertEqual(len(hs), 1, frase)
+            self.assertEqual(hs[0].gravedad, reglas.ALTA, frase)
+
+    def test_promesas_nuevas_sin_falsos_positivos(self):
+        for frase in ("El resultado definitivo se aprecia a las dos semanas del tratamiento.",
+                      "Los resultados no son permanentes: el tratamiento se repite cada año.",
+                      "Pago 100% eficaz y seguro con tarjeta.",
+                      "Ningún tratamiento es 100% eficaz en todas las pieles."):
+            self.assertEqual(reglas.regla_promesas(self._pag(frase)), [], frase)
+
+    def test_texto_corregido_de_100_eficaz(self):
+        h = reglas.regla_promesas(self._pag("Tratamiento facial 100% eficaz."))[0]
+        self.assertNotIn("100", h.texto_corregido)
+        self.assertIn("valoración médica", h.texto_corregido)
+
+    def test_cadena_con_lenguaje_y_varios_registros(self):
+        ps = [self._pag("Visite nuestras clínicas de Madrid y Marbella. Elige tu clínica."),
+              self._pag("Madrid: CS12345. Marbella: NICA 67890.", "https://c.test/aviso-legal")]
+        s = reglas.senales_cadena(ps)
+        self.assertEqual(len(s), 3)
+        self.assertIn("nuestras clinicas", s[0])
+        self.assertIn("2 números de registro", s[1])
+        self.assertIn("marbella", s[2])
+
+    def test_sede_unica_sin_senales(self):
+        ps = [self._pag("Las mejores clínicas en Madrid. Únete a nuestra newsletter. La doctora se formó en "
+                        "Barcelona y Valencia."),
+              self._pag("Centro sanitario CS12345.", "https://c.test/aviso-legal")]
+        self.assertEqual(reglas.senales_cadena(ps), [])
+
+    def test_cadena_no_va_al_informe_de_la_clinica(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            paginas = [("https://c.test/", "<p>" + "Nuestros centros en Madrid y Barcelona. " * 10 + "</p>"),
+                       ("https://c.test/b", "<p>Elige tu centro.</p>")]
+            carpeta, datos, _ = blindaje.ejecutar(paginas, "Clínica Uno", "https://c.test", tmp, previo=True)
+            self.assertTrue(datos["senales_cadena"])
+            html = (carpeta / "informe_previo.html").read_text(encoding="utf-8")
+            self.assertNotIn("cadena", reglas.plegar(html))
+            self.assertNotIn("senales", html)
+
+
+class TestReanalizar(unittest.TestCase):
+    def test_guarda_copia_y_reanaliza_sin_red(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            salida = Path(tmp)
+            paginas = {"https://c.test/": "<html><body><p>" + "Nuestra clínica. " * 30 + "</p>"
+                                         "<a href='/b'>b</a></body></html>",
+                       "https://c.test/b": "<html><body><p>Tratamiento con bótox.</p></body></html>",
+                       "https://c.test/robots.txt": ""}
+
+            def obtener(url):
+                if url not in paginas:
+                    return 404, url, "text/html", b""
+                return 200, url, "text/html", paginas[url].encode("utf-8")
+
+            fila = {"id": "A1", "nombre": "Uno", "web": "https://c.test/", "telefono_publico": "600"}
+            with redirect_stdout(io.StringIO()):
+                r1 = lote.procesar_clinica(fila, salida, obtener=obtener, dormir=lambda s: None, subcarpeta="uno")
+            self.assertTrue((salida / "uno" / lote.CACHE).is_file())
+            with redirect_stdout(io.StringIO()):
+                r2 = lote.procesar_clinica(fila, salida, obtener=_sin_red, dormir=lambda s: None,
+                                           subcarpeta="uno", reanalizar=True)
+            self.assertEqual(r2["estado"], r1["estado"])
+            self.assertEqual(r2["n_puntos_norma"], r1["n_puntos_norma"])
+            self.assertGreaterEqual(r1["n_puntos_norma"], 1)
+
+
+class TestFalsosPositivosLoteReal(unittest.TestCase):
+    """Falsos positivos vistos en el lote real del 29-09-2026 (webs de clínicas de Madrid)."""
+
+    def _pag(self, texto, url="https://c.test/tratamientos"):
+        return reglas.extraer(url, f"<html><body><p>{texto}</p></body></html>")
+
+    def _regla(self, regla, frase):
+        return regla(self._pag(frase))
+
+    def test_garantizar_como_finalidad_o_sin_resultado_no_es_promesa(self):
+        for frase in ("Para garantizar la comodidad del paciente, aplicamos una crema anestésica en la zona.",
+                      "Para garantizar los mejores resultados, es importante elegir un médico con experiencia.",
+                      "Seguir las indicaciones del especialista para garantizar los mejores resultados.",
+                      "Nuestro enfoque personalizado garantiza que el tratamiento se adapte a cada zona.",
+                      "Instalaciones equipadas con la última tecnología para garantizar tu comodidad en el tratamiento.",
+                      "Seguridad y garantías del tratamiento.",
+                      "¿Dónde hacer un relleno de labios con garantías?",
+                      "La cara es sensible, por lo que es imposible garantizar un procedimiento completamente indoloro."):
+            self.assertEqual(self._regla(reglas.regla_promesas, frase), [], frase)
+
+    def test_garantizar_resultados_sigue_siendo_promesa(self):
+        for frase in ("Técnicas innovadoras que garantizan resultados naturales en el tratamiento.",
+                      "Tratamiento facial: resultados garantizados.",
+                      "Profesionales expertos que garantizan resultados visibles desde la primera sesión."):
+            hs = self._regla(reglas.regla_promesas, frase)
+            self.assertEqual(len(hs), 1, frase)
+            self.assertEqual(hs[0].gravedad, reglas.ALTA, frase)
+
+    def test_consulta_gratuita_no_es_promocion(self):
+        for frase in ("1ª valoración médica gratuita para su tratamiento de arrugas.",
+                      "Diagnóstico gratuito antes de cualquier tratamiento.",
+                      "Reserva una consulta gratuita para tu tratamiento facial.",
+                      "En la clínica no participamos en promociones masivas del tratamiento.",
+                      "Te ofrecemos soluciones médico estéticas basadas en una amplia oferta de tratamientos."):
+            self.assertEqual(self._regla(reglas.regla_promociones, frase), [], frase)
+
+    def test_promocion_real_sigue_saliendo(self):
+        for frase in ("Tratamiento antiarrugas en oferta por solo 199 €.", "Promoción de septiembre en relleno de labios.",
+                      "Tratamiento de mesoterapia gratis al comprar un bono de sesiones."):
+            self.assertEqual(len(self._regla(reglas.regla_promociones, frase)), 1, frase)
+
+    def test_prosa_sobre_antes_y_despues_no_es_galeria(self):
+        for frase in ("Luego pondré resultados del antes y después.",
+                      "Hay una imagen que muchas personas conocen: la foto de antes y después de unos labios exagerados."):
+            self.assertEqual(self._regla(reglas.regla_antes_despues, frase), [], frase)
+        self.assertEqual(len(self._regla(reglas.regla_antes_despues, "Fotos del antes y después")), 1)
+
+    def test_consejo_de_leer_opiniones_no_es_testimonio(self):
+        frase = ("En primer lugar, la credibilidad de la clínica: revisa referencias, opiniones de pacientes e "
+                 "incluso su trayectoria.")
+        self.assertEqual(self._regla(reglas.regla_testimonios, frase), [])
+        self.assertEqual(len(self._regla(reglas.regla_testimonios, "Lo que dicen nuestros pacientes")), 1)
+
+
+
+class TestRevisionManualLoteReal(unittest.TestCase):
+    """Falsos positivos que encontró la revisión a mano (revisor) de los 996 hallazgos del lote real, 29-09-2026."""
+
+    def _pag(self, cuerpo, url="https://c.test/tratamientos"):
+        return reglas.extraer(url, f"<html><body>{cuerpo}</body></html>")
+
+    def _p(self, texto):
+        return self._pag(f"<p>{texto}</p>")
+
+    # -- promociones -----------------------------------------------------
+    def test_consultas_citas_y_telefonos_gratuitos_no_son_promocion(self):
+        for frase in ("Ofrecemos un diagnóstico completo, gratuito y honesto de su tratamiento facial.",
+                      "Siempre previa cita gratuita con la Dra. para su tratamiento.",
+                      "Dudas y consultas gratis sobre cualquier tratamiento.",
+                      "Pide Cita Gratuita para tu tratamiento de labios.",
+                      "Pídenos asesoramiento gratuito sobre el tratamiento.",
+                      "1ª Cita y diagnóstico ¡GRATIS! en medicina estética.",
+                      "Línea gratuita 900 902 623 para pedir su tratamiento.",
+                      "Precio: (Se reintegra de tu compra o tratamiento, es decir, gratuito)."):
+            hs = reglas.regla_promociones(self._p(frase))
+            self.assertEqual(hs, [], frase)
+
+    def test_otros_sentidos_de_oferta_y_promocion(self):
+        for frase in ("Tenemos la mejor oferta posible de tratamientos faciales en Madrid.",
+                      "Chequeos generales, promoción y prevención en salud y tratamientos.",
+                      "Ha formado más de 5 promociones médicas en tratamientos de medicina estética.",
+                      "Los tratamientos médicos son incompatibles con ese tipo de ofertas.",
+                      "Acepto recibir la newsletter con ofertas de tratamientos de la clínica."):
+            self.assertEqual(reglas.regla_promociones(self._p(frase)), [], frase)
+
+    def test_promocion_de_tratamiento_no_medico_no_cuenta(self):
+        for frase in ("Limpieza 5en1 personalizada y terapia LED. Incluye valoración dermo-cosmética. Ahora: 49,90€ Antes 90€",
+                      "Bono 5 sesiones de maderoterapia facial: 200 €.",
+                      "BONO 5 SESIONES de terapia EMDR (psicología): 350 €."):
+            self.assertEqual(reglas.regla_promociones(self._p(frase)), [], frase)
+
+    def test_promocion_sin_precio_queda_para_revisar_y_no_cuenta_en_n(self):
+        hs = reglas.regla_promociones(self._pag("<nav><a href='/promociones'>Promociones</a> "
+                                                "<a href='/t'>Tratamientos</a></nav><p>Relleno de labios.</p>"))
+        self.assertEqual([(h.regla, h.gravedad) for h in hs], [("promociones_revisar", reglas.BAJA)])
+        self.assertEqual(reglas.n_puntos_norma(hs), 0)
+        self.assertEqual(reglas.n_puntos_revisar(hs), 0)
+
+    def test_promocion_con_precio_cuenta_y_es_la_evidencia(self):
+        hs = reglas.regla_promociones(self._pag(
+            "<nav><a href='/promociones'>Promociones</a></nav>"
+            "<p>Bonos anuales de tratamiento.</p><p>15% de descuento en aumento de labios con el código VERANO26.</p>"))
+        self.assertEqual(len(hs), 1)
+        self.assertEqual(hs[0].gravedad, reglas.MEDIA)
+        self.assertIn("15%", hs[0].evidencia)
+
+    # -- reseñas de pacientes --------------------------------------------
+    def test_resena_en_widget_no_cuenta_como_publicidad_de_la_clinica(self):
+        p = self._pag("<p>Medicina estética facial en Madrid.</p>"
+                      "<div class='ti-widget ti-reviews'><div class='ti-review-item'>"
+                      "<p>Acudí para ponerme botox y el resultado fue muy natural. El procedimiento fue indoloro.</p>"
+                      "</div></div>")
+        self.assertEqual(reglas.regla_toxina(p), [])
+        self.assertEqual(reglas.regla_promesas(p), [])
+        hs = reglas.regla_testimonios(p)
+        self.assertEqual(len(hs), 1)
+        self.assertEqual(hs[0].ubicacion, "bloque de reseñas o testimonios")
+
+    def test_resena_pegada_como_texto_baja_a_revisar(self):
+        hs = reglas.regla_toxina(self._p("Lleve a mi madre y el doctor le ha ido poniendo ácido hialurónico y botox."))
+        self.assertEqual([h.regla for h in hs], ["toxina_revisar"])
+
+    def test_clase_css_sola_no_es_testimonio(self):
+        p = self._pag("<div class='widget-testimonial-carousel-css'></div><p>Tratamientos faciales.</p>")
+        self.assertEqual(reglas.regla_testimonios(p), [])
+
+    # -- toxina ----------------------------------------------------------
+    def test_curriculum_del_medico_baja_a_revisar(self):
+        for frase in ("Formación avanzada en técnicas de toxina botulínica, hilos tensores y rellenos.",
+                      "Médico general con formación en neuromoduladores y ecografía."):
+            hs = reglas.regla_toxina(self._p(frase))
+            self.assertEqual([h.regla for h in hs], ["toxina_revisar"], frase)
+
+    def test_pack_cosmetico_post_toxina_no_es_el_medicamento(self):
+        self.assertEqual(reglas.regla_toxina(self._p("Pack POST-TOXINA de SkinCeuticals.")), [])
+
+    def test_toxina_ofrecida_sigue_siendo_alta(self):
+        hs = reglas.regla_toxina(self._p("Neuromoduladores (Bot*x): ahora 385 €, antes 505 €."))
+        self.assertEqual([h.gravedad for h in hs], [reglas.ALTA])
+
+    # -- promesas --------------------------------------------------------
+    def test_promesas_falsas_de_la_revision(self):
+        for frase in ("La mayoría son indoloros o ligeramente molestos.",
+                      "Los tratamientos suelen ser indoloros.",
+                      "Generalmente son indoloros.",
+                      "Un procedimiento sin dolor significativo, no invasivo.",
+                      "Algunas personas encuentran el láser indoloro, otras perciben algo de dolor.",
+                      "Recupere una vida sin dolor ni molestias provocadas por el bruxismo.",
+                      "Mejora tu alimentación de forma médica, sin dietas milagro.",
+                      "Recupera tu peso ideal sin hacer dietas “milagro”.",
+                      "Trabajó en Vithas La Milagrosa como médico estético.",
+                      "Es importante asistir a las revisiones médicas para garantizar un buen resultado.",
+                      "El producto está regulado por la AEMPS, que se encarga de garantizar la seguridad y eficacia.",
+                      "Esto garantiza la continuidad del tratamiento y su efectividad.",
+                      "Esto puede ser un beneficio, sin obtener unos resultados permanentes.",
+                      "Masaje DrenoRedux: resultados inmediatos, sin dolor ni aparatos."):
+            self.assertEqual(reglas.regla_promesas(self._p(frase)), [], frase)
+
+    def test_sin_riesgo_concreto_es_media(self):
+        hs = reglas.regla_promesas(self._p("El cuerpo asimila el ácido hialurónico sin riesgo de rechazo."))
+        self.assertEqual([h.gravedad for h in hs], [reglas.MEDIA])
+
+    # -- antes y después y registro --------------------------------------
+    def test_antes_y_despues_sin_fotos(self):
+        for frase in ("¿Qué precauciones debo tener antes y después del tratamiento?",
+                      "¿Cuáles son los resultados de la mesoterapia corporal antes y después?"):
+            self.assertEqual(reglas.regla_antes_despues(self._p(frase)), [], frase)
+
+    def test_consejo_sobre_autorizacion_no_es_mencion_del_registro(self):
+        legal = reglas.extraer("https://c.test/aviso-legal", "<p>Aviso legal. Registro sanitario CS12345.</p>")
+        consejo = self._p("Asegúrate de que la clínica cuente con la autorización sanitaria U48.")
+        self.assertEqual(reglas.regla_registro([consejo, legal]), [])
+        estado, _ = reglas.estado_registro([consejo])
+        self.assertEqual(estado, "ausente")
+
+    def test_precio_en_la_linea_siguiente_es_promocion_concreta(self):
+        hs = reglas.regla_promociones(self._pag("<div><h3>Promoción</h3><p>280 €</p><p>Neuromoduladores</p></div>"))
+        self.assertEqual([(h.regla, h.gravedad) for h in hs], [("promociones", reglas.MEDIA)])
+
+    def test_pregunta_de_blog_y_bono_con_precio_no_cuentan_en_n(self):
+        for frase in ("Descuento de la inyección de toxina botulínica (Botox) ¿es posible?",
+                      "HIFU facial: el bono de 3 sesiones 1100 €."):
+            hs = reglas.regla_promociones(self._p(frase))
+            self.assertEqual(reglas.n_puntos_norma(hs), 0, frase)
+        hs = reglas.regla_promociones(self._p("Relleno de labios: precio bono (-10%) en 3 sesiones."))
+        self.assertEqual(reglas.n_puntos_norma(hs), 1)
+
+    def test_precio_antes_y_ahora_es_promocion(self):
+        hs = reglas.regla_promociones(self._p("Neuromoduladores (Bot*x) Ahora: 385€ Antes: 505€"))
+        self.assertEqual([(h.regla, h.gravedad) for h in hs], [("promociones", reglas.MEDIA)])
+
+    def test_n_cuenta_tipos_de_punto_no_frases(self):
+        ps = [self._p("Tratamiento con bótox en la frente."), self._p("Neuromoduladores para el entrecejo."),
+              self._p("Relleno de labios: 20% de descuento este mes.")]
+        hs = reglas.analizar(ps, ausencias=False)
+        self.assertEqual(reglas.n_puntos_norma(hs), 2)          # toxina + promociones
+
+    def test_index_html_y_raiz_son_la_misma_pagina(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            html = "<p>" + "Clínica de medicina estética en Madrid. " * 10 + "</p>"
+            _, datos, _ = blindaje.ejecutar([("https://c.test/", html), ("https://c.test/index.html", html),
+                                            ("https://c.test/b", "<p>Otra página.</p>")], "Uno", "https://c.test", tmp)
+            self.assertEqual(len(datos["paginas"]), 2)

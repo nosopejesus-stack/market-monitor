@@ -9,7 +9,8 @@ Revisión y vigilancia de la publicidad sanitaria de clínicas de medicina esté
 | `proyecto-nuevo/arcend/PASO_A_PASO.md` | **Lo que haces tú, día a día** |
 | `proyecto-nuevo/arcend/DECISION.md` | Qué vendemos, por qué, cuándo lo paramos |
 | `proyecto-nuevo/arcend/blindaje/` | Herramienta: genera los informes (README con pasos para Windows) |
-| `proyecto-nuevo/arcend/prospectos/clinicas.csv` | 49 clínicas independientes (datos SIN VERIFICAR) |
+| `proyecto-nuevo/arcend/prospectos/clinicas.csv` | 49 clínicas; nº de registro, titular y teléfono verificados el 29-09-2026 (columnas nuevas) |
+| `proyecto-nuevo/arcend/ventas/llamadas_top10.md` | **Las 10 primeras clínicas a llamar** (frase, hallazgo, teléfono y registro verificados) |
 | `proyecto-nuevo/arcend/ventas/` | Guion de llamada, reunión, oferta, contrato, registro de llamadas |
 | `proyecto-nuevo/arcend/simulacion/` | Monte Carlo que eligió la estrategia |
 

@@ -194,8 +194,8 @@ def generar_html(datos, hallazgos, contacto=None, previo=False):
     w("</div>\n")
     w(f"<p class=\"cifra\">{_plural(n_norma, 'punto', 'puntos')} con norma concreta</p>\n")
     n_rev = datos.get("n_puntos_revisar", n_puntos_revisar(hallazgos))
-    w(f"<p class=\"meta\"><b>Puntos a revisar: {n_rev}</b> (riesgos altos y medios, contando una vez la misma "
-      "frase; incluye los que dependen de un requisito marcado SIN VERIFICAR).</p>\n")
+    w(f"<p class=\"meta\"><b>Puntos a revisar: {n_rev}</b> (riesgos altos y medios, contando una vez cada tipo "
+      "de punto; incluye los que dependen de un requisito marcado SIN VERIFICAR).</p>\n")
 
     if previo:
         w("<h2>Puntos encontrados</h2>\n")
@@ -263,7 +263,7 @@ def generar_html(datos, hallazgos, contacto=None, previo=False):
     w("<p>Puntuación: se parte de 100 y cada hallazgo resta según su gravedad (alta 25, media 10, baja 4; las "
       "repeticiones de un mismo punto restan menos). Con algún punto de riesgo alto la nota es C como máximo. "
       "«Puntos con norma concreta»: riesgos altos y medios con una norma identificada (sin los SIN VERIFICAR), "
-      "contando una sola vez la misma frase.</p>")
+      "contando una sola vez cada tipo de punto aunque aparezca en varias páginas.</p>")
     w("<div class=\"etq\">Páginas revisadas</div><ul class=\"paginas\">")
     for u in datos["paginas"]:
         w(f"<li>{e(u)}</li>")

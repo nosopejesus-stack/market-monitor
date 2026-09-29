@@ -317,9 +317,22 @@ def slug(texto: str) -> str:
     return s[:60] or "clinica"
 
 
+def _sin_duplicadas(paginas):
+    """Quita páginas repetidas: "/" e "/index.html" (o .php), o el mismo texto servido con otra URL."""
+    vistas, textos, out = set(), set(), []
+    for p in paginas:
+        clave = re.sub(r"/index\.(html?|php)$", "/", p.url.split("?")[0].split("#")[0]).rstrip("/")
+        if clave in vistas or (len(p.texto) > 200 and p.texto in textos):
+            continue
+        vistas.add(clave)
+        textos.add(p.texto)
+        out.append(p)
+    return out
+
+
 def ejecutar(paginas_html, clinica, web, salida, avisos=None, contacto=None, fecha=None, modo="web",
              previo=False, subcarpeta=None):
-    paginas = [reglas.extraer(u, h) for u, h in paginas_html]
+    paginas = _sin_duplicadas([reglas.extraer(u, h) for u, h in paginas_html])
     fiable, aviso_lectura = reglas.evaluar_lectura(paginas)
     hallazgos = reglas.analizar(paginas, ausencias=fiable)
     puntos, nota = reglas.puntuar(hallazgos)
@@ -338,6 +351,8 @@ def ejecutar(paginas_html, clinica, web, salida, avisos=None, contacto=None, fec
         "n_puntos_norma": reglas.n_puntos_norma(hallazgos),
         "n_puntos_revisar": reglas.n_puntos_revisar(hallazgos),
         "herramienta": f"blindaje {VERSION}",
+        # Uso interno (prospección): no se pinta en el informe de la clínica.
+        "senales_cadena": reglas.senales_cadena(paginas),
     }
     datos["frase_llamada"] = reglas.frase_llamada(datos["n_puntos_norma"], datos["n_puntos_revisar"], fiable)
     carpeta = Path(salida) / (subcarpeta or slug(clinica))

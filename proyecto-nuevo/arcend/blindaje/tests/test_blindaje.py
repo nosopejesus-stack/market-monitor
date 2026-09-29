@@ -121,9 +121,14 @@ class TestRegistro(unittest.TestCase):
         self.assertIn("registro sanitario", hs[0].evidencia[hs[0].marca_inicio:hs[0].marca_fin])
 
     def test_ausente_es_alta_y_registro_mercantil_no_cuenta(self):
-        hs = reglas.regla_registro([pagina("falsos_positivos.html")])
+        legal = reglas.extraer("https://clinica.test/aviso-legal", "<p>Aviso legal. Titular: Clínica SL.</p>")
+        hs = reglas.regla_registro([pagina("falsos_positivos.html"), legal])
         self.assertEqual([h.gravedad for h in hs], [reglas.ALTA])
         self.assertIn("{numero_registro_sanitario}", hs[0].texto_corregido)
+
+    def test_sin_aviso_legal_leido_no_se_afirma_que_falte(self):
+        hs = reglas.regla_registro([pagina("falsos_positivos.html")])
+        self.assertEqual([(h.regla, h.gravedad) for h in hs], [("registro_sin_lectura", reglas.BAJA)])
 
 
 class TestMedias(unittest.TestCase):
@@ -151,7 +156,8 @@ class TestMedias(unittest.TestCase):
         hs = reglas.regla_testimonios(pagina("testimonios.html"))
         self.assertEqual(len(hs), 1)
         self.assertEqual(hs[0].gravedad, reglas.MEDIA)
-        self.assertEqual(hs[0].apariciones, 2)  # texto + class="testimonials-slider"
+        self.assertEqual(hs[0].apariciones, 1)  # bloque class="testimonials-slider" con texto visible
+        self.assertEqual(hs[0].ubicacion, "bloque de reseñas o testimonios")
 
     def test_paginas_legales_no_se_revisan_como_publicidad(self):
         p = reglas.extraer("https://c.test/privacidad.html",
@@ -221,7 +227,7 @@ class TestInformeYCli(unittest.TestCase):
     def test_sitio_malo(self):
         carpeta, datos, hs = self._ejecutar("sitio_malo", "Clínica Malo & Cía")
         reglas_vistas = {h.regla for h in hs}
-        self.assertTrue({"toxina", "promesas", "registro", "promociones", "antes_despues", "testimonios",
+        self.assertTrue({"toxina", "promesas", "registro_sin_lectura", "promociones", "antes_despues", "testimonios",
                          "aviso_legal", "privacidad", "cookies", "medico"} <= reglas_vistas)
         self.assertEqual(datos["nota"], "E")
         self.assertEqual(carpeta.name, "clinica-malo-cia")

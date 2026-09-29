@@ -11,4 +11,6 @@ origen: arcend/blindaje/blindaje.py
 - Toda regla de ausencia comprueba antes la cobertura de lectura.
 - Si sale "revisión no fiable", guardar las páginas con el navegador (Ctrl+S) y usar `--html-local CARPETA`.
 
+- **Repetido 2026-09-29:** la regla de registro sanitario marcaba "ausente" ALTA sin haber leído el aviso legal. Corregido: BAJA `registro_sin_lectura`. Ver [[2026-09-29 Filtros de contexto en todas las reglas que cuentan en N]].
+
 Relacionado: [[Proyecto/Arcend - clínicas estéticas Madrid]], [[Decisiones/2026-09-28 Arcend - Blindaje continuo por teléfono]].
