@@ -318,7 +318,7 @@ def slug(texto: str) -> str:
 
 
 def ejecutar(paginas_html, clinica, web, salida, avisos=None, contacto=None, fecha=None, modo="web",
-             previo=False):
+             previo=False, subcarpeta=None):
     paginas = [reglas.extraer(u, h) for u, h in paginas_html]
     fiable, aviso_lectura = reglas.evaluar_lectura(paginas)
     hallazgos = reglas.analizar(paginas, ausencias=fiable)
@@ -336,9 +336,11 @@ def ejecutar(paginas_html, clinica, web, salida, avisos=None, contacto=None, fec
         "lectura_fiable": fiable,
         "aviso_lectura": aviso_lectura,
         "n_puntos_norma": reglas.n_puntos_norma(hallazgos),
+        "n_puntos_revisar": reglas.n_puntos_revisar(hallazgos),
         "herramienta": f"blindaje {VERSION}",
     }
-    carpeta = Path(salida) / slug(clinica)
+    datos["frase_llamada"] = reglas.frase_llamada(datos["n_puntos_norma"], datos["n_puntos_revisar"], fiable)
+    carpeta = Path(salida) / (subcarpeta or slug(clinica))
     carpeta.mkdir(parents=True, exist_ok=True)
     nombre_html = "informe_previo.html" if previo else "informe.html"
     (carpeta / nombre_html).write_text(informe.generar_html(datos, hallazgos, contacto, previo=previo),
@@ -399,7 +401,7 @@ def main(argv=None):
     if not datos["lectura_fiable"]:
         print(f"\n*** AVISO: {datos['aviso_lectura']} ***")
     print(f"\nNota {datos['nota']} ({datos['puntuacion']}/100) · {len(hallazgos)} hallazgo(s) · "
-          f"{datos['n_puntos_norma']} punto(s) con norma concreta")
+          f"{datos['n_puntos_norma']} punto(s) con norma concreta · {datos['n_puntos_revisar']} punto(s) a revisar")
     for h in hallazgos:
         print(f"  [{h.gravedad}] {h.titulo} · {h.url}")
     nombre_html = "informe_previo.html" if args.previo else "informe.html"

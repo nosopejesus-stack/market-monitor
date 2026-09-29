@@ -17,7 +17,7 @@ from dataclasses import asdict
 from html import escape
 from urllib.parse import urlparse
 
-from reglas import ALTA, BAJA, MEDIA, n_puntos_norma
+from reglas import ALTA, BAJA, MEDIA, n_puntos_norma, n_puntos_revisar
 
 NOTA_METODOLOGICA = ("Revisión basada solo en información pública, sin acceder a ningún sistema. "
                      "No constituye asesoramiento jurídico.")
@@ -193,6 +193,9 @@ def generar_html(datos, hallazgos, contacto=None, previo=False):
         w(f"<p>{e(linea)}</p>")
     w("</div>\n")
     w(f"<p class=\"cifra\">{_plural(n_norma, 'punto', 'puntos')} con norma concreta</p>\n")
+    n_rev = datos.get("n_puntos_revisar", n_puntos_revisar(hallazgos))
+    w(f"<p class=\"meta\"><b>Puntos a revisar: {n_rev}</b> (riesgos altos y medios, contando una vez la misma "
+      "frase; incluye los que dependen de un requisito marcado SIN VERIFICAR).</p>\n")
 
     if previo:
         w("<h2>Puntos encontrados</h2>\n")
@@ -303,6 +306,7 @@ def generar_json(datos, hallazgos):
     salida = dict(datos)
     salida["resumen"] = _resumen(datos, hallazgos, datos.get("previo", False))
     salida["n_puntos_norma"] = n_puntos_norma(hallazgos)
+    salida["n_puntos_revisar"] = n_puntos_revisar(hallazgos)
     salida["hallazgos"] = [_hallazgo_json(h) for h in hallazgos]
     salida["nota_metodologica"] = NOTA_METODOLOGICA
     return json.dumps(salida, ensure_ascii=False, indent=2)

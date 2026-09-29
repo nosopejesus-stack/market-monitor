@@ -16,7 +16,15 @@ Todo está en `proyecto-nuevo/arcend/`. Lo que marca 🙋 lo haces tú; lo demá
    Se crea `informes\prueba\informe.html`. Ábrelo con el navegador (Ctrl+P → Guardar como PDF).
    Detalles en `blindaje/README.md`.
 
-## Día 1 · Informes de las primeras 10 clínicas (1 h)
+## Día 1 · Informes de todas las clínicas (1 comando + 1 h de comprobaciones)
+0. 🙋 En PowerShell, dentro de `Documentos\arcend\blindaje`:
+   ```powershell
+   py lote.py ..\prospectos\clinicas.csv --contacto-nombre "Tu nombre" --contacto-telefono "Tu móvil"
+   start .\informes\RESUMEN.html
+   ```
+   El resumen ordena las clínicas por prioridad de llamada y trae **la frase exacta** para cada una
+   (columna `frase_llamada`). Si una sale "revisar a mano", guarda su web con Ctrl+S y usa `--html-local`.
+   Pásame `informes\RESUMEN.csv` y los `informe.json`: reviso cada hallazgo antes de que llames.
 1. 🙋 Abre `prospectos/clinicas.csv` (49 clínicas). Empieza por las de tu ruta **menos** Face Clinic (es un grupo de 4 centros) y usa la IME de **Vallehermoso 9** (la de Lagasca 95 es Clínica Londres, una cadena).
 2. 🙋 Para cada una: comprueba en su web que el teléfono y la dirección del CSV son correctos (los datos salen de un buscador y están SIN VERIFICAR).
 3. 🙋 Comprueba en el **Registro de centros sanitarios de la Comunidad de Madrid** (buscador público de la Comunidad) que la clínica está inscrita. Si no aparece, no se llama hasta aclararlo; anótalo en `notas`.

@@ -991,6 +991,35 @@ def n_puntos_norma(hallazgos) -> int:
     return len(claves)
 
 
+def n_puntos_revisar(hallazgos) -> int:
+    """Puntos a revisar: ALTA/MEDIA deduplicados por regla y frase, INCLUIDOS los SIN VERIFICAR.
+
+    Siempre es >= n_puntos_norma. Sirve para el gancho de la llamada cuando no hay puntos con
+    norma concreta ("conviene revisar", nunca "no permite").
+    """
+    return len({(h.regla, _clave_evidencia(h)) for h in hallazgos if h.gravedad in (ALTA, MEDIA)})
+
+
+def frase_llamada(n_norma: int, n_revisar: int, lectura_fiable: bool = True) -> str:
+    """Frase para abrir la llamada, calculada por la herramienta (nunca a mano).
+
+    - con puntos con norma concreta: "... no permite";
+    - si solo hay puntos a revisar (incluye SIN VERIFICAR): "... conviene revisar";
+    - sin puntos o con lectura no fiable: "" (no hay gancho honesto).
+    """
+    if not lectura_fiable:
+        return ""
+    inicio = "He revisado la publicidad de su web y hay"
+    if n_norma > 0:
+        que = "punto que la normativa de publicidad sanitaria no permite" if n_norma == 1 else \
+            "puntos que la normativa de publicidad sanitaria no permite"
+        return f"{inicio} {n_norma} {que}."
+    if n_revisar > 0:
+        que = "punto que conviene revisar" if n_revisar == 1 else "puntos que conviene revisar"
+        return f"{inicio} {n_revisar} {que} según la normativa de publicidad sanitaria."
+    return ""
+
+
 # Resta por hallazgo: el primero de cada regla resta el peso completo, cada uno
 # de más +25 %, con tope de 2 veces el peso por regla (para que una web con el
 # mismo fallo en 20 páginas no quede peor que una con fallos de todo tipo).

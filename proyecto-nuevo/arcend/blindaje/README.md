@@ -46,7 +46,7 @@ los testimonios salen como `[nombre]`).
    No trabajes dentro del ZIP sin extraer: no funciona.
 3. Dentro de lo extraído, la herramienta está en
    `market-monitor-main\proyecto-nuevo\arcend\blindaje` (si descargaste otra rama, la primera carpeta se
-   llama `market-monitor-<rama>`). Copia la carpeta `blindaje` a `Documentos`.
+   llama `market-monitor-<rama>`). Copia la carpeta **`arcend`** entera (contiene `blindaje` y `prospectos`) a `Documentos` y trabaja en `Documentos\arcend\blindaje`.
 
 > **Aviso OneDrive:** si tu carpeta Documentos está sincronizada con OneDrive, las rutas pueden ser
 > `C:\Users\TU_USUARIO\OneDrive\Documentos\...` y a veces los archivos quedan "solo en la nube". Si algo
@@ -111,6 +111,49 @@ start .\informes\clinica-x\informe.html
 
 Para PDF: en el navegador, **Ctrl+P → Guardar como PDF** (ya está maquetado para A4).
 
+### Todas las clínicas de una vez: `lote.py`
+
+Hace el informe previo (`--previo`) de todas las clínicas de `..\prospectos\clinicas.csv` y una tabla con el
+orden en que conviene llamarlas. Necesita la carpeta `prospectos` al lado de `blindaje` (si en la instalación
+copiaste solo `blindaje` a Documentos, copia también `market-monitor-...\proyecto-nuevo\arcend\prospectos` a
+Documentos, junto a `blindaje`).
+
+Con PowerShell abierto en la carpeta `blindaje`, **un solo comando**:
+
+```powershell
+py lote.py ..\prospectos\clinicas.csv --contacto-nombre "Tu Nombre" --contacto-telefono "600 000 000"
+```
+
+Y al terminar:
+
+```powershell
+start .\informes\RESUMEN.html
+```
+
+- Salta las filas **sin web**, con **`cadena` = si** o con **`no_llamar`** en `notas`.
+- Revisa como máximo 15 páginas por clínica (`--max-paginas 25` para más). Con 1 petición por segundo, unas
+  50 clínicas tardan del orden de 15-20 minutos (estimación, SIN VERIFICAR con webs reales). Solo algunas:
+  `--solo ARC-001,ARC-002`. Opcional: `--contacto-email "tu@correo.es"` (también va en el User-Agent).
+- Si una clínica falla (certificado SSL, tiempo de espera, web que no responde) se anota en su fila y el lote
+  **sigue** con la siguiente. El resumen se reescribe tras cada clínica: si cierras la ventana a mitad, lo hecho
+  queda en `RESUMEN.html`.
+- Cada clínica deja su `informes\<nombre-de-la-clinica>\informe_previo.html` + `informe.json`, igual que
+  `blindaje.py --previo`. En `RESUMEN.html` el nombre de la clínica enlaza a su informe.
+- `informes\RESUMEN.csv` (separado por `;`, se abre con doble clic en Excel) y `informes\RESUMEN.html`, con:
+  id, nombre, teléfono, web, lectura fiable, puntos con norma, puntos a revisar, nota, hallazgo principal
+  (el alto o medio más grave), **frase para la llamada** y estado.
+- **Orden**: primero las que tienen más puntos con norma concreta, después más puntos a revisar, después peor
+  nota. Al final las no legibles (estado `revisar a mano: usar --html-local`) y las que dieron error.
+- **Frase para la llamada** (la calcula la herramienta, no se escribe a mano):
+  - con puntos con norma concreta: *"He revisado la publicidad de su web y hay N puntos que la normativa de
+    publicidad sanitaria no permite."*
+  - si solo hay puntos a revisar: *"He revisado la publicidad de su web y hay M puntos que conviene revisar
+    según la normativa de publicidad sanitaria."*
+  - si no hay ninguno: vacía, estado `ok: sin gancho` (no llamar con esa frase).
+  - si la web no se ha leído bien: vacía, estado `revisar a mano: usar --html-local`. Guarda sus páginas y
+    pasa esa clínica sola con `py blindaje.py ... --html-local ... --previo` (sección siguiente).
+- Antes de llamar, abre el informe previo de la clínica y comprueba en su web el hallazgo principal.
+
 ### Si la web bloquea la descarga, da error de certificado (SSL) o sale "revisión no fiable": `--html-local`
 
 1. Abre la web en el navegador y guarda cada página importante con **Ctrl+S** ("Página web, solo HTML")
@@ -143,6 +186,10 @@ antes de publicar.
 
 **Puntos con norma concreta** (`n_puntos_norma`): hallazgos ALTA o MEDIA sin nada SIN VERIFICAR, contando una
 sola vez la misma frase (aunque salga en el texto y en la descripción). Es la cifra que se usa en la oferta.
+
+**Puntos a revisar** (`n_puntos_revisar`): lo mismo pero **incluyendo** los ALTA/MEDIA que dependen de algo
+SIN VERIFICAR (siempre ≥ puntos con norma). Sale en el informe previo ("Puntos a revisar") y en `informe.json`
+junto con `frase_llamada`. Solo se usa para decir "conviene revisar", nunca "no permite".
 Los falsos positivos conocidos ("garantizamos su privacidad", "pago 100 % seguro", "casi sin dolor",
 "Dra. Milagros"/"DRA. MILAGROS PÉREZ", negaciones como "no garantizamos resultados", "eliminar toxinas",
 "botox capilar", "antes y después del tratamiento evite el sol", "cuidados antes y después del tratamiento",
@@ -159,6 +206,7 @@ C ≥ 55, D ≥ 35, E < 35. Con algún ALTA la nota es C como máximo.
 py -m unittest discover -s tests -v
 ```
 
+El modo lote se prueba en `tests/test_lote.py` (sin red: webs que no responden y HTML local por id).
 Los fixtures son HTML sintéticos en `tests/fixtures/` (uno por regla, falsos positivos, un sitio con
 todos los fallos y un sitio limpio). El rastreador se prueba con un servidor simulado.
 

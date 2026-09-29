@@ -128,3 +128,9 @@ Columnas: `id,clinica,telefono,web,fecha,etapa,importe,notas`.
 
 Métrica de las condiciones de muerte (`DECISION.md`): de las primeras 40 filas `llamada`, ¿cuántas llegan a
 `reunion`? Si son < 3 → cambiar guion o pasar a visita en persona.
+
+
+## Frase del gancho (la da la herramienta, columna `frase_llamada` de RESUMEN.csv)
+- Si hay puntos con norma concreta: "He revisado la publicidad de su web y hay {N} puntos que la normativa de publicidad sanitaria no permite."
+- Si solo hay puntos a revisar: "He revisado la publicidad de su web y hay {M} puntos que conviene revisar según la normativa de publicidad sanitaria."
+- Si la columna está vacía: no se usa gancho (o se revisa a mano antes de llamar).
