@@ -177,6 +177,22 @@ start .\informes\RESUMEN.html
    La URL es opcional en este modo (solo sirve para que aparezca en el informe). Sin URL, el informe dice
    "Hemos revisado N páginas guardadas de la web de Clínica X".
 
+## Escáner de cumplimiento de la web (`escaner.py`)
+
+Además de la publicidad sanitaria, el informe incluye incumplimientos de la web. Solo mira lo que ve cualquier
+visitante (el HTML descargado y el certificado que entrega la web al abrirla); nada de puertos ni pruebas:
+
+| Regla | Qué detecta | Gravedad |
+|---|---|---|
+| `web_certificado` / `web_https` | certificado caducado o no válido, o web sin https | MEDIA (caduca en ≤ 21 días: BAJA) |
+| `web_formulario` | formulario que pide correo o teléfono sin texto ni casilla de privacidad (RGPD art. 13) | MEDIA, comprobar en el navegador |
+| `web_registro_distinto` | el nº de registro que publica la web no es el del Registro de la CAM para esa dirección (columna `registro_sanitario` del CSV) | MEDIA |
+| `web_legal_roto` | enlace a aviso legal / privacidad / cookies que da error | BAJA |
+| `web_cookies` | analítica o píxel sin gestor de consentimiento reconocible | BAJA, comprobar a mano (el banner puede cargarse con JavaScript) |
+
+No cuentan en la frase de la llamada (que habla de publicidad sanitaria); salen en la columna
+`incumplimientos_web` del resumen. Con `blindaje.py`, el nº oficial se pasa con `--registro CS12345`.
+
 ## Qué revisa (reglas en `reglas.py`)
 
 | Gravedad | Regla |

@@ -1261,7 +1261,8 @@ def n_puntos_norma(hallazgos) -> int:
     la misma mención repetida (revisión manual del lote real, 29-09-2026). El detalle de páginas y
     frases está en el informe.
     """
-    return len({h.regla for h in hallazgos if h.gravedad in (ALTA, MEDIA) and not h.sin_verificar})
+    return len({h.regla for h in hallazgos
+                if h.gravedad in (ALTA, MEDIA) and not h.sin_verificar and not h.regla.startswith("web_")})
 
 
 def n_puntos_revisar(hallazgos) -> int:
@@ -1270,7 +1271,12 @@ def n_puntos_revisar(hallazgos) -> int:
     Siempre es >= n_puntos_norma. Sirve para el gancho de la llamada cuando no hay puntos con
     norma concreta ("conviene revisar", nunca "no permite").
     """
-    return len({h.regla for h in hallazgos if h.gravedad in (ALTA, MEDIA)})
+    return len({h.regla for h in hallazgos if h.gravedad in (ALTA, MEDIA) and not h.regla.startswith("web_")})
+
+
+def n_incumplimientos_web(hallazgos) -> int:
+    """Incumplimientos de la web (escáner: certificado, cookies, formularios, enlaces legales, nº de registro)."""
+    return len({h.regla for h in hallazgos if h.regla.startswith("web_") and h.gravedad in (ALTA, MEDIA)})
 
 
 def frase_llamada(n_norma: int, n_revisar: int, lectura_fiable: bool = True) -> str:

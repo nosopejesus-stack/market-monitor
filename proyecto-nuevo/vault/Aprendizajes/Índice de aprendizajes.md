@@ -46,3 +46,4 @@ Lecciones que los agentes y tú hemos aprendido. Cada lección es una nota en es
 | 2026-09-29 | [[2026-09-29 Sanciones verificadas y el matiz del recurso]] | #arcend #legal #sanciones #ventas |
 | 2026-09-29 | [[2026-09-29 En el PC del usuario el comando es python, no py]] | #entorno #python #windows |
 | 2026-09-29 | [[2026-09-29 Heredoc de bash y barras invertidas]] | #entorno #bash #regex |
+| 2026-09-29 | [[2026-09-29 Escáner web pasivo sin afirmar lo que no se ve]] | #arcend #blindaje #escaner #rgpd |

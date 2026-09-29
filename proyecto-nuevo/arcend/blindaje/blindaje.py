@@ -32,6 +32,7 @@ from urllib.parse import urldefrag, urljoin, urlparse, urlunparse
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import escaner  # noqa: E402
 import informe  # noqa: E402
 import reglas  # noqa: E402
 
@@ -331,10 +332,12 @@ def _sin_duplicadas(paginas):
 
 
 def ejecutar(paginas_html, clinica, web, salida, avisos=None, contacto=None, fecha=None, modo="web",
-             previo=False, subcarpeta=None):
+             previo=False, subcarpeta=None, certificado=None, registro_csv=""):
     paginas = _sin_duplicadas([reglas.extraer(u, h) for u, h in paginas_html])
     fiable, aviso_lectura = reglas.evaluar_lectura(paginas)
     hallazgos = reglas.analizar(paginas, ausencias=fiable)
+    hallazgos += escaner.analizar(paginas_html, paginas, web, avisos, certificado, registro_csv)
+    hallazgos.sort(key=lambda h: reglas.ORDEN_GRAVEDAD[h.gravedad])
     puntos, nota = reglas.puntuar(hallazgos)
     datos = {
         "clinica": clinica,
@@ -350,6 +353,7 @@ def ejecutar(paginas_html, clinica, web, salida, avisos=None, contacto=None, fec
         "aviso_lectura": aviso_lectura,
         "n_puntos_norma": reglas.n_puntos_norma(hallazgos),
         "n_puntos_revisar": reglas.n_puntos_revisar(hallazgos),
+        "n_incumplimientos_web": reglas.n_incumplimientos_web(hallazgos),
         "herramienta": f"blindaje {VERSION}",
         # Uso interno (prospección): no se pinta en el informe de la clínica.
         "senales_cadena": reglas.senales_cadena(paginas),
@@ -382,6 +386,8 @@ def main(argv=None):
     ap.add_argument("--contacto-telefono", default="", help="tu teléfono para el informe")
     ap.add_argument("--contacto-email", default="",
                     help="tu email para el informe (también va en el User-Agent: +contacto)")
+    ap.add_argument("--registro", default="",
+                    help="nº del Registro de centros sanitarios de la CAM para comprobar el que publica la web (p. ej. CS12345)")
     ap.add_argument("--previo", action="store_true",
                     help="informe previo de una página, SIN textos corregidos (para enseñar antes de vender)")
     args = ap.parse_args(argv)
@@ -411,8 +417,12 @@ def main(argv=None):
         return 2
 
     contacto = {"nombre": args.contacto_nombre, "telefono": args.contacto_telefono, "email": args.contacto_email}
+    certificado = None
+    if web and not args.html_local:
+        certificado = escaner.comprobar_certificado(_host(web if "://" in web else "https://" + web))
     carpeta, datos, hallazgos = ejecutar(paginas_html, args.nombre, web, args.salida, avisos, contacto,
-                                         modo="local" if args.html_local else "web", previo=args.previo)
+                                         modo="local" if args.html_local else "web", previo=args.previo,
+                                         certificado=certificado, registro_csv=args.registro)
     if not datos["lectura_fiable"]:
         print(f"\n*** AVISO: {datos['aviso_lectura']} ***")
     print(f"\nNota {datos['nota']} ({datos['puntuacion']}/100) · {len(hallazgos)} hallazgo(s) · "

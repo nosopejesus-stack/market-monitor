@@ -29,6 +29,7 @@ Antes de cada llamada: abre el informe previo (`blindaje/informes/<clínica>/inf
 la frase del hallazgo principal; si ya no está, no la uses.
 
 ## Avisos por clínica
+- **López-Linares:** además, el formulario de su portada pide nombre y teléfono sin casilla ni texto de privacidad (RGPD art. 13; comprobado en el navegador el 29-09-2026). No cuenta en la frase de la llamada: úsalo en la reunión.
 - **Génova 10:** la web menciona «Nuestra clínica en Bilbao»: tienen otro centro fuera de Madrid (sigue siendo de las doctoras). La promoción caduca el 05/10/2026: llamar esta semana.
 - **Golden:** posible 2.º centro en Marbella (Instagram), SIN VERIFICAR.
 - **Novo Clinic:** su web no publica el titular; el centro inscrito en Velázquez 46, 1.º izda. es Derma Clear: confírmalo en la llamada o no lo menciones.

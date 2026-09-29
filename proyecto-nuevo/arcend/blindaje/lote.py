@@ -32,10 +32,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import blindaje  # noqa: E402
+import escaner  # noqa: E402
 import reglas  # noqa: E402
 
 COLUMNAS = ["id", "nombre", "telefono", "web", "lectura_fiable", "n_puntos_norma", "n_puntos_revisar", "nota",
-            "hallazgo_principal", "frase_llamada", "posible_cadena", "estado", "informe"]
+            "hallazgo_principal", "frase_llamada", "incumplimientos_web", "posible_cadena", "estado", "informe"]
 ESTADO_NO_LEGIBLE = "revisar a mano: usar --html-local"
 ESTADO_SIN_GANCHO = "ok: sin gancho"
 
@@ -129,7 +130,8 @@ def leer_cache(carpeta):
 
 
 def procesar_clinica(fila, salida, max_paginas=15, contacto=None, html_local=None, obtener=None,
-                     dormir=time.sleep, log=print, subcarpeta=None, fecha=None, reanalizar=False) -> dict:
+                     dormir=time.sleep, log=print, subcarpeta=None, fecha=None, reanalizar=False,
+                     comprobar_cert=None) -> dict:
     """Informe previo de una clínica. Nunca lanza excepción: los errores van a la columna estado.
 
     Lo descargado se guarda en informes/<slug>/paginas.json; con ``reanalizar`` se usa esa copia
@@ -141,7 +143,7 @@ def procesar_clinica(fila, salida, max_paginas=15, contacto=None, html_local=Non
         web = "https://" + web
     res = {"id": fila.get("id", ""), "nombre": nombre, "telefono": fila.get("telefono_publico", ""),
            "web": web, "lectura_fiable": "", "n_puntos_norma": "", "n_puntos_revisar": "", "nota": "",
-           "hallazgo_principal": "", "frase_llamada": "", "posible_cadena": "", "estado": "", "informe": "", "_puntuacion": None}
+           "hallazgo_principal": "", "frase_llamada": "", "incumplimientos_web": "", "posible_cadena": "", "estado": "", "informe": "", "_puntuacion": None}
     contacto = contacto or {}
     carpeta_clinica = Path(salida) / (subcarpeta or blindaje.slug(nombre))
     try:
@@ -171,8 +173,13 @@ def procesar_clinica(fila, salida, max_paginas=15, contacto=None, html_local=Non
             res["estado"] = "error: " + _una_linea(f"no se pudo leer ninguna página. {motivo}", 400)
             res["lectura_fiable"] = "no"
             return res
+        certificado = None
+        if comprobar_cert and web and modo == "web":
+            certificado = comprobar_cert(blindaje._host(web))
         carpeta, datos, hallazgos = blindaje.ejecutar(paginas_html, nombre, web, salida, avisos, contacto,
-                                                      fecha=fecha, modo=modo, previo=True, subcarpeta=subcarpeta)
+                                                      fecha=fecha, modo=modo, previo=True, subcarpeta=subcarpeta,
+                                                      certificado=certificado,
+                                                      registro_csv=fila.get("registro_sanitario", ""))
     except (Exception, SystemExit) as err:  # SSL, timeout, URL mal formada, carpeta inexistente...
         res["estado"] = "error: " + _una_linea(blindaje.describir_error(err) or type(err).__name__)
         res["lectura_fiable"] = "no"
@@ -186,6 +193,8 @@ def procesar_clinica(fila, salida, max_paginas=15, contacto=None, html_local=Non
         "hallazgo_principal": hallazgo_principal(hallazgos),
         "frase_llamada": datos["frase_llamada"],
         "posible_cadena": "; ".join(datos.get("senales_cadena", [])),
+        "incumplimientos_web": "; ".join(h.titulo for h in hallazgos
+                                         if h.regla.startswith("web_") and h.gravedad in (reglas.ALTA, reglas.MEDIA)),
         "informe": f"{carpeta.name}/informe_previo.html",
         "_puntuacion": datos["puntuacion"],
     })
@@ -275,7 +284,7 @@ def generar_html(resultados, saltadas=(), fecha=None, completo=True):
       "El informe no es asesoramiento jurídico.</p>\n")
     w("<table><thead><tr><th>#</th><th>Id</th><th>Clínica</th><th>Teléfono</th><th>Web</th><th>Lectura fiable</th>"
       "<th>Puntos con norma</th><th>Puntos a revisar</th><th>Nota</th><th>Hallazgo principal</th>"
-      "<th>Frase para la llamada</th><th>Posible cadena (verificar)</th><th>Estado</th></tr></thead><tbody>\n")
+      "<th>Frase para la llamada</th><th>Incumplimientos de la web</th><th>Posible cadena (verificar)</th><th>Estado</th></tr></thead><tbody>\n")
     for i, r in enumerate(filas, 1):
         nombre = e(r["nombre"])
         if r["informe"]:
@@ -284,7 +293,7 @@ def generar_html(resultados, saltadas=(), fecha=None, completo=True):
           f"<td>{e(r['telefono'])}</td><td class=\"web\">{e(r['web'])}</td><td>{e(r['lectura_fiable'])}</td>"
           f"<td>{e(str(r['n_puntos_norma']))}</td><td>{e(str(r['n_puntos_revisar']))}</td><td>{e(r['nota'])}</td>"
           f"<td>{e(r['hallazgo_principal'])}</td><td class=\"frase\">{e(r['frase_llamada'])}</td>"
-          f"<td>{e(r.get('posible_cadena', ''))}</td><td>{e(r['estado'])}</td></tr>\n")
+          f"<td>{e(r.get('incumplimientos_web', ''))}</td><td>{e(r.get('posible_cadena', ''))}</td><td>{e(r['estado'])}</td></tr>\n")
     w("</tbody></table>\n")
     if saltadas:
         w("<h2>Saltadas</h2>\n<table><thead><tr><th>Id</th><th>Clínica</th><th>Motivo</th></tr></thead><tbody>\n")
@@ -337,7 +346,8 @@ def ejecutar_lote(ruta_csv, salida, solo=None, max_paginas=15, contacto=None, ht
             log(f"\n[{n}/{len(procesar)}] {fila.get('id', '')} {nombre} · {fila.get('web', '')}")
             r = procesar_clinica(fila, salida, max_paginas, contacto, html_local=html_local_id.get(fila.get("id")),
                                  obtener=obtener, dormir=dormir, log=log, subcarpeta=sub, fecha=fecha,
-                                 reanalizar=reanalizar)
+                                 reanalizar=reanalizar,
+                                 comprobar_cert=escaner.comprobar_certificado if obtener is None else None)
             log(f"  -> {r['estado']}" + (f" · {r['frase_llamada']}" if r["frase_llamada"] else ""))
             resultados.append(r)
             escribir_resumen(resultados, saltadas, salida, fecha, completo=False)
