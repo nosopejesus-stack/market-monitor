@@ -35,3 +35,4 @@ Lecciones que los agentes y tú hemos aprendido. Cada lección es una nota en es
 | 2026-09-28 | [[2026-09-28 Rastreadores robustos - URL final, parámetros y codificación]] | #arcend #blindaje #rastreador #python |
 | 2026-09-28 | [[2026-09-28 Front matter YAML y documentar opciones que existen]] | #error #markdown #yaml #proceso |
 | 2026-09-28 | [[2026-09-28 Prospección - comprobar direcciones y distinguir cadenas]] | #arcend #prospeccion #datos |
+| 2026-09-29 | [[2026-09-29 Lote robusto, gancho honesto y acceso al PC]] | #arcend #blindaje #python #csv #proceso |
