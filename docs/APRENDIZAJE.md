@@ -130,3 +130,7 @@ diseño, referencias y una forma de comprobar lo que construye.
   y su script de arranque instala Playwright CLI.
 - ⏳ Tarea 1 de CS336: código descargado. Instalar sus dependencias (`uv sync`) necesita tu
   autorización.
+
+## Siguiente paso: bóveda de Obsidian y Mi IA
+
+Todo lo aprendido (los 3 videos, las 17 clases de CS336 y la memoria) está ahora en la bóveda de Obsidian `vault/`, y `mi-ia/` es el asistente que la usa como memoria. Empieza por `vault/00 - Inicio.md` y `mi-ia/README.md`.
