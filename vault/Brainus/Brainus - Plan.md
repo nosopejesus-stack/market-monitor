@@ -1,10 +1,12 @@
 ---
 tipo: proyecto
-estado: v2 funcionando (memoria + reglas + feedback + web + red propia); falta instalarla en tu PC
-tags: [mi-ia, proyecto, rag, obsidian, ollama]
+estado: v3 lista (red 100 % desde cero y verificada; el instalador elige el cerebro más potente); falta instalarla en tu PC
+tags: [brainus, proyecto, rag, obsidian, ollama]
 ---
 
-# Mi IA: plan y arquitectura
+# Brainus: plan y arquitectura
+
+> **Brainus** es el nombre que el dueño eligió para su IA el 2026-11-06 (antes se llamaba "Mi IA").
 
 ## Qué quieres
 Tu propia IA funcionando, que **aprenda todo lo que Claude sabe de ti y de tus proyectos** y que tenga acceso a Obsidian como memoria.
@@ -15,14 +17,15 @@ Tu propia IA funcionando, que **aprenda todo lo que Claude sabe de ti y de tus p
 - **El camino que funciona hoy:**
 
 ```
-   Tú ──pregunta──▶ Mi IA (mi_ia.py)
+   Tú ──pregunta──▶ Brainus (brainus.py)
                        │ 1. busca en tu bóveda (BM25)
                        ▼
                Bóveda de Obsidian (vault/) ◀── Claude y tú escribís notas
                        │ 2. fragmentos relevantes
                        ▼
                Modelo de lenguaje
-               ├─ Ollama (local, gratis, privado): qwen3:8b, llama3.1:8b, gemma3...
+               ├─ Ollama (local, gratis, privado): el qwen3 más grande que aguante tu PC
+               ├─ red propia de Brainus (desde cero, experimental)
                └─ API de Claude (de pago, más inteligente)
                        │ 3. respuesta citando [[notas]]
                        ▼
@@ -39,18 +42,28 @@ Esto se llama **RAG** (generación aumentada con recuperación). Es justo la "me
    - búsqueda **por significado** (embeddings);
    - **página web local**;
    - historial de conversaciones;
-   - **[[Mi red neuronal]]** propia creada desde cero.
-3. ⏳ **En tu PC:** ejecutar `mi-ia/instalar_windows.ps1`, que deja Ollama + qwen3:8b + Obsidian + el acceso directo "Mi IA".
-4. **v3:** afinar un modelo abierto con tus 👍/👎 (DPO, [[Clase 15 - Mid y post-training]]) para que responda a tu gusto.
-5. **v4:** darle manos con [[Agent Desktop]] y Playwright, para que actúe en tu PC y no solo responda.
+   - **[[Brainus - Red neuronal]]** propia creada desde cero.
+3. ✅ **v3 (2026-11-06):**
+   - red neuronal reescrita **100 % desde cero** según CS336 y verificada con 23 tests;
+   - el instalador **elige el cerebro más potente** según tu RAM/GPU (de `qwen3:4b` a `qwen3:32b`);
+   - nombre definitivo: **Brainus**.
+4. ⏳ **En tu PC:** ejecutar `brainus/instalar_windows.ps1`.
+5. **v4:** afinar un modelo abierto con tus 👍/👎 (DPO, [[Clase 15 - Mid y post-training]]) para que responda a tu gusto.
+6. **v5:** darle manos con [[Agent Desktop]] y Playwright, para que actúe en tu PC y no solo responda.
 
 ## Cómo sigue aprendiendo
 - **Automático con Claude Code:** el instalador añade a `~/.claude/CLAUDE.md` unas instrucciones. Con ellas, Claude lee tus reglas al empezar y, al terminar cada tarea, escribe en la bóveda lo bueno (Hacer), lo malo (No hacer) y un resumen de la sesión. En este repo lo dice el `CLAUDE.md` de la raíz.
-- En Mi IA: 👍/`/bien`, 👎/`/mal <por qué>` (crea una regla), `/hacer`, `/evitar`.
-- En el chat de Mi IA: `/recordar <lo que sea>`.
-- Tú mismo, escribiendo notas en Obsidian. Mi IA las lee al momento.
+- En Brainus: 👍/`/bien`, 👎/`/mal <por qué>` (crea una regla), `/hacer`, `/evitar`.
+- En el chat de Brainus: `/recordar <lo que sea>`.
+- Tú mismo, escribiendo notas en Obsidian. Brainus las lee al momento.
 
-## Hardware recomendado para la v2
-- Modelo de 7-8B cuantizado (Q4): unos **8 GB de RAM o VRAM**. Va bien en un portátil moderno o en un Mac M1/M2/M3.
-- Modelo de 14B: unos 12-16 GB. De 32B: 24 GB o más (GPU buena).
-- Sin GPU funciona igual, pero más lento ([[Clase 10 - Inferencia]]: llama.cpp, cuantización).
+## Qué cerebro elige el instalador
+| Tu PC | Cerebro | Notas |
+|---|---|---|
+| GPU de 24 GB | `qwen3:32b` | el más listo que cabe en una sola GPU de consumo |
+| GPU de 16 GB | `qwen3:14b` | |
+| 32 GB de RAM | `qwen3:30b-a3b` | MoE: 30B parámetros pero solo 3B activos por token, rápido en CPU ([[Clase 04 - Alternativas a la atención y MoE]]) |
+| 16 GB de RAM o GPU de 8 GB | `qwen3:8b` | |
+| menos | `qwen3:4b` | |
+
+Van todos cuantizados (Q4), que reduce la memoria unas 4 veces ([[Clase 10 - Inferencia]]).

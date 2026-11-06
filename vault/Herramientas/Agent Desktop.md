@@ -28,4 +28,4 @@ En la sesión del 2026-11-06 Claude lo probó en un escritorio Linux virtual: ab
 - No automatiza webs; para eso está Playwright.
 - Las capturas y lecturas pueden contener datos privados.
 
-Relacionado: [[Videos - Aprendizaje de los 3 TikToks]], [[Mi IA - Plan]] (fase v5: que tu IA actúe).
+Relacionado: [[Videos - Aprendizaje de los 3 TikToks]], [[Brainus - Plan]] (fase v5: que tu IA actúe).

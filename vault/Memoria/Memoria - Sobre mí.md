@@ -7,7 +7,7 @@ tags: [memoria, perfil]
 
 # Memoria: sobre mí
 
-> Esta nota la lee [[Mi IA - Plan|Mi IA]] para conocerte. Corrígela y amplíala tú: es tuya.
+> Esta nota la lee [[Brainus - Plan|Brainus]] para conocerte. Corrígela y amplíala tú: es tuya.
 
 ## Idioma y forma de trabajar
 - Escribo en **español** y espero respuestas en español.
@@ -17,12 +17,12 @@ tags: [memoria, perfil]
 - Ya tenía montado un **panel de Obsidian** en mi ordenador (se mencionó en una sesión de octubre de 2026).
 
 ## Objetivo principal ahora
-- **Tener mi propia IA funcionando**, con acceso a Obsidian como memoria y con todo lo aprendido con Claude. Ver [[Mi IA - Plan]].
+- **Tener mi propia IA funcionando**, con acceso a Obsidian como memoria y con todo lo aprendido con Claude. Ver [[Brainus - Plan]].
 
 ## Proyectos y temas (según mis sesiones con Claude)
 | Fecha | Tema |
 |---|---|
-| 2026-11-06 | Montar herramientas para proyectos + aprender de 3 TikToks + curso CS336 + Mi IA (esta sesión) |
+| 2026-11-06 | Montar herramientas para proyectos + aprender de 3 TikToks + curso CS336 + Brainus (esta sesión) |
 | 2026-11-06 | Propuesta de **carta de cócteles** (botellas de 750 ml por cóctel para la prueba) |
 | 2026-11-05 | **Head barman**: recursos para una **apertura en Madrid** (documento con graduaciones, sulfitos, caducidades) |
 | 2026-11-04 | Proyecto **Arcend** funcionando |
@@ -33,9 +33,9 @@ tags: [memoria, perfil]
 | 2026-08-30 | Conectar un MCP de **TradingView** |
 
 ## Repositorios
-- `nosopejesus-stack/market-monitor`: monitor de mercados. Aquí viven esta bóveda, las skills de diseño y Mi IA (rama `claude/design-skills-setup`).
+- `nosopejesus-stack/market-monitor`: monitor de mercados. Aquí viven esta bóveda, las skills de diseño y Brainus (rama `claude/design-skills-setup`).
 
 ## Pendiente de completar (lo sabes tú, no Claude)
 - ¿A qué te dedicas exactamente y en qué ciudad?
 - ¿Qué es Arcend? ¿Y el Proyecto 110k?
-- ¿Qué quieres que Mi IA haga por ti cada día?
+- ¿Qué quieres que Brainus haga por ti cada día?

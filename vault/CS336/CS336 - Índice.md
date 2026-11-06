@@ -58,7 +58,7 @@ No vienen del audio: YouTube bloquea las descargas desde servidores en la nube.
 9. **Los datos son lo más importante:** filtrar con clasificadores, deduplicar con MinHash y mezclar con cuidado de no repetir demasiadas épocas.
 10. **Post-training:** SFT (extrae, no añade conocimiento) → RLHF/DPO → **RLVR con GRPO** (razonamiento tipo R1).
 
-## Relación con [[Mi IA - Plan]]
+## Relación con [[Brainus - Plan]]
 El curso enseña a crear un modelo **desde cero**, y eso exige GPUs y millones de dólares para llegar a la frontera.
 El camino práctico para tener **tu propia IA funcionando** es otro:
 - usar un modelo abierto ya entrenado (Qwen, Llama, Gemma) en local;

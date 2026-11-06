@@ -1,7 +1,7 @@
-<!-- MI-IA-MEMORIA -->
-## Memoria compartida con Mi IA (mi IA personal)
+<!-- BRAINUS-MEMORIA -->
+## Memoria compartida con Brainus (mi IA personal)
 Mi bóveda de Obsidian está en: `{{BOVEDA}}`
-Es la memoria de Mi IA, mi asistente personal. En CUALQUIER proyecto o conversación:
+Es la memoria de Brainus, mi IA personal. En CUALQUIER proyecto o conversación:
 
 1. **Al empezar:** lee `Memoria/Lecciones/Reglas - Hacer.md` y `Memoria/Lecciones/Reglas - No hacer.md` de esa bóveda y cúmplelas.
 2. **Al terminar cada tarea:**
@@ -11,4 +11,4 @@ Es la memoria de Mi IA, mi asistente personal. En CUALQUIER proyecto o conversac
    - conocimiento reutilizable → una nota temática enlazada desde `00 - Inicio.md`;
    - cosas nuevas sobre mí → `Memoria/Memoria - Sobre mí.md` (nunca contraseñas, claves ni datos bancarios).
 3. Respóndeme en español y entrégame cosas funcionando y probadas.
-<!-- /MI-IA-MEMORIA -->
+<!-- /BRAINUS-MEMORIA -->

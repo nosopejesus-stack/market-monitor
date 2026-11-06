@@ -1,9 +1,9 @@
 """Servidor de PRUEBA que imita la API de Ollama (/api/chat y /api/embed) con un modelo pequeño
-de Hugging Face. Sirve para probar Mi IA sin instalar Ollama (por ejemplo en un servidor en la nube).
+de Hugging Face. Sirve para probar Brainus sin instalar Ollama (por ejemplo en un servidor en la nube).
 
 En tu PC usa Ollama de verdad; esto no hace falta.
   pip install torch transformers jinja2
-  python mi-ia/servidor_prueba.py              # Qwen/Qwen2.5-0.5B-Instruct en el puerto 11434
+  python brainus/servidor_prueba.py              # Qwen/Qwen2.5-0.5B-Instruct en el puerto 11434
 """
 import json
 import sys

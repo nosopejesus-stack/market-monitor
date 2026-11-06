@@ -1,6 +1,6 @@
 ---
 tipo: reglas
-uso: Mi IA las lee SIEMPRE antes de responder. Claude las amplía al final de cada sesión.
+uso: Brainus las lee SIEMPRE antes de responder. Claude las amplía al final de cada sesión.
 tags: [memoria, lecciones, reglas]
 ---
 
@@ -20,3 +20,5 @@ tags: [memoria, lecciones, reglas]
 - Al re-entrenar con datos nuevos, **mezclar texto general** y guardar la mejor versión, para no olvidar lo anterior. (2026-11-06: el primer mid-training sobreajustó; validación de 3,29 a 4,45)
 - Probar cada función de punta a punta con un modelo real antes de entregarla. (2026-11-06: la prueba destapó dos fallos)
 - Resumir en **lenguaje llano y en tono de colega**, sin tecnicismos ni tablas largas, cuando el dueño pide un resumen. (2026-11-06: pidió "resume en cristiano y como colega")
+- Respetar las normas de uso de IA de cursos y proyectos ajenos (p. ej. el CLAUDE.md de CS336): explicarlas y buscar una vía legítima. (2026-11-06: Brainus se hizo como proyecto propio en vez de resolver la tarea oficial)
+- Verificar cada pieza escrita a mano contra una referencia fiable (tests). (2026-11-06: 23 tests de la red de Brainus contra PyTorch)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mi IA: tu asistente personal con memoria en Obsidian, que aprende de lo bueno y lo malo.
+"""Brainus: tu IA personal con memoria en Obsidian, que aprende de lo bueno y lo malo.
 
 Cómo funciona (RAG + reglas + feedback):
   1. Lee la bóveda de Obsidian y la parte en fragmentos.
@@ -21,11 +21,11 @@ Cómo funciona (RAG + reglas + feedback):
      datos/preferencias.jsonl (formato listo para afinar un modelo con DPO o SFT más adelante).
 
 Uso:
-  python mi_ia.py chat             conversar en la terminal
-  python mi_ia.py web              abrir la página web local en http://localhost:8765
-  python mi_ia.py preguntar "..."  una pregunta suelta
-  python mi_ia.py buscar "..."     ver qué notas encuentra
-  python mi_ia.py estado           resumen de la memoria
+  python brainus.py chat             conversar en la terminal
+  python brainus.py web              abrir la página web local en http://localhost:8765
+  python brainus.py preguntar "..."  una pregunta suelta
+  python brainus.py buscar "..."     ver qué notas encuentra
+  python brainus.py estado           resumen de la memoria
 """
 from __future__ import annotations
 
@@ -44,13 +44,21 @@ from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent
 DATOS = RAIZ / "datos"
-BOVEDA = Path(os.environ.get("MI_IA_BOVEDA", RAIZ.parent / "vault"))
-MODELO_OLLAMA = os.environ.get("MI_IA_MODELO", "qwen3:8b")
-MODELO_EMBED = os.environ.get("MI_IA_EMBED", "nomic-embed-text")
-MODELO_CLAUDE = os.environ.get("MI_IA_MODELO_CLAUDE", "claude-sonnet-5-5")
-URL_OLLAMA = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+# Configuración: variables de entorno > config.json (lo escribe el instalador según tu PC) > valores por defecto
+_CONFIG = json.loads((RAIZ / "config.json").read_text(encoding="utf-8")) if (RAIZ / "config.json").exists() else {}
 
-SISTEMA = """Eres "Mi IA", el asistente personal de tu dueño. Tu memoria es su bóveda de Obsidian.
+
+def _cfg(clave: str, defecto: str) -> str:
+    return os.environ.get("BRAINUS_" + clave.upper(), _CONFIG.get(clave, defecto))
+
+
+BOVEDA = Path(_cfg("boveda", str(RAIZ.parent / "vault")))
+MODELO_OLLAMA = _cfg("modelo", "qwen3:8b")
+MODELO_EMBED = _cfg("embed", "nomic-embed-text")
+MODELO_CLAUDE = _cfg("modelo_claude", "claude-sonnet-5-5")
+URL_OLLAMA = os.environ.get("OLLAMA_HOST", _CONFIG.get("ollama", "http://localhost:11434"))
+
+SISTEMA = """Eres "Brainus", la IA personal de tu dueño. Tu memoria es su bóveda de Obsidian.
 
 REGLAS QUE SIEMPRE CUMPLES (aprendidas de experiencias anteriores):
 {reglas}
@@ -223,12 +231,12 @@ def generar(mensajes: list[dict], motor: str, sistema: str) -> str:
             return f"⚠️ La red propia necesita PyTorch y regex (pip install torch regex): {e}"
         pregunta = mensajes[-1]["content"].split("PREGUNTA:")[-1].strip()
         texto = continuar(f"## {pregunta}\n", tokens=150, temperatura=0.7)
-        return "🧪 (red neuronal propia, experimental: escribe al estilo de tus notas, todavía no razona)\n" + texto
+        return "🧪 (red neuronal propia de Brainus, creada desde cero: escribe al estilo de tus notas, todavía no razona)\n" + texto
     raise ValueError(motor)
 
 
 # ================================================================== IA
-class MiIA:
+class Brainus:
     def __init__(self, boveda: Path, motor: str):
         self.boveda, self.motor = boveda, motor
         self.historial: list[dict] = []
@@ -259,13 +267,13 @@ class MiIA:
         carpeta = self.boveda / "Memoria" / "Conversaciones"
         carpeta.mkdir(parents=True, exist_ok=True)
         hoy = dt.datetime.now()
-        ruta = carpeta / f"{hoy:%Y-%m-%d} Conversaciones con Mi IA.md"
+        ruta = carpeta / f"{hoy:%Y-%m-%d} Conversaciones con Brainus.md"
         if not ruta.exists():
             ruta.write_text(f"---\nfecha: {hoy:%Y-%m-%d}\ntipo: conversaciones\ntags: [memoria, conversaciones]\n---\n\n"
-                            f"# Conversaciones con Mi IA ({hoy:%Y-%m-%d})\n", encoding="utf-8")
+                            f"# Conversaciones con Brainus ({hoy:%Y-%m-%d})\n", encoding="utf-8")
         refs = ", ".join(f"[[{f}]]" for f in fuentes[:4])
         with ruta.open("a", encoding="utf-8") as f:
-            f.write(f"\n## {hoy:%H:%M}: {pregunta[:80]}\n**Tú:** {pregunta}\n\n**Mi IA:** {respuesta}\n\n*Fuentes: {refs}*\n")
+            f.write(f"\n## {hoy:%H:%M}: {pregunta[:80]}\n**Tú:** {pregunta}\n\n**Brainus:** {respuesta}\n\n*Fuentes: {refs}*\n")
 
     def _preferencia(self, valoracion: str, motivo: str = "") -> None:
         DATOS.mkdir(exist_ok=True)
@@ -342,7 +350,7 @@ AYUDA = """Comandos:
 
 # ================================================================== web
 PAGINA = r"""<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Mi IA</title><style>
+<title>Brainus</title><style>
 :root{--bg:#f6f5f2;--card:#fff;--txt:#1d1d1f;--sub:#6b6b70;--acc:#3b5bdb;--yo:#e9edff;--borde:#e3e1dc}
 @media(prefers-color-scheme:dark){:root{--bg:#141416;--card:#1e1e22;--txt:#ececf0;--sub:#9a9aa2;--acc:#7c94ff;--yo:#262b45;--borde:#2c2c32}}
 *{box-sizing:border-box}body{margin:0;font:16px/1.55 system-ui,-apple-system,Segoe UI,sans-serif;background:var(--bg);color:var(--txt);display:flex;flex-direction:column;height:100vh}
@@ -355,7 +363,7 @@ form{display:flex;gap:8px;padding:14px 20px;border-top:1px solid var(--borde);ma
 textarea{flex:1;resize:none;height:52px;padding:12px;border-radius:12px;border:1px solid var(--borde);background:var(--card);color:var(--txt);font:inherit}
 form button{border:0;border-radius:12px;padding:0 18px;background:var(--acc);color:#fff;font-weight:600;cursor:pointer}
 </style></head><body>
-<header><div><h1>🧠 Mi IA</h1><small id="estado"></small></div><small>/recordar · /bien · /mal &lt;por qué&gt; · /hacer · /evitar · /reglas</small></header>
+<header><div><h1>🧠 Brainus</h1><small id="estado"></small></div><small>/recordar · /bien · /mal &lt;por qué&gt; · /hacer · /evitar · /reglas</small></header>
 <div id="log"></div>
 <form id="f"><textarea id="q" placeholder="Pregúntame algo o enséñame con /recordar…" autofocus></textarea><button>Enviar</button></form>
 <script>
@@ -375,7 +383,7 @@ fetch('/estado').then(r=>r.json()).then(j=>document.getElementById('estado').tex
 </script></body></html>"""
 
 
-def servir(ia: MiIA, puerto: int) -> None:
+def servir(ia: Brainus, puerto: int) -> None:
     from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
     class Manejador(BaseHTTPRequestHandler):
@@ -408,15 +416,15 @@ def servir(ia: MiIA, puerto: int) -> None:
         def log_message(self, *a):
             pass
 
-    print(f"Mi IA en http://localhost:{puerto}  (Ctrl+C para cerrar)")
+    print(f"Brainus en http://localhost:{puerto}  (Ctrl+C para cerrar)")
     ThreadingHTTPServer(("127.0.0.1", puerto), Manejador).serve_forever()
 
 
 # ================================================================== CLI
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Mi IA: asistente con memoria en Obsidian")
+    ap = argparse.ArgumentParser(description="Brainus: IA personal con memoria en Obsidian")
     ap.add_argument("--motor", choices=["ollama", "anthropic", "propia", "ninguno"],
-                    default=os.environ.get("MI_IA_MOTOR", "ollama"))
+                    default=_cfg("motor", "ollama"))
     ap.add_argument("--boveda", type=Path, default=BOVEDA)
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("preguntar").add_argument("texto")
@@ -431,9 +439,9 @@ def main() -> None:
     a = ap.parse_args()
 
     if not a.boveda.exists():
-        sys.exit(f"No encuentro la bóveda en {a.boveda}. Usa --boveda o MI_IA_BOVEDA.")
+        sys.exit(f"No encuentro la bóveda en {a.boveda}. Usa --boveda o BRAINUS_BOVEDA.")
     motor = "ninguno" if a.cmd in ("buscar", "recordar") else a.motor
-    ia = MiIA(a.boveda, motor)
+    ia = Brainus(a.boveda, motor)
 
     if a.cmd == "recordar":
         print(f"Guardado en {ia.recordar(a.texto, a.titulo)}")
@@ -447,7 +455,7 @@ def main() -> None:
     elif a.cmd == "web":
         servir(ia, a.puerto)
     elif a.cmd == "chat":
-        print("🧠 Mi IA lista. Escribe tu pregunta, /ayuda para ver comandos, o 'salir'.")
+        print("🧠 Brainus listo. Escribe tu pregunta, /ayuda para ver comandos, o 'salir'.")
         while True:
             try:
                 q = input("\nTú: ").strip()
@@ -462,7 +470,7 @@ def main() -> None:
                 r, fuentes = ia.preguntar(q)
                 if fuentes:
                     r += "\n   (fuentes: " + ", ".join(fuentes[:4]) + ")"
-            print(f"\nMi IA: {r}")
+            print(f"\nBrainus: {r}")
 
 
 if __name__ == "__main__":

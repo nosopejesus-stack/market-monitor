@@ -4,8 +4,8 @@ tipo: recuerdo
 tags: [memoria]
 ---
 
-# Nacimiento de Mi IA
+# Nacimiento de Brainus
 
-Prueba de memoria: Mi IA se creó el 6 de noviembre de 2026 con Claude Code.
+Prueba de memoria: Brainus se creó el 6 de noviembre de 2026 con Claude Code.
 
 Ver también: [[Memoria - Sobre mí]]

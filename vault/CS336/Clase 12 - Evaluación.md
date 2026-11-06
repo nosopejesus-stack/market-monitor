@@ -51,7 +51,7 @@ La tendencia: preguntas cada vez más difíciles a medida que los benchmarks se 
 - **Técnicas de andamiaje:**
   - lista de tareas explícita;
   - **delegación jerárquica**: subagentes con contexto limpio;
-  - **memoria persistente en archivos** (justo lo que hacemos con Obsidian, ver [[Mi IA - Plan]]);
+  - **memoria persistente en archivos** (justo lo que hacemos con Obsidian, ver [[Brainus - Plan]]);
   - mucha ingeniería de contexto.
 - Evaluar un agente es evaluar **andamiaje + modelo**.
 

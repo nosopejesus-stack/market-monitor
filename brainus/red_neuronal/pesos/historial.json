@@ -1,0 +1,47 @@
+[
+  {
+    "fecha": "2026-11-06 19:54",
+    "perfil": "pequeno",
+    "fase": "preentrenamiento",
+    "parametros": 13767552,
+    "tokens": 3844144,
+    "pasos": 1009,
+    "mejor_validacion": 4.548,
+    "perplejidad": 94.4
+  },
+  {
+    "fecha": "2026-11-06 20:19",
+    "perfil": "pequeno",
+    "fase": "preentrenamiento (reanudado)",
+    "bits_por_byte": 1.85,
+    "parametros": 13767552,
+    "tokens": 3844626,
+    "pasos": 1119,
+    "mejor_validacion": 4.117,
+    "perplejidad": 61.4
+  },
+  {
+    "fecha": "2026-11-06 20:23",
+    "perfil": "pequeno",
+    "fase": "mid-training",
+    "bits_por_byte": 1.712,
+    "parametros": 13767552,
+    "tokens": 161327,
+    "pasos": 112,
+    "mejor_validacion": 3.477,
+    "perplejidad": 32.4,
+    "nota": "DESCARTADO: la validación solo medía Wikipedia y eligió un punto que casi no había aprendido la bóveda. Se repitió con validación mixta (entrada siguiente)."
+  },
+  {
+    "fecha": "2026-11-06 20:28",
+    "perfil": "pequeno",
+    "fase": "mid-training",
+    "bits_por_byte": 1.891,
+    "parametros": 13767552,
+    "tokens": 154413,
+    "pasos": 144,
+    "mejor_validacion": 3.864,
+    "perplejidad": 47.7,
+    "nota": "Validación mixta: notas apartadas de la bóveda + Wikipedia. No es comparable con las cifras anteriores (incluye notas que la red no vio)."
+  }
+]

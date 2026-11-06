@@ -1,3 +1,5 @@
-mi-ia/datos/
+
 __pycache__/
 .playwright-cli/
+brainus/datos/
+brainus/red_neuronal/corpus/es_wiki_*mb.txt.gz

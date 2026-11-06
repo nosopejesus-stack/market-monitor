@@ -131,6 +131,6 @@ diseño, referencias y una forma de comprobar lo que construye.
 - ⏳ Tarea 1 de CS336: código descargado. Instalar sus dependencias (`uv sync`) necesita tu
   autorización.
 
-## Siguiente paso: bóveda de Obsidian y Mi IA
+## Siguiente paso: bóveda de Obsidian y Brainus
 
-Todo lo aprendido (los 3 videos, las 17 clases de CS336 y la memoria) está ahora en la bóveda de Obsidian `vault/`, y `mi-ia/` es el asistente que la usa como memoria. Empieza por `vault/00 - Inicio.md` y `mi-ia/README.md`.
+Todo lo aprendido (los 3 videos, las 17 clases de CS336 y la memoria) está ahora en la bóveda de Obsidian `vault/`, y `brainus/` es el asistente que la usa como memoria. Empieza por `vault/00 - Inicio.md` y `brainus/README.md`.

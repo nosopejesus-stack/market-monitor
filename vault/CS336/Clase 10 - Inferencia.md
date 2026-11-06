@@ -69,4 +69,4 @@ tags: [cs336, inferencia, kv-cache, cuantizacion, speculative-decoding, vllm]
 - La inferencia está limitada por memoria y es dinámica.
 - Las palancas son la arquitectura, la cuantización, la poda o destilación y la especulación.
 - Las ideas vienen de sistemas: ejecución especulativa y paginación.
-- Muy relevante para [[Mi IA - Plan|montar tu propia IA]]: llama.cpp u Ollama con un modelo cuantizado para correrlo en local.
+- Muy relevante para [[Brainus - Plan|montar tu propia IA]]: llama.cpp u Ollama con un modelo cuantizado para correrlo en local.
