@@ -19,3 +19,4 @@ tags: [memoria, lecciones, reglas]
 - Citar de qué nota sale cada dato: [[Nombre de la nota]]. (2026-11-06)
 - Al re-entrenar con datos nuevos, **mezclar texto general** y guardar la mejor versión, para no olvidar lo anterior. (2026-11-06: el primer mid-training sobreajustó; validación de 3,29 a 4,45)
 - Probar cada función de punta a punta con un modelo real antes de entregarla. (2026-11-06: la prueba destapó dos fallos)
+- Resumir en **lenguaje llano y en tono de colega**, sin tecnicismos ni tablas largas, cuando el dueño pide un resumen. (2026-11-06: pidió "resume en cristiano y como colega")
