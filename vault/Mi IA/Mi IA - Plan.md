@@ -1,6 +1,6 @@
 ---
 tipo: proyecto
-estado: v1 funcionando (búsqueda en memoria); falta conectar el modelo en tu ordenador
+estado: v2 funcionando (memoria + reglas + feedback + web + red propia); falta instalarla en tu PC
 tags: [mi-ia, proyecto, rag, obsidian, ollama]
 ---
 
@@ -32,14 +32,21 @@ Tu propia IA funcionando, que **aprenda todo lo que Claude sabe de ti y de tus p
 Esto se llama **RAG** (generación aumentada con recuperación). Es justo la "memoria persistente en archivos" que usan los agentes ([[Clase 12 - Evaluación]]).
 
 ## Fases
-1. **v1 (hecha):** bóveda + `mi-ia/mi_ia.py` (búsqueda BM25, chat y recordar). Probado aquí con el motor `ninguno`, que solo busca.
-2. **v2 (en tu ordenador):** instalar Ollama y descargar un modelo para tener la IA completa en local. Pasos en `mi-ia/README.md`.
-3. **v3:** búsqueda semántica con *embeddings* (por ejemplo `nomic-embed-text` en Ollama) para encontrar por significado y no solo por palabras.
-4. **v4:** afinar (LoRA/SFT) un modelo pequeño con tus notas y conversaciones para que hable "a tu manera". Ver [[Clase 15 - Mid y post-training]]: el SFT sirve para **estilo**, no para meter datos (eso lo hace el RAG).
-5. **v5:** conectarla a tus herramientas (Agent Desktop, Playwright, MCPs) para que **actúe**, no solo responda.
+1. ✅ **v1:** bóveda + búsqueda BM25 + chat + `/recordar`.
+2. ✅ **v2 (2026-11-06):**
+   - **reglas Hacer / No hacer** que siempre se cumplen;
+   - **👍/👎 que crean reglas**;
+   - búsqueda **por significado** (embeddings);
+   - **página web local**;
+   - historial de conversaciones;
+   - **[[Mi red neuronal]]** propia creada desde cero.
+3. ⏳ **En tu PC:** ejecutar `mi-ia/instalar_windows.ps1`, que deja Ollama + qwen3:8b + Obsidian + el acceso directo "Mi IA".
+4. **v3:** afinar un modelo abierto con tus 👍/👎 (DPO, [[Clase 15 - Mid y post-training]]) para que responda a tu gusto.
+5. **v4:** darle manos con [[Agent Desktop]] y Playwright, para que actúe en tu PC y no solo responda.
 
 ## Cómo sigue aprendiendo
-- Cada vez que trabajes con Claude, pídele: **"guarda lo aprendido en la bóveda"**. Escribirá notas nuevas.
+- **Automático con Claude Code:** el instalador añade a `~/.claude/CLAUDE.md` unas instrucciones. Con ellas, Claude lee tus reglas al empezar y, al terminar cada tarea, escribe en la bóveda lo bueno (Hacer), lo malo (No hacer) y un resumen de la sesión. En este repo lo dice el `CLAUDE.md` de la raíz.
+- En Mi IA: 👍/`/bien`, 👎/`/mal <por qué>` (crea una regla), `/hacer`, `/evitar`.
 - En el chat de Mi IA: `/recordar <lo que sea>`.
 - Tú mismo, escribiendo notas en Obsidian. Mi IA las lee al momento.
 

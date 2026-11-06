@@ -1,55 +1,96 @@
-# Mi IA: tu asistente con memoria en Obsidian
+# 🧠 Mi IA: tu IA personal, con memoria en Obsidian, que aprende de lo bueno y lo malo
 
-Responde a tus preguntas usando **tu bóveda de Obsidian** (`../vault`) como memoria y aprende cuando le dices `/recordar`.
-Funciona con un modelo **local y gratis** (Ollama) o con la API de Claude.
-Plan y arquitectura: `vault/Mi IA/Mi IA - Plan.md`.
-
-## Instalación en tu ordenador (Windows, macOS o Linux), unos 15 minutos
-
-1. **Descarga el repo** (rama `claude/design-skills-setup`):
-   ```bash
-   git clone -b claude/design-skills-setup https://github.com/nosopejesus-stack/market-monitor.git
-   cd market-monitor
-   ```
-2. **Obsidian:** instala Obsidian (obsidian.md) → *Open folder as vault* → elige la carpeta `vault`.
-3. **Python 3.9+:** no necesita librerías extra.
-4. **Ollama** (el "cerebro" local): instálalo desde ollama.com y descarga un modelo:
-   ```bash
-   ollama pull qwen3:8b      # recomendado: unos 5 GB, buen español. Alternativas: llama3.1:8b, gemma3:12b
-   ```
-5. **Habla con tu IA:**
-   ```bash
-   python mi-ia/mi_ia.py chat
-   ```
-   - Pregunta lo que quieras: busca en tus notas y responde citando `[[la nota]]`.
-   - `/recordar Mi proveedor de hielo es X y entrega los martes` guarda una nota nueva en `vault/Memoria/Recuerdos`. Desde ese momento lo sabe, y tú también lo ves en Obsidian.
-   - `salir` para terminar.
-
-## Otros comandos
-```bash
-python mi-ia/mi_ia.py estado                        # cuántas notas conoce
-python mi-ia/mi_ia.py buscar "leyes de escala"      # solo buscar, sin modelo
-python mi-ia/mi_ia.py preguntar "¿qué es GRPO?"     # una pregunta suelta
-python mi-ia/mi_ia.py --motor anthropic chat        # usar Claude (necesita ANTHROPIC_API_KEY)
+```
+                 ┌────────────── TU PC (funciona sin internet) ──────────────┐
+  Tú ──▶ navegador http://localhost:8765  o  terminal (chat)
+              │
+              ▼
+          mi_ia.py ──1. busca──▶ Bóveda de Obsidian (vault/)
+              │                   ├─ notas, cursos (CS336), proyectos
+              │                   ├─ Memoria/Lecciones: Reglas Hacer / No hacer  ◀─ /bien /mal /hacer /evitar
+              │                   ├─ Memoria/Conversaciones (cada charla queda guardada)
+              │                   └─ Memoria/Sesiones  ◀── Claude Code escribe aquí al terminar cada tarea
+              │ 2. reglas + memoria + pregunta
+              ▼
+          CEREBRO (eliges uno):
+              ├─ Ollama + qwen3:8b ........ red neuronal abierta de 8.000 millones de parámetros (recomendado)
+              ├─ red_neuronal/ ............ TU red, creada desde cero como en CS336 (experimental)
+              └─ API de Claude ............ la más lista; de pago y necesita internet
+                 └──────────────────────────────────────────────────────────────┘
 ```
 
-## Configuración (variables de entorno)
+## 1. Instalar (una vez)
+
+### Windows (lo más fácil)
+1. Descarga el repo: `git clone -b claude/design-skills-setup https://github.com/nosopejesus-stack/market-monitor.git`
+   (o desde GitHub: botón *Code* → *Download ZIP*, eligiendo la rama `claude/design-skills-setup`).
+2. Clic derecho en `mi-ia\instalar_windows.ps1` → **Ejecutar con PowerShell**. El instalador:
+   - instala Python, Git, **Ollama** y **Obsidian**;
+   - descarga los modelos `qwen3:8b` y `nomic-embed-text` (unos 5 GB);
+   - instala PyTorch para tu red propia;
+   - crea el acceso directo **"Mi IA"** en el escritorio;
+   - configura Claude Code para que guarde lo aprendido en tu bóveda.
+3. En Obsidian: **Open folder as vault** → carpeta `vault`.
+
+### macOS / Linux
+```bash
+git clone -b claude/design-skills-setup https://github.com/nosopejesus-stack/market-monitor.git && cd market-monitor
+# Instala Ollama (ollama.com) y Obsidian (obsidian.md), luego:
+ollama pull qwen3:8b && ollama pull nomic-embed-text
+pip install torch regex          # solo para la red propia
+cat mi-ia/claude_global_CLAUDE.md | sed "s#{{BOVEDA}}#$PWD/vault#" >> ~/.claude/CLAUDE.md
+```
+
+## 2. Usarla (cada día)
+- **Windows:** doble clic en **"Mi IA"** del escritorio (o en `mi-ia\MiIA.bat`). Se abre el navegador.
+- **macOS/Linux:** `./mi-ia/mi-ia.sh`
+- **Terminal:** `python mi-ia/mi_ia.py chat`
+
+| Escribe | Qué pasa |
+|---|---|
+| una pregunta | busca en tu bóveda, cumple tus reglas y responde citando `[[la nota]]` |
+| `/recordar Mi proveedor de hielo entrega los martes` | lo guarda en `Memoria/Recuerdos` y desde ese momento lo sabe |
+| 👍 o `/bien` | guarda la respuesta como buen ejemplo |
+| 👎 o `/mal no me inventes precios` | lo guarda como error **y crea una regla en "No hacer"** |
+| `/hacer responde con listas cortas` | nueva regla en "Hacer" |
+| `/evitar usar inglés` | nueva regla en "No hacer" |
+| `/reglas` | muestra lo que ha aprendido |
+
+## 3. Cómo aprende cada vez que usas Claude
+- El instalador añade a tu `~/.claude/CLAUDE.md` unas instrucciones. Con ellas, **Claude Code, en cualquier proyecto**:
+  - lee tus reglas al empezar;
+  - al terminar cada tarea, escribe en tu bóveda lo que salió bien (Hacer), lo que salió mal (No hacer) y un resumen de la sesión.
+- Mi IA lee esas notas en la siguiente pregunta. **Lo que aprende Claude contigo, lo sabe tu IA.**
+- Tus 👍 y 👎 quedan también en `mi-ia/datos/preferencias.jsonl`, en el mismo formato que se usa para afinar modelos con **DPO**. Con el tiempo servirán para entrenar tu modelo con tus gustos (ver la nota "Clase 15 - Mid y post-training").
+
+## 4. Tu red neuronal propia (`red_neuronal/`)
+Un Transformer construido **desde cero** con lo aprendido en CS336:
+- tokenizador BPE;
+- RMSNorm, RoPE, SwiGLU y atención causal;
+- AdamW con warmup y coseno.
+
+Se entrenó igual que los modelos grandes, en dos fases:
+1. **Preentrenamiento** con 12 MB de Wikipedia en español.
+2. **Mid-training** con tu bóveda.
+
+```bash
+python mi-ia/red_neuronal/generar.py "La tokenización"            # hazla escribir
+python mi-ia/red_neuronal/entrenar.py --continuar --minutos 10    # que aprenda tus notas nuevas
+python mi-ia/mi_ia.py --motor propia chat                         # usarla como cerebro (experimental)
+```
+
+**Siendo honestos:** tiene unos 5 millones de parámetros. Escribe con el estilo y las palabras de tus notas, pero **no razona**. Por eso el cerebro diario es `qwen3:8b`, que tiene 1600 veces más parámetros. Tu red es la demostración de que sabes crear una IA desde cero y la base para crecer: con una GPU y más datos puedes entrenarla más grande.
+
+## 5. Configuración
 | Variable | Por defecto | Para qué |
 |---|---|---|
-| `MI_IA_BOVEDA` | `../vault` | usar otra bóveda, por ejemplo tu panel de Obsidian ya existente |
-| `MI_IA_MODELO` | `qwen3:8b` | el modelo de Ollama |
-| `MI_IA_MOTOR` | `ollama` | `ollama`, `anthropic` o `ninguno` |
-| `OLLAMA_HOST` | `http://localhost:11434` | si Ollama corre en otra máquina |
+| `MI_IA_BOVEDA` | `vault/` | apuntar a otra bóveda (por ejemplo tu panel de Obsidian) |
+| `MI_IA_MODELO` | `qwen3:8b` | otro modelo de Ollama (`gemma3:12b`, `llama3.1:8b`…) |
+| `MI_IA_EMBED` | `nomic-embed-text` | el modelo para buscar por significado |
+| `MI_IA_MOTOR` | `ollama` | `ollama`, `anthropic`, `propia` o `ninguno` |
 
-> **¿Ya tienes una bóveda de Obsidian?** Copia las carpetas de `vault/` dentro de la tuya, o apunta `MI_IA_BOVEDA` a la tuya.
-
-## Cómo se probó (6 de noviembre de 2026)
-- La búsqueda y la memoria (`buscar`, `recordar`) se probaron con las 23 notas de la bóveda.
-- Prueba completa con un modelo real: `servidor_prueba.py` imita la API de Ollama con **Qwen2.5-0.5B-Instruct**.
-  - Respondió bien a "¿cuántos tokens por parámetro recomienda Chinchilla?" (unos 20, sacado de las notas).
-  - Respondió bien a la fecha de creación, aunque añadió un detalle inventado. Es normal con un modelo tan pequeño; con 8B es mucho más fiable.
-
-## Próximos pasos
-- **Búsqueda semántica** con *embeddings* (`ollama pull nomic-embed-text`) para encontrar por significado.
-- **Afinar** un modelo pequeño con tus conversaciones (LoRA) para que hable a tu manera.
-- **Darle manos:** conectar Agent Desktop y Playwright para que actúe en tu ordenador.
+## Probado (6 de noviembre de 2026, en un servidor Linux)
+- La búsqueda híbrida, las reglas, `/recordar`, `/bien`, `/mal`, `/hacer` y `/evitar`, y la página web (probada con Playwright).
+- Las respuestas con un modelo real se probaron con `servidor_prueba.py`, que imita a Ollama usando Qwen2.5-0.5B.
+- La red propia se entrenó en este servidor (solo CPU) y sus pesos van incluidos en `red_neuronal/pesos/`.
+- **No se ha podido probar en Windows:** el instalador `.ps1` y el `.bat` están escritos con cuidado, pero si algo falla, dile a Claude qué error sale.
