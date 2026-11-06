@@ -1,0 +1,43 @@
+=== Video 1 — @gonzalo_lopezg (Agent Desktop)
+[0s]  Claude ya puede utilizar cualquier aplicación de tu ordenador mientras tú sigues trabajando,
+[4s]  sin conexiones, mcps, ni nada, y encima con varias sesiones a la vez.
+[7s]  Se llama Agent Desktop, es de Bercel y ya pasa de las 5.000 series, y te permite hacer
+[11s]  cosas con Claude que antes ni te imaginabas.
+[13s]  Y todo eso sin tocar el ratón, para que tú puedas mientras tanto seguir trabajando.
+[16s]  Y lo mejor de todo es que puedes tener hasta varias sesiones a la vez, cada una con su
+[19s]  cursor como si fueran un equipo trabajando.
+[21s]  Todas esas cosas que seguimos haciendo a mano, como pasar números de un pdf o una
+[24s]  hoja de cálculo, ya lo puedo hacer.
+[26s]  Te lo enseño en mi ordenador, uno pasa 10 facturas de un pdf a una hoja
+[29s]  de cálculo.
+[30s]  La otra resumen y el otro va sumando todo, los 3 a la vez y yo sin tocar nada.
+[33s]  Claude no para de cambiar como utilizamos los ordenadores, y con esto todavía más.
+[37s]  Y si tú también quieres aprovecharlo, te he dejado un prompt para pegarle a tu Claude
+[40s]  y que te diga cómo puedes utilizarlo para tu caso concreto.
+[42s]  Así que sígueme, comenta ordenador y te lo mando por privado.
+=== Video 2 — @midudev (Stanford CS336)
+[0s]  Curso de la Universidad de Stanford para crear tu propia inteligencia artificial desde cero.
+[4s]  Son 18 vídeos con audio en español para crear tu propio modelo de IA con Python y Machine Learning.
+[10s]  Te enseñan a toquenizar cómo entrenar con datos, que es la inferencia y el posentrenamiento.
+[14s]  Y lo mejor de todo es que es totalmente gratis.
+[17s]  Busca en YouTube Stanford CS336 y sígueme para más recursos para dominar la inteligencia artificial.
+=== Video 3 — @revolutia.ai (5 herramientas de diseño)
+[0s]  ¿Por qué las apps que hace todo el mundo con clau de code parecen costar 10.000 euros y la tuya parece construir en 2006?
+[6s]  Porque te faltan cinco herramientas clave, y ahora te las dejo.
+[9s]  La primera es Taste Skill.
+[10s]  Ayuda a clau de desarrollar criterio estético de verdad, para que por fin entienda que significa que algo se vea prep.
+[15s]  Porque si veo otra vez un degradado morado con más de tres tarjetas redondeadas, llamo la policía.
+[20s]  La segunda son las guías de diseño web.
+[22s]  Y esta es distinta, porque revisa lo que clau de ya ha construido,
+[25s]  en vez de quedarte mirando la pantalla pensando que algo falla, pero sin saber el qué.
+[30s]  Clau de audita en la interfaz contra unas guías reales de diseño, y eso te ahorra lanzamientos vergonzos.
+[35s]  La tercera es Awesome Design.
+[37s]  Y le da a tu agente referencias y sistemas de diseño de los que tirar tipografía, colores, espaciado, un componente, estructuras.
+[44s]  Así que así se acaba a pasarte 45 minutos eligiendo entre dos tonos de azul.
+[48s]  La cuarta es Image to Code.
+[50s]  Encuentras un diseño que te gusta, le das una captura, se la das a clau de, y él te lo recrea.
+[54s]  Sí, eso convierte Pinterest en una herramienta de desarrollo, peligroso, pero funciona.
+[59s]  Y la quinta es Playwright Fill A.
+[61s]  Esta parece que no pintará de diseño, pero lo cambia todo.
+[64s]  Clau de abre el navegador, interactúa con tu web, hace capturas y comproba lo que ha construido.
+[69s]  Lo construye, lo abre y lo mira.
