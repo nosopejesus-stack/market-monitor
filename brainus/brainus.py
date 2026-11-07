@@ -45,7 +45,7 @@ from pathlib import Path
 RAIZ = Path(__file__).resolve().parent
 DATOS = RAIZ / "datos"
 # Configuración: variables de entorno > config.json (lo escribe el instalador según tu PC) > valores por defecto
-_CONFIG = json.loads((RAIZ / "config.json").read_text(encoding="utf-8")) if (RAIZ / "config.json").exists() else {}
+_CONFIG = json.loads((RAIZ / "config.json").read_text(encoding="utf-8-sig")) if (RAIZ / "config.json").exists() else {}
 
 
 def _cfg(clave: str, defecto: str) -> str:

@@ -3,3 +3,4 @@ __pycache__/
 .playwright-cli/
 brainus/datos/
 brainus/red_neuronal/corpus/es_wiki_*mb.txt.gz
+brainus/config.json

@@ -1,0 +1,25 @@
+BRAINUS - tu IA personal
+========================
+
+PASO 1 (solo la primera vez, ~20-40 min segun tu internet):
+   Doble clic en  "1 - INSTALAR BRAINUS.bat"
+   - Instala Python, Ollama y Obsidian.
+   - Mira tu PC y descarga el cerebro mas potente que aguanta.
+   - Si Windows pregunta "Desea permitir...", di que SI.
+   - Si sale el aviso azul "Windows protegio su PC": "Mas informacion" -> "Ejecutar de todas formas".
+
+PASO 2 (cada dia):
+   Doble clic en  "2 - ABRIR BRAINUS.bat"  (o en el icono "Brainus" del escritorio).
+   Se abre en el navegador: http://localhost:8765
+   No cierres la ventana negra mientras la uses.
+
+PASO 3 (la memoria):
+   Abre Obsidian -> "Open folder as vault" -> elige la carpeta "vault" de aqui.
+
+USO:
+   Preguntale lo que quieras. Ensenale con  /recordar ...
+   Boton 1 (bien) / 2 (mal + por que) = aprende lo bueno y lo malo.
+
+GUARDA ESTA CARPETA en un sitio fijo (p. ej. Documentos\Brainus):
+la memoria y la red viven aqui. Si algo falla, copia el error y pasaselo a Claude.
+Mas detalle: brainus\README.md

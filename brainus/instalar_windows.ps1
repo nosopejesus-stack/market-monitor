@@ -1,4 +1,4 @@
-# Instalador de BRAINUS para Windows 10/11.
+﻿# Instalador de BRAINUS para Windows 10/11.
 # Uso: clic derecho en este archivo -> "Ejecutar con PowerShell"
 #      (o en PowerShell: powershell -ExecutionPolicy Bypass -File .\brainus\instalar_windows.ps1)
 # Instala Python, Git, Ollama y Obsidian; elige el cerebro más potente que aguanta tu PC; deja el acceso directo.
@@ -31,6 +31,11 @@ elseif ($vramGB -ge 7 -or $ramGB -ge 14) { $modelo = "qwen3:8b" }
 else                    { $modelo = "qwen3:4b" }         # PCs modestos
 Write-Host "-> Tu PC: $ramGB GB de RAM, $vramGB GB de VRAM NVIDIA. Cerebro elegido: $modelo" -ForegroundColor Green
 
+# Asegurar que el servicio de Ollama está arrancado antes de descargar
+if (-not (Get-Process ollama -ErrorAction SilentlyContinue)) {
+    Start-Process ollama -ArgumentList "serve" -WindowStyle Hidden
+    Start-Sleep -Seconds 8
+}
 Write-Host "-> Descargando el cerebro y el modelo de búsqueda (puede tardar)" -ForegroundColor Yellow
 ollama pull $modelo
 ollama pull nomic-embed-text

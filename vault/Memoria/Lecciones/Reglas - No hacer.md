@@ -20,3 +20,5 @@ tags: [memoria, lecciones, reglas, errores]
 - No mezclar cachés o datos de modelos distintos. (2026-11-06: embeddings de dos modelos en la misma caché)
 - No leer dos veces los mismos datos al entrenar (duplicados). (2026-11-06: la muestra de Wikipedia estaba dentro del corpus grande)
 - No elegir la "mejor versión" midiendo solo datos que no son el objetivo: la validación debe incluir lo que se quiere aprender. (2026-11-06: el primer mid-training de Brainus casi no aprendió la bóveda)
+- No olvidar las particularidades de Windows: PowerShell 5 guarda UTF-8 con BOM y lee .ps1 sin BOM como ANSI. (2026-11-07: config.json con BOM habría impedido arrancar Brainus; se corrigió con utf-8-sig)
+- No usar `git ls-files` sin `core.quotePath=false` para nombres con tildes. (2026-11-07: el primer ZIP perdió 7 notas)
